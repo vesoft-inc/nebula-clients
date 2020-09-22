@@ -31,7 +31,7 @@ if not '__pypy__' in sys.builtin_module_names:
 all_structs = []
 UTF8STRINGS = bool(0) or sys.version_info.major >= 3
 
-__all__ = ['UTF8STRINGS', 'ErrorCode', 'AlterSchemaOp', 'RoleType', 'PropertyType', 'HostStatus', 'SnapshotStatus', 'AdminJobOp', 'AdminCmd', 'JobStatus', 'ListHostType', 'HostRole', 'TaskResult', 'ConfigModule', 'ConfigMode', 'ID', 'ColumnDef', 'SchemaProp', 'Schema', 'IdName', 'SpaceDesc', 'SpaceItem', 'TagItem', 'AlterSchemaItem', 'EdgeItem', 'SchemaID', 'IndexItem', 'HostItem', 'UserItem', 'RoleItem', 'ExecResp', 'AdminJobReq', 'JobDesc', 'TaskDesc', 'AdminJobResult', 'AdminJobResp', 'CreateSpaceReq', 'DropSpaceReq', 'ListSpacesReq', 'ListSpacesResp', 'GetSpaceReq', 'GetSpaceResp', 'CreateTagReq', 'AlterTagReq', 'DropTagReq', 'ListTagsReq', 'ListTagsResp', 'GetTagReq', 'GetTagResp', 'CreateEdgeReq', 'AlterEdgeReq', 'GetEdgeReq', 'GetEdgeResp', 'DropEdgeReq', 'ListEdgesReq', 'ListEdgesResp', 'ListHostsReq', 'ListHostsResp', 'PartItem', 'ListPartsReq', 'ListPartsResp', 'GetPartsAllocReq', 'GetPartsAllocResp', 'MultiPutReq', 'GetReq', 'GetResp', 'MultiGetReq', 'MultiGetResp', 'RemoveReq', 'RemoveRangeReq', 'ScanReq', 'ScanResp', 'HBResp', 'HBReq', 'CreateTagIndexReq', 'DropTagIndexReq', 'GetTagIndexReq', 'GetTagIndexResp', 'ListTagIndexesReq', 'ListTagIndexesResp', 'CreateEdgeIndexReq', 'DropEdgeIndexReq', 'GetEdgeIndexReq', 'GetEdgeIndexResp', 'ListEdgeIndexesReq', 'ListEdgeIndexesResp', 'RebuildIndexReq', 'CreateUserReq', 'DropUserReq', 'AlterUserReq', 'GrantRoleReq', 'RevokeRoleReq', 'ListUsersReq', 'ListUsersResp', 'ListRolesReq', 'ListRolesResp', 'GetUserRolesReq', 'ChangePasswordReq', 'BalanceReq', 'BalanceTask', 'BalanceResp', 'LeaderBalanceReq', 'ConfigItem', 'RegConfigReq', 'GetConfigReq', 'GetConfigResp', 'SetConfigReq', 'ListConfigsReq', 'ListConfigsResp', 'CreateSnapshotReq', 'DropSnapshotReq', 'ListSnapshotsReq', 'Snapshot', 'ListSnapshotsResp', 'ListIndexStatusReq', 'IndexStatus', 'ListIndexStatusResp', 'SchemaVer', 'ClusterID']
+__all__ = ['UTF8STRINGS', 'ErrorCode', 'AlterSchemaOp', 'RoleType', 'PropertyType', 'HostStatus', 'SnapshotStatus', 'AdminJobOp', 'AdminCmd', 'JobStatus', 'ListHostType', 'HostRole', 'TaskResult', 'ConfigModule', 'ConfigMode', 'ID', 'ColumnTypeDef', 'ColumnDef', 'SchemaProp', 'Schema', 'IdName', 'SpaceDesc', 'SpaceItem', 'TagItem', 'AlterSchemaItem', 'EdgeItem', 'SchemaID', 'IndexItem', 'HostItem', 'UserItem', 'RoleItem', 'ExecResp', 'AdminJobReq', 'JobDesc', 'TaskDesc', 'AdminJobResult', 'AdminJobResp', 'CreateSpaceReq', 'DropSpaceReq', 'ListSpacesReq', 'ListSpacesResp', 'GetSpaceReq', 'GetSpaceResp', 'CreateTagReq', 'AlterTagReq', 'DropTagReq', 'ListTagsReq', 'ListTagsResp', 'GetTagReq', 'GetTagResp', 'CreateEdgeReq', 'AlterEdgeReq', 'GetEdgeReq', 'GetEdgeResp', 'DropEdgeReq', 'ListEdgesReq', 'ListEdgesResp', 'ListHostsReq', 'ListHostsResp', 'PartItem', 'ListPartsReq', 'ListPartsResp', 'GetPartsAllocReq', 'GetPartsAllocResp', 'MultiPutReq', 'GetReq', 'GetResp', 'MultiGetReq', 'MultiGetResp', 'RemoveReq', 'RemoveRangeReq', 'ScanReq', 'ScanResp', 'HBResp', 'HBReq', 'CreateTagIndexReq', 'DropTagIndexReq', 'GetTagIndexReq', 'GetTagIndexResp', 'ListTagIndexesReq', 'ListTagIndexesResp', 'CreateEdgeIndexReq', 'DropEdgeIndexReq', 'GetEdgeIndexReq', 'GetEdgeIndexResp', 'ListEdgeIndexesReq', 'ListEdgeIndexesResp', 'RebuildIndexReq', 'CreateUserReq', 'DropUserReq', 'AlterUserReq', 'GrantRoleReq', 'RevokeRoleReq', 'ListUsersReq', 'ListUsersResp', 'ListRolesReq', 'ListRolesResp', 'GetUserRolesReq', 'ChangePasswordReq', 'BalanceReq', 'BalanceTask', 'BalanceResp', 'LeaderBalanceReq', 'ConfigItem', 'RegConfigReq', 'GetConfigReq', 'GetConfigResp', 'SetConfigReq', 'ListConfigsReq', 'ListConfigsResp', 'CreateSnapshotReq', 'DropSnapshotReq', 'ListSnapshotsReq', 'Snapshot', 'ListSnapshotsResp', 'ListIndexStatusReq', 'IndexStatus', 'ListIndexStatusResp', 'SchemaVer', 'ClusterID']
 
 class ErrorCode:
   SUCCEEDED = 0
@@ -213,6 +213,7 @@ class PropertyType:
   TIMESTAMP = 21
   DATE = 24
   DATETIME = 25
+  TIME = 26
 
   _VALUES_TO_NAMES = {
     0: "UNKNOWN",
@@ -229,6 +230,7 @@ class PropertyType:
     21: "TIMESTAMP",
     24: "DATE",
     25: "DATETIME",
+    26: "TIME",
   }
 
   _NAMES_TO_VALUES = {
@@ -246,6 +248,7 @@ class PropertyType:
     "TIMESTAMP": 21,
     "DATE": 24,
     "DATETIME": 25,
+    "TIME": 26,
   }
 
 class HostStatus:
@@ -636,13 +639,108 @@ class ID(object):
   def __ne__(self, other):
     return not (self == other)
 
+class ColumnTypeDef:
+  """
+  Attributes:
+   - type
+   - type_length
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.type = iprot.readI32()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I16:
+          self.type_length = iprot.readI16()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    if self.type == None:
+      raise TProtocolException(TProtocolException.MISSING_REQUIRED_FIELD, "Required field 'type' was not found in serialized data! Struct: ColumnTypeDef")
+
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('ColumnTypeDef')
+    if self.type != None:
+      oprot.writeFieldBegin('type', TType.I32, 1)
+      oprot.writeI32(self.type)
+      oprot.writeFieldEnd()
+    if self.type_length != None and self.type_length != self.thrift_spec[2][4]:
+      oprot.writeFieldBegin('type_length', TType.I16, 2)
+      oprot.writeI16(self.type_length)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.type is not None:
+      value = pprint.pformat(self.type, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    type=%s' % (value))
+    if self.type_length is not None:
+      value = pprint.pformat(self.type_length, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    type_length=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
 class ColumnDef:
   """
   Attributes:
    - name
    - type
    - default_value
-   - type_length
    - nullable
   """
 
@@ -674,8 +772,9 @@ class ColumnDef:
         else:
           iprot.skip(ftype)
       elif fid == 2:
-        if ftype == TType.I32:
-          self.type = iprot.readI32()
+        if ftype == TType.STRUCT:
+          self.type = ColumnTypeDef()
+          self.type.read(iprot)
         else:
           iprot.skip(ftype)
       elif fid == 3:
@@ -685,11 +784,6 @@ class ColumnDef:
         else:
           iprot.skip(ftype)
       elif fid == 4:
-        if ftype == TType.I16:
-          self.type_length = iprot.readI16()
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
         if ftype == TType.BOOL:
           self.nullable = iprot.readBool()
         else:
@@ -722,19 +816,15 @@ class ColumnDef:
       oprot.writeString(self.name)
       oprot.writeFieldEnd()
     if self.type != None:
-      oprot.writeFieldBegin('type', TType.I32, 2)
-      oprot.writeI32(self.type)
+      oprot.writeFieldBegin('type', TType.STRUCT, 2)
+      self.type.write(oprot)
       oprot.writeFieldEnd()
     if self.default_value != None:
       oprot.writeFieldBegin('default_value', TType.STRUCT, 3)
       self.default_value.write(oprot)
       oprot.writeFieldEnd()
-    if self.type_length != None and self.type_length != self.thrift_spec[4][4]:
-      oprot.writeFieldBegin('type_length', TType.I16, 4)
-      oprot.writeI16(self.type_length)
-      oprot.writeFieldEnd()
-    if self.nullable != None and self.nullable != self.thrift_spec[5][4]:
-      oprot.writeFieldBegin('nullable', TType.BOOL, 5)
+    if self.nullable != None and self.nullable != self.thrift_spec[4][4]:
+      oprot.writeFieldBegin('nullable', TType.BOOL, 4)
       oprot.writeBool(self.nullable)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -755,10 +845,6 @@ class ColumnDef:
       value = pprint.pformat(self.default_value, indent=0)
       value = padding.join(value.splitlines(True))
       L.append('    default_value=%s' % (value))
-    if self.type_length is not None:
-      value = pprint.pformat(self.type_length, indent=0)
-      value = padding.join(value.splitlines(True))
-      L.append('    type_length=%s' % (value))
     if self.nullable is not None:
       value = pprint.pformat(self.nullable, indent=0)
       value = padding.join(value.splitlines(True))
@@ -11793,14 +11879,39 @@ def ID__init__(self, space_id=None, tag_id=None, edge_type=None, index_id=None, 
 
 ID.__init__ = ID__init__
 
+all_structs.append(ColumnTypeDef)
+ColumnTypeDef.thrift_spec = (
+  None, # 0
+  (1, TType.I32, 'type', PropertyType, None, 0, ), # 1
+  (2, TType.I16, 'type_length', None, 0, 1, ), # 2
+)
+
+ColumnTypeDef.thrift_struct_annotations = {
+}
+ColumnTypeDef.thrift_field_annotations = {
+}
+
+def ColumnTypeDef__init__(self, type=None, type_length=ColumnTypeDef.thrift_spec[2][4],):
+  self.type = type
+  self.type_length = type_length
+
+ColumnTypeDef.__init__ = ColumnTypeDef__init__
+
+def ColumnTypeDef__setstate__(self, state):
+  state.setdefault('type', None)
+  state.setdefault('type_length', 0)
+  self.__dict__ = state
+
+ColumnTypeDef.__getstate__ = lambda self: self.__dict__.copy()
+ColumnTypeDef.__setstate__ = ColumnTypeDef__setstate__
+
 all_structs.append(ColumnDef)
 ColumnDef.thrift_spec = (
   None, # 0
   (1, TType.STRING, 'name', False, None, 0, ), # 1
-  (2, TType.I32, 'type', PropertyType, None, 0, ), # 2
+  (2, TType.STRUCT, 'type', [ColumnTypeDef, ColumnTypeDef.thrift_spec, False], None, 0, ), # 2
   (3, TType.STRUCT, 'default_value', [nebula2.common.ttypes.Value, nebula2.common.ttypes.Value.thrift_spec, True], None, 1, ), # 3
-  (4, TType.I16, 'type_length', None, 0, 1, ), # 4
-  (5, TType.BOOL, 'nullable', None, False, 1, ), # 5
+  (4, TType.BOOL, 'nullable', None, False, 1, ), # 4
 )
 
 ColumnDef.thrift_struct_annotations = {
@@ -11808,11 +11919,10 @@ ColumnDef.thrift_struct_annotations = {
 ColumnDef.thrift_field_annotations = {
 }
 
-def ColumnDef__init__(self, name=None, type=None, default_value=None, type_length=ColumnDef.thrift_spec[4][4], nullable=ColumnDef.thrift_spec[5][4],):
+def ColumnDef__init__(self, name=None, type=None, default_value=None, nullable=ColumnDef.thrift_spec[4][4],):
   self.name = name
   self.type = type
   self.default_value = default_value
-  self.type_length = type_length
   self.nullable = nullable
 
 ColumnDef.__init__ = ColumnDef__init__
@@ -11821,7 +11931,6 @@ def ColumnDef__setstate__(self, state):
   state.setdefault('name', None)
   state.setdefault('type', None)
   state.setdefault('default_value', None)
-  state.setdefault('type_length', 0)
   state.setdefault('nullable', False)
   self.__dict__ = state
 

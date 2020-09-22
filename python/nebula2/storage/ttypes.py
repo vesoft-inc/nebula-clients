@@ -6436,7 +6436,6 @@ class RebuildIndexRequest:
    - space_id
    - parts
    - index_id
-   - is_offline
   """
 
   thrift_spec = None
@@ -6486,11 +6485,6 @@ class RebuildIndexRequest:
           self.index_id = iprot.readI32()
         else:
           iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.BOOL:
-          self.is_offline = iprot.readBool()
-        else:
-          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -6523,10 +6517,6 @@ class RebuildIndexRequest:
       oprot.writeFieldBegin('index_id', TType.I32, 3)
       oprot.writeI32(self.index_id)
       oprot.writeFieldEnd()
-    if self.is_offline != None:
-      oprot.writeFieldBegin('is_offline', TType.BOOL, 4)
-      oprot.writeBool(self.is_offline)
-      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -6545,10 +6535,6 @@ class RebuildIndexRequest:
       value = pprint.pformat(self.index_id, indent=0)
       value = padding.join(value.splitlines(True))
       L.append('    index_id=%s' % (value))
-    if self.is_offline is not None:
-      value = pprint.pformat(self.is_offline, indent=0)
-      value = padding.join(value.splitlines(True))
-      L.append('    is_offline=%s' % (value))
     return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
 
   def __eq__(self, other):
@@ -8522,7 +8508,6 @@ RebuildIndexRequest.thrift_spec = (
   (1, TType.I32, 'space_id', None, None, 2, ), # 1
   (2, TType.LIST, 'parts', (TType.I32,None), None, 2, ), # 2
   (3, TType.I32, 'index_id', None, None, 2, ), # 3
-  (4, TType.BOOL, 'is_offline', None, None, 2, ), # 4
 )
 
 RebuildIndexRequest.thrift_struct_annotations = {
@@ -8530,11 +8515,10 @@ RebuildIndexRequest.thrift_struct_annotations = {
 RebuildIndexRequest.thrift_field_annotations = {
 }
 
-def RebuildIndexRequest__init__(self, space_id=None, parts=None, index_id=None, is_offline=None,):
+def RebuildIndexRequest__init__(self, space_id=None, parts=None, index_id=None,):
   self.space_id = space_id
   self.parts = parts
   self.index_id = index_id
-  self.is_offline = is_offline
 
 RebuildIndexRequest.__init__ = RebuildIndexRequest__init__
 
@@ -8542,7 +8526,6 @@ def RebuildIndexRequest__setstate__(self, state):
   state.setdefault('space_id', None)
   state.setdefault('parts', None)
   state.setdefault('index_id', None)
-  state.setdefault('is_offline', None)
   self.__dict__ = state
 
 RebuildIndexRequest.__getstate__ = lambda self: self.__dict__.copy()
