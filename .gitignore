@@ -1,0 +1,8 @@
+# IDE
+.idea/
+.project
+.settings/
+.classpath
+.vscode/
+
+
