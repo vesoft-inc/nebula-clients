@@ -72,7 +72,7 @@ class TestConnectionPool(TestCase):
     def setup_class(self):
         self.addresses = list()
         self.addresses.append(('127.0.0.1', 32976))
-        self.addresses.append(('192.168.8.6', 3777))
+        self.addresses.append(('127.0.0.1', 32976))
         self.user_name = 'root'
         self.password = 'nebula'
         self.configs = Config()
