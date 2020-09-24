@@ -22,7 +22,7 @@ if __name__ == '__main__':
     config.max_retry_time = 3
 
     addresses = list()
-    addresses.append(('192.168.8.6', 3777))
+    addresses.append(('127.0.0.1', 3699))
     # init connection pool
     connection_pool = ConnectionPool(addresses, 'root', 'nebula', config)
 
