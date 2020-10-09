@@ -7,7 +7,9 @@
 # attached with Common Clause Condition 1.0, found in the LICENSES directory.
 
 
-from enum import Enum
+import threading
+import logging
+
 from collections import deque
 from threading import RLock
 
@@ -30,24 +32,47 @@ from nebula2.data.ResultSet import ResultSet
 
 
 class Session(object):
-    def __init__(self, connection, session_id, pool):
-        self._session_id = session_id
+    def __init__(self, connection, session_id, pool, retry_connect=True):
+        self.session_id = session_id
         self._connection = connection
         self._timezone = 0
         self._pool = pool
+        self._retry_connect = retry_connect
 
     def execute(self, stmt):
         try:
-            return ResultSet(self._connection.execute(self._session_id, stmt))
+            return ResultSet(self._connection.execute(self.session_id, stmt))
         except IOErrorException as ie:
             if ie.type == IOErrorException.E_CONNECT_BROKEN:
                 self._pool.update_servers_status()
+                if self._retry_connect:
+                    if not self.retry_connect():
+                        logging.warning('Retry connect failed')
+                        raise IOErrorException(IOErrorException.E_ALL_BROKEN, 'All connections are broken')
+                    try:
+                        return ResultSet(self._connection.execute(self.session_id, stmt))
+                    except Exception:
+                        raise
             raise
         except Exception:
             raise
 
     def release(self):
         self._connection.is_used = False
+        self._connection.signout(self.session_id)
+
+    def ping(self):
+        self._connection.ping()
+
+    def retry_connect(self):
+        try:
+            conn = self._pool.get_connection()
+            if conn is None:
+                return False
+            self._connection = conn
+        except NotValidConnectionException:
+            return False
+        return True
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.release()
@@ -80,39 +105,45 @@ class ConnectionPool(object):
         self._lock = RLock()
         self._pos = -1
 
-        self.update_servers_status()
+        # detect the services
+        self._period_detect()
 
-    def get_session(self):
-        conn, session_id = self.chosen_connection()
-        if conn is None:
+    def get_session(self, retry_connect=True):
+        connection = self.get_connection()
+        if connection is None:
             raise NotValidConnectionException()
-        return Session(conn, session_id, self)
+        try:
+            session_id = connection.authenticate(self._user_name, self._password)
+            return Session(connection, session_id, self, retry_connect)
+        except Exception:
+            raise
 
-    def chosen_connection(self):
+    def get_connection(self):
         with self._lock:
             try:
-                max_con_per_address = int(self._configs.max_connection_pool_size / self.get_ok_servers_num())
+                ok_num = self.get_ok_servers_num()
+                if ok_num == 0:
+                    return None
+                max_con_per_address = int(self._configs.max_connection_pool_size / ok_num)
                 try_count = 0
                 while try_count <= len(self._addresses):
                     self._pos = (self._pos + 1) % len(self._addresses)
                     addr = self._addresses[self._pos]
                     if self._addresses_status[addr] == self.S_OK:
                         if len(self._connections[addr]) < max_con_per_address:
-                            use_conn = UseConnection()
-                            use_conn.connection = Connection()
-                            use_conn.connection.open(addr[0], addr[1], self._configs.timeout)
-                            use_conn.session_id = use_conn.connection.auth(self._user_name, self._password)
-                            self._connections[addr].append(use_conn)
-                        for conn in self._connections[addr]:
-                            if not conn.connection.is_used:
-                                conn.connection.is_used = True
-                                return conn.connection, conn.session_id
+                            connection = Connection()
+                            connection.open(addr[0], addr[1], self._configs.timeout)
+                            self._connections[addr].append(connection)
+                        for connection in self._connections[addr]:
+                            if not connection.is_used:
+                                connection.is_used = True
+                                return connection
                     else:
-                        for conn in self._connections[addr]:
-                            if not conn.connection.is_used:
-                                self._connections[addr].remove(conn)
+                        for connection in self._connections[addr]:
+                            if not connection.is_used:
+                                self._connections[addr].remove(connection)
                     try_count = try_count + 1
-                return None, 0
+                return None
             except Exception:
                 raise
 
@@ -121,22 +152,22 @@ class ConnectionPool(object):
             conn = Connection()
             conn.open(address[0], address[1], 1000)
             return True
-        except Exception:
+        except Exception as ex:
+            logging.error('Connect {}:{} failed: {}'.format(address[0], address[1], ex))
             return False
 
     def close(self):
         with self._lock:
             for addr in self._connections.keys():
-                for conn in self._connections[addr]:
-                    conn.connection.release(conn.session_id)
-                    conn.connection.close()
+                for connection in self._connections[addr]:
+                    connection.close()
 
     def connnects(self):
         with self._lock:
             count = 0
             for addr in self._connections.keys():
-                for conn in self._connections[addr]:
-                    if conn.connection.is_used:
+                for connection in self._connections[addr]:
+                    if connection.is_used:
                         count = count + 1
             return count
 
@@ -144,8 +175,8 @@ class ConnectionPool(object):
         with self._lock:
             count = 0
             for addr in self._connections.keys():
-                for conn in self._connections[addr]:
-                    if conn.connection.is_used:
+                for connection in self._connections[addr]:
+                    if connection.is_used:
                         count = count + 1
             return count
 
@@ -163,10 +194,11 @@ class ConnectionPool(object):
                 if self.ping(address):
                     self._addresses_status[address] = self.S_OK
 
-
-class UseConnection(object):
-    session_id = 0
-    connection = None
+    def _period_detect(self):
+        self.update_servers_status()
+        timer = threading.Timer(60, self._period_detect)
+        timer.setDaemon(True)
+        timer.start()
 
 
 class Connection(object):
@@ -187,7 +219,7 @@ class Connection(object):
         except Exception:
             raise
 
-    def auth(self, user_name, password):
+    def authenticate(self, user_name, password):
         try:
             resp = self._connection.authenticate(user_name, password)
             if resp.error_code != ttypes.ErrorCode.SUCCEEDED:
@@ -207,7 +239,7 @@ class Connection(object):
                 self.close()
             raise IOErrorException(IOErrorException.E_CONNECT_BROKEN)
 
-    def release(self, session_id):
+    def signout(self, session_id):
         try:
             self._connection.signout(session_id)
         except TTransportException as te:

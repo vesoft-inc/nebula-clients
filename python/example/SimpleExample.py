@@ -16,30 +16,37 @@ from nebula2.Config import Config
 from FormatResp import FormatResp
 
 if __name__ == '__main__':
-    config = Config()
-    config.timeout = 1000
-    config.max_connection_pool_size = 4
-    config.max_retry_time = 3
+    client = None
+    try:
+        config = Config()
+        config.timeout = 1000
+        config.max_connection_pool_size = 4
+        config.max_retry_time = 3
 
-    addresses = list()
-    addresses.append(('127.0.0.1', 3699))
-    # init connection pool
-    connection_pool = ConnectionPool(addresses, 'root', 'nebula', config)
+        addresses = list()
+        addresses.append(('127.0.0.1', 3699))
+        # init connection pool
+        connection_pool = ConnectionPool(addresses, 'root', 'nebula', config)
 
-    # get session from the pool
-    client = connection_pool.get_session()
-    assert client is not None
+        # get session from the pool
+        client = connection_pool.get_session()
+        assert client is not None
 
-    client.execute('CREATE SPACE IF NOT EXISTS test; USE test;'
-                   'CREATE TAG IF NOT EXISTS person(name string, age int);')
-    
-    # insert data need to sleep after create schema
-    time.sleep(6)
+        client.execute('CREATE SPACE IF NOT EXISTS test; USE test;'
+                       'CREATE TAG IF NOT EXISTS person(name string, age int);')
 
-    # insert vertex
-    client.execute('INSERT VERTEX person(name, age) VALUES "Bob":("Bob", 10)')
+        # insert data need to sleep after create schema
+        time.sleep(6)
 
-    # get vertex
-    resp = client.execute('FETCH PROP ON person "Bob"')
-    FormatResp.print_resp(resp)
+        # insert vertex
+        client.execute('INSERT VERTEX person(name, age) VALUES "Bob":("Bob", 10)')
 
+        # get vertex
+        resp = client.execute('FETCH PROP ON person "Bob"')
+        FormatResp.print_resp(resp)
+
+    except Exception as x:
+        print(x)
+        if client is not None:
+            client.release()
+        exit(1)

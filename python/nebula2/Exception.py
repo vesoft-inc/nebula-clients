@@ -36,7 +36,7 @@ class IOErrorException(Exception):
     E_ALL_BROKEN = 1
     E_CONNECT_BROKEN = 2
 
-    def __init__(self, type=E_UNKNOWN, message=None):
+    def __init__(self, code=E_UNKNOWN, message=None):
         Exception.__init__(self, message)
-        self.type = type
+        self.type = code
 

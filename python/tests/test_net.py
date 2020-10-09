@@ -34,7 +34,7 @@ class TestConnection(TestCase):
     def test_create(self):
         try:
             conn = Connection()
-            conn.open('127.0.0.1', 32976, 1000)
+            conn.open('127.0.0.1', 3699, 1000)
             session_id = conn.auth('root', 'nebula')
             assert session_id != 0
             conn.close()
@@ -44,12 +44,12 @@ class TestConnection(TestCase):
     def test_release(self):
         try:
             conn = Connection()
-            conn.open('127.0.0.1', 32976, 1000)
+            conn.open('127.0.0.1', 3699, 1000)
             session_id = conn.auth('root', 'nebula')
             assert session_id != 0
             resp = conn.execute(session_id, 'SHOW SPACES')
             assert resp.error_code == ttypes.ErrorCode.SUCCEEDED
-            conn.release(session_id)
+            conn.signout(session_id)
             resp = conn.execute(session_id, 'SHOW SPACES')
             assert resp.error_code != ttypes.ErrorCode.SUCCEEDED
         except Exception as ex:
@@ -57,7 +57,7 @@ class TestConnection(TestCase):
 
     def test_close(self):
         conn = Connection()
-        conn.open('127.0.0.1', 32976, 1000)
+        conn.open('127.0.0.1', 3699, 1000)
         session_id = conn.auth('root', 'nebula')
         assert session_id != 0
         conn.close()
@@ -71,8 +71,8 @@ class TestConnectionPool(TestCase):
     @classmethod
     def setup_class(self):
         self.addresses = list()
-        self.addresses.append(('127.0.0.1', 32976))
-        self.addresses.append(('127.0.0.1', 32976))
+        self.addresses.append(('127.0.0.1', 3699))
+        self.addresses.append(('127.0.0.1', 3699))
         self.user_name = 'root'
         self.password = 'nebula'
         self.configs = Config()
@@ -82,7 +82,7 @@ class TestConnectionPool(TestCase):
         self.pool = ConnectionPool(self.addresses, self.user_name, self.password, self.configs)
 
     def test_ping(self):
-        assert self.pool.ping(('127.0.0.1', 32976))
+        assert self.pool.ping(('127.0.0.1', 3699))
         assert self.pool.ping(('127.0.0.1', 5000)) is False
 
     def test_get_session(self):
