@@ -13,20 +13,23 @@ sys.path.insert(0, '../')
 
 from nebula2.net import ConnectionPool
 from nebula2.Config import Config
-from FormatResp import FormatResp
+from FormatResp import print_resp
 
 if __name__ == '__main__':
     client = None
     try:
         config = Config()
         config.timeout = 1000
+        config.idle_time = 5 * 60 * 1000
         config.max_connection_pool_size = 4
         config.max_retry_time = 3
 
         addresses = list()
         addresses.append(('127.0.0.1', 3699))
+        addresses.append(('127.0.0.1', 3700))
         # init connection pool
-        connection_pool = ConnectionPool(addresses, 'root', 'nebula', config)
+        connection_pool = ConnectionPool()
+        assert connection_pool.init(addresses, 'root', 'nebula', config)
 
         # get session from the pool
         client = connection_pool.get_session()
@@ -39,14 +42,16 @@ if __name__ == '__main__':
         time.sleep(6)
 
         # insert vertex
-        client.execute('INSERT VERTEX person(name, age) VALUES "Bob":("Bob", 10)')
+        resp = client.execute('INSERT VERTEX person(name, age) VALUES "Bob":("Bob", 10)')
+        assert resp.error_code == 0
 
-        # get vertex
         resp = client.execute('FETCH PROP ON person "Bob"')
-        FormatResp.print_resp(resp)
+        assert resp.error_code == 0
+        print_resp(resp)
 
     except Exception as x:
-        print(x)
+        import traceback
+        print(traceback.format_exc())
         if client is not None:
             client.release()
         exit(1)

@@ -8,8 +8,16 @@
 
 
 class Config(object):
+    # the min connection always in pool
+    min_connection_pool_size = 0
+
+    # the max connection in pool
     max_connection_pool_size = 10
 
     max_retry_time = 3
 
+    # connection or execute timeout, unit ms
     timeout = 10000
+
+    # unit s
+    idle_time = 5 * 60

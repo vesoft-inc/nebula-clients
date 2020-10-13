@@ -16,7 +16,7 @@ sys.path.insert(0, '../')
 
 from nebula2.net import ConnectionPool
 from nebula2.Config import Config
-from FormatResp import FormatResp
+from FormatResp import print_resp
 
 
 def main_test():
@@ -62,7 +62,7 @@ def main_test():
         # Print the result of query
         print(' \n====== The query result of thread[%s]======\n '
               % threading.current_thread().getName())
-        FormatResp.print_resp(query_resp)
+        print_resp(query_resp)
         client.release()
 
     except Exception as x:
@@ -81,7 +81,8 @@ if __name__ == '__main__':
     addresses = list()
     addresses.append(('127.0.0.1', 3699))
     # init connection pool
-    connection_pool = ConnectionPool(addresses, 'root', 'nebula', config)
+    connection_pool = ConnectionPool()
+    assert connection_pool.init(addresses, 'root', 'nebula', config)
 
     # Use multi thread and reuse the session three times
     for count in range(0, 3):

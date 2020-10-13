@@ -15,7 +15,7 @@ sys.path.insert(0, root_dir)
 
 from nebula2.common import ttypes
 from unittest import TestCase
-from nebula2.data_type.DataObject import (
+from nebula2.data.DataObject import (
     ConvertValue,
     Node,
     Relationship,

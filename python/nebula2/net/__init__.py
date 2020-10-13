@@ -9,6 +9,7 @@
 
 import threading
 import logging
+import time
 
 from collections import deque
 from threading import RLock
@@ -40,13 +41,18 @@ class Session(object):
         self._retry_connect = retry_connect
 
     def execute(self, stmt):
+        """
+        execute statement
+        :param stmt: the ngql
+        :return: ResultSet
+        """
         try:
             return ResultSet(self._connection.execute(self.session_id, stmt))
         except IOErrorException as ie:
             if ie.type == IOErrorException.E_CONNECT_BROKEN:
                 self._pool.update_servers_status()
                 if self._retry_connect:
-                    if not self.retry_connect():
+                    if not self._reconnect():
                         logging.warning('Retry connect failed')
                         raise IOErrorException(IOErrorException.E_ALL_BROKEN, 'All connections are broken')
                     try:
@@ -58,13 +64,20 @@ class Session(object):
             raise
 
     def release(self):
+        """
+        release the connection to pool
+        """
         self._connection.is_used = False
         self._connection.signout(self.session_id)
+        self._connection.reset()
 
     def ping(self):
+        """
+        check the connection is ok
+        """
         self._connection.ping()
 
-    def retry_connect(self):
+    def _reconnect(self):
         try:
             conn = self._pool.get_connection()
             if conn is None:
@@ -82,33 +95,62 @@ class ConnectionPool(object):
     S_OK = 0
     S_BAD = 1
 
-    def __init__(self, addresses, user_name, password, configs):
+    def __init__(self):
         # all addresses of servers
         self._addresses = list()
-        for addr in addresses:
-            if addr not in self._addresses:
-                self._addresses.append(addr)
-
-        # all session_id
-        self._session_ids = list()
 
         # server's status
         self._addresses_status = dict()
+
         # all connections
         self._connections = dict()
-        for address in addresses:
-            self._addresses_status[address] = self.S_BAD
-            self._connections[address] = deque()
-        self._configs = configs
-        self._user_name = user_name
-        self._password = password
+        self._configs = None
+        self._user_name = None
+        self._password = None
         self._lock = RLock()
         self._pos = -1
+        self._check_delay = 60  # unit seconds
+
+    def init(self, addresses, user_name, password, configs):
+        """
+        init the connection pool
+        :param addresses: the graphd servers' addresses
+        :param user_name: the user name
+        :param password: the password
+        :param configs: the config
+        :return: if all addresses are ok, return True else return False.
+        """
+        self._user_name = user_name
+        self._password = password
+        self._configs = configs
+        for address in addresses:
+            if address not in self._addresses:
+                self._addresses.append(address)
+            self._addresses_status[address] = self.S_BAD
+            self._connections[address] = deque()
 
         # detect the services
         self._period_detect()
 
+        # init min connections
+        ok_num = self.get_ok_servers_num()
+        if ok_num < len(self._addresses):
+            return False
+
+        conns_per_address = int(self._configs.min_connection_pool_size / ok_num)
+        for addr in self._addresses:
+            for i in range(0, conns_per_address):
+                connection = Connection()
+                connection.open(addr[0], addr[1], self._configs.timeout)
+                self._connections[addr].append(connection)
+        return True
+
     def get_session(self, retry_connect=True):
+        """
+        get session
+        :param retry_connect: if auto retry connect
+        :return: void
+        """
         connection = self.get_connection()
         if connection is None:
             raise NotValidConnectionException()
@@ -119,6 +161,10 @@ class ConnectionPool(object):
             raise
 
     def get_connection(self):
+        """
+        get available connection
+        :return: Connection Object
+        """
         with self._lock:
             try:
                 ok_num = self.get_ok_servers_num()
@@ -130,14 +176,19 @@ class ConnectionPool(object):
                     self._pos = (self._pos + 1) % len(self._addresses)
                     addr = self._addresses[self._pos]
                     if self._addresses_status[addr] == self.S_OK:
-                        if len(self._connections[addr]) < max_con_per_address:
-                            connection = Connection()
-                            connection.open(addr[0], addr[1], self._configs.timeout)
-                            self._connections[addr].append(connection)
                         for connection in self._connections[addr]:
                             if not connection.is_used:
                                 connection.is_used = True
+                                logging.info('Get connection to {}'.format(addr))
                                 return connection
+
+                        if len(self._connections[addr]) < max_con_per_address:
+                            connection = Connection()
+                            connection.open(addr[0], addr[1], self._configs.timeout)
+                            connection.is_used = True
+                            self._connections[addr].append(connection)
+                            logging.info('Get connection to {}'.format(addr))
+                            return connection
                     else:
                         for connection in self._connections[addr]:
                             if not connection.is_used:
@@ -148,30 +199,46 @@ class ConnectionPool(object):
                 raise
 
     def ping(self, address):
+        """
+        check the server is ok
+        :param address: the server address want to connect
+        :return: True or False
+        """
         try:
             conn = Connection()
             conn.open(address[0], address[1], 1000)
+            conn.close()
             return True
         except Exception as ex:
             logging.error('Connect {}:{} failed: {}'.format(address[0], address[1], ex))
             return False
 
     def close(self):
+        """
+        close all connections in pool
+        :return: void
+        """
         with self._lock:
             for addr in self._connections.keys():
                 for connection in self._connections[addr]:
                     connection.close()
 
     def connnects(self):
+        """
+        get the number of existing connections
+        :return: int
+        """
         with self._lock:
             count = 0
             for addr in self._connections.keys():
-                for connection in self._connections[addr]:
-                    if connection.is_used:
-                        count = count + 1
+                count = count + len(self._connections[addr])
             return count
 
     def in_used_connects(self):
+        """
+        get the number of the used connections
+        :return: int
+        """
         with self._lock:
             count = 0
             for addr in self._connections.keys():
@@ -181,6 +248,10 @@ class ConnectionPool(object):
             return count
 
     def get_ok_servers_num(self):
+        """
+        get the number of the ok servers
+        :return: int
+        """
         with self._lock:
             count = 0
             for addr in self._addresses_status.keys():
@@ -189,14 +260,28 @@ class ConnectionPool(object):
             return count
 
     def update_servers_status(self):
+        """
+        update the servers' status
+        """
         with self._lock:
             for address in self._addresses:
                 if self.ping(address):
                     self._addresses_status[address] = self.S_OK
+                else:
+                    self._addresses_status[address] = self.S_BAD
+
+    def _remove_idle_connection(self):
+        with self._lock:
+            for addr in self._connections.keys():
+                conns = self._connections[addr]
+                for connection in conns:
+                    if not connection.is_used and connection.idle_time() > self._configs.idle_time:
+                        conns.remove(connection)
 
     def _period_detect(self):
         self.update_servers_status()
-        timer = threading.Timer(60, self._period_detect)
+        self._remove_idle_connection()
+        timer = threading.Timer(self._check_delay, self._period_detect)
         timer.setDaemon(True)
         timer.start()
 
@@ -206,6 +291,7 @@ class Connection(object):
 
     def __init__(self):
         self._connection = None
+        self.start_use_time = 0
 
     def open(self, ip, port, timeout):
         try:
@@ -252,4 +338,20 @@ class Connection(object):
             self._connection._iprot.trans.close()
         except Exception:
             raise
+
+    def ping(self):
+        try:
+            self._connection.ping()
+        except TTransportException as te:
+            if te.type == TTransportException.END_OF_FILE:
+                self.close()
+            raise
+
+    def reset(self):
+        self.start_use_time = time.time()
+
+    def idle_time(self):
+        if not self.is_used:
+            return 0
+        return time.time() - self.start_use_time
 
