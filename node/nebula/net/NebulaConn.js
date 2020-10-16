@@ -4,7 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-var thrift = require('../lib/thrift');
+var thrift = require('thrift');
 var GraphService = require('../interface/GraphService');
 
 

@@ -5,7 +5,7 @@
 //
 
 //var thrift = require('thrift');
-var thrift = require('../lib/thrift');
+var thrift = require('thrift');
 var Thrift = thrift.Thrift;
 
 if (typeof nebula === 'undefined') {

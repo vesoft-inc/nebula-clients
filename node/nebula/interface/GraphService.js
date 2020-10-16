@@ -6,7 +6,7 @@
 
 
 //HELPER FUNCTIONS AND STRUCTURES
-var thrift = require('../lib/thrift');
+var thrift = require('thrift');
 var Thrift = thrift.Thrift
 var Q = thrift.Q
 
