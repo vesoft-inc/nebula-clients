@@ -47,13 +47,28 @@ describe('#nebula connection', () => {
                 assert(response.success.error_code == 0)
                 assert(response.success.session_id != 0)
                 sessionId = response.success.session_id
-                console.info('response.success.session_id = ' + sessionId)
-                conn.execute(sessionId, 'SHOW SPACES', function (response) {
+                conn.execute(sessionId, 'CREATE SPACE IF NOT EXISTS test', function (response) {
                     assert(response.success.error_code == 0)
-                    assert(response.success.data.column_names[0] === undefined)
-                    assert(response.success.data.rows.length == 0)
-                    done()
-                    conn.close()
+                    conn.execute(sessionId, 'DESC SPACE test', function (response) {
+                        assert(response.success.error_code == 0)
+                        expect(response.success.data.column_names[0]).to.equal('ID')
+                        expect(response.success.data.column_names[1]).to.equal('Name')
+                        expect(response.success.data.column_names[2]).to.equal('Partition Number')
+                        expect(response.success.data.column_names[3]).to.equal('Replica Factor')
+                        expect(response.success.data.column_names[4]).to.equal('Charset')
+                        expect(response.success.data.column_names[5]).to.equal('Collate')
+                        expect(response.success.data.column_names[6]).to.equal('Vid Type')
+                        expect(response.success.data.rows.length).to.equal(1)
+                        expect(response.success.data.rows[0].values[1].sVal).to.equal('test')
+                        expect(parseInt(response.success.data.rows[0].values[2].iVal.buffer.toString('hex'))).to.equal(64)
+                        expect(parseInt(response.success.data.rows[0].values[3].iVal.buffer.toString('hex')), 1)
+                        expect(response.success.data.rows[0].values[4].sVal, 'utf8')
+                        expect(response.success.data.rows[0].values[5].sVal, 'utf8_bin')
+                        expect(response.success.data.rows[0].values[6].sVal, 'FIXED_STRING(8)')
+                        done()
+                        conn.close()
+
+                    })
 
                 })
             })
@@ -65,14 +80,14 @@ describe('#nebula connection', () => {
 
     })
 
-    it('test open failed', () => {
-        var conn = new NebulaConn('localhost', 3999, 1000)
-        try {
-            conn.open()
-            conn.close()
-        } catch (e) {
-            assert(true, 'Expected open failed, but: ' + e.stack)
-        }
-
-    })
+    // it('test open failed', () => {
+    //     var conn = new NebulaConn('localhost', 3999, 1000)
+    //     try {
+    //         conn.open()
+    //         conn.close()
+    //     } catch (e) {
+    //         assert(true, 'Expected open failed, but: ' + e.stack)
+    //     }
+    //
+    // })
 })

@@ -53,21 +53,21 @@ nebula.Date.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.I16) {
-        this.year = input.readI16().value;
+        this.year = input.readI16();
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.BYTE) {
-        this.month = input.readByte().value;
+        this.month = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
       if (ftype == Thrift.Type.BYTE) {
-        this.day = input.readByte().value;
+        this.day = input.readByte();
       } else {
         input.skip(ftype);
       }
@@ -139,28 +139,28 @@ nebula.Time.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.BYTE) {
-        this.hour = input.readByte().value;
+        this.hour = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.BYTE) {
-        this.minute = input.readByte().value;
+        this.minute = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
       if (ftype == Thrift.Type.BYTE) {
-        this.sec = input.readByte().value;
+        this.sec = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 4:
       if (ftype == Thrift.Type.I32) {
-        this.microsec = input.readI32().value;
+        this.microsec = input.readI32();
       } else {
         input.skip(ftype);
       }
@@ -249,49 +249,49 @@ nebula.DateTime.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.I16) {
-        this.year = input.readI16().value;
+        this.year = input.readI16();
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.BYTE) {
-        this.month = input.readByte().value;
+        this.month = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
       if (ftype == Thrift.Type.BYTE) {
-        this.day = input.readByte().value;
+        this.day = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 4:
       if (ftype == Thrift.Type.BYTE) {
-        this.hour = input.readByte().value;
+        this.hour = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 5:
       if (ftype == Thrift.Type.BYTE) {
-        this.minute = input.readByte().value;
+        this.minute = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 6:
       if (ftype == Thrift.Type.BYTE) {
-        this.sec = input.readByte().value;
+        this.sec = input.readByte();
       } else {
         input.skip(ftype);
       }
       break;
       case 7:
       if (ftype == Thrift.Type.I32) {
-        this.microsec = input.readI32().value;
+        this.microsec = input.readI32();
       } else {
         input.skip(ftype);
       }
@@ -427,35 +427,35 @@ nebula.Value.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.I32) {
-        this.nVal = input.readI32().value;
+        this.nVal = input.readI32();
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.BOOL) {
-        this.bVal = input.readBool().value;
+        this.bVal = input.readBool();
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
       if (ftype == Thrift.Type.I64) {
-        this.iVal = input.readI64().value;
+        this.iVal = input.readI64();
       } else {
         input.skip(ftype);
       }
       break;
       case 4:
       if (ftype == Thrift.Type.DOUBLE) {
-        this.fVal = input.readDouble().value;
+        this.fVal = input.readDouble();
       } else {
         input.skip(ftype);
       }
       break;
       case 5:
       if (ftype == Thrift.Type.STRING) {
-        this.sVal = input.readString().value;
+        this.sVal = input.readString();
       } else {
         input.skip(ftype);
       }
@@ -749,7 +749,7 @@ nebula.Map.prototype.read = function(input) {
           }
           var key14 = null;
           var val15 = null;
-          key14 = input.readString().value;
+          key14 = input.readString();
           val15 = new nebula.Value();
           val15.read(input);
           this.kvs[key14] = val15;
@@ -983,7 +983,7 @@ nebula.DataSet.prototype.read = function(input) {
         for (var _i39 = 0; _i39 < _size34; ++_i39)
         {
           var elem40 = null;
-          elem40 = input.readString().value;
+          elem40 = input.readString();
           this.column_names.push(elem40);
         }
         input.readListEnd();
@@ -1084,7 +1084,7 @@ nebula.Tag.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.STRING) {
-        this.name = input.readString().value;
+        this.name = input.readString();
       } else {
         input.skip(ftype);
       }
@@ -1109,7 +1109,7 @@ nebula.Tag.prototype.read = function(input) {
           }
           var key56 = null;
           var val57 = null;
-          key56 = input.readString().value;
+          key56 = input.readString();
           val57 = new nebula.Value();
           val57.read(input);
           this.props[key56] = val57;
@@ -1183,7 +1183,7 @@ nebula.Vertex.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.STRING) {
-        this.vid = input.readString().value;
+        this.vid = input.readString()
       } else {
         input.skip(ftype);
       }
@@ -1288,35 +1288,35 @@ nebula.Edge.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.STRING) {
-        this.src = input.readString().value;
+        this.src = input.readString()
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.STRING) {
-        this.dst = input.readString().value;
+        this.dst = input.readString()
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
       if (ftype == Thrift.Type.I32) {
-        this.type = input.readI32().value;
+        this.type = input.readI32()
       } else {
         input.skip(ftype);
       }
       break;
       case 4:
       if (ftype == Thrift.Type.STRING) {
-        this.name = input.readString().value;
+        this.name = input.readString()
       } else {
         input.skip(ftype);
       }
       break;
       case 5:
       if (ftype == Thrift.Type.I64) {
-        this.ranking = input.readI64().value;
+        this.ranking = input.readI64()
       } else {
         input.skip(ftype);
       }
@@ -1341,7 +1341,7 @@ nebula.Edge.prototype.read = function(input) {
           }
           var key74 = null;
           var val75 = null;
-          key74 = input.readString().value;
+          key74 = input.readString()
           val75 = new nebula.Value();
           val75.read(input);
           this.props[key74] = val75;
@@ -1455,21 +1455,21 @@ nebula.Step.prototype.read = function(input) {
       break;
       case 2:
       if (ftype == Thrift.Type.I32) {
-        this.type = input.readI32().value;
+        this.type = input.readI32()
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
       if (ftype == Thrift.Type.STRING) {
-        this.name = input.readString().value;
+        this.name = input.readString()
       } else {
         input.skip(ftype);
       }
       break;
       case 4:
       if (ftype == Thrift.Type.I64) {
-        this.ranking = input.readI64().value;
+        this.ranking = input.readI64()
       } else {
         input.skip(ftype);
       }
@@ -1494,7 +1494,7 @@ nebula.Step.prototype.read = function(input) {
           }
           var key84 = null;
           var val85 = null;
-          key84 = input.readString().value;
+          key84 = input.readString()
           val85 = new nebula.Value();
           val85.read(input);
           this.props[key84] = val85;
@@ -1673,14 +1673,14 @@ nebula.HostAddr.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.STRING) {
-        this.host = input.readString().value;
+        this.host = input.readString()
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.I32) {
-        this.port = input.readI32().value;
+        this.port = input.readI32()
       } else {
         input.skip(ftype);
       }
@@ -1739,14 +1739,14 @@ nebula.KeyValue.prototype.read = function(input) {
     {
       case 1:
       if (ftype == Thrift.Type.STRING) {
-        this.key = input.readString().value;
+        this.key = input.readString()
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.STRING) {
-        this.value = input.readString().value;
+        this.value = input.readString()
       } else {
         input.skip(ftype);
       }
