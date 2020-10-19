@@ -1,3 +1,9 @@
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
 package com.vesoft.nebula.client.graph.net;
 
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
@@ -14,7 +20,6 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.net.util.IPAddressUtil;
 
 public class NebulaPool {
     private GenericObjectPool<SyncConnection> objectPool = null;
@@ -84,13 +89,7 @@ public class NebulaPool {
             throws UnknownHostException {
         List<HostAddress> newAddrs = new ArrayList<HostAddress>();
         for (HostAddress addr : addresses) {
-            String ip;
-            if (IPAddressUtil.isIPv4LiteralAddress(addr.getHost())
-                    || IPAddressUtil.isIPv6LiteralAddress(addr.getHost())) {
-                ip = addr.getHost();
-            } else {
-                ip = InetAddress.getByName(addr.getHost()).getHostAddress();
-            }
+            String ip = InetAddress.getByName(addr.getHost()).getHostAddress();
             newAddrs.add(new HostAddress(ip, addr.getPort()));
         }
         return newAddrs;

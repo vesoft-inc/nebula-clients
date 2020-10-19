@@ -2,7 +2,6 @@ package com.vesoft.nebula.client.graph.net;
 
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

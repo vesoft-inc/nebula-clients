@@ -3,11 +3,10 @@ package com.vesoft.nebula.client.graph.net;
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
+import java.util.List;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
-
-import java.util.List;
 
 public class ConnObjectPool extends BasePooledObjectFactory<SyncConnection> {
     private final RoundRobinLoadBalancer loadBalancer;
