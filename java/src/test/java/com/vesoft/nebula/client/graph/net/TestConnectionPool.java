@@ -21,6 +21,17 @@ import org.junit.Test;
 public class TestConnectionPool {
     @Test()
     public void testInitFailed() {
+        // hostname is not existed
+        try {
+            List<HostAddress> addresses = Arrays.asList(new HostAddress("hostname", 3888));
+            NebulaPool pool = new NebulaPool();
+            assert (false == pool.init(addresses, new NebulaPoolConfig()));
+        } catch (UnknownHostException e) {
+            System.out.println("We expect must reach here: init pool failed.");
+            assert (true);
+        }
+
+        // connect failed
         try {
             NebulaPoolConfig nebulaPoolConfig = new NebulaPoolConfig();
             nebulaPoolConfig.setMinConnSize(0);
