@@ -76,7 +76,12 @@ class Record(object):
         '''
         if index >= self._size:
             raise OutOfRangeException()
-        return self._convert(self._record[index])
+        if self._record[index] != ttypes.Value.PVAL:
+            return InvalidValueTypeException(
+                'the type of index: {} is {} != {}'.format(index,
+                                                           self._record[index].getType(),
+                                                           ttypes.Value.PVAL))
+        return ConvertValue.convert(self._record[index])
 
     def get_path(self, key):
         '''
@@ -85,7 +90,12 @@ class Record(object):
         '''
         if key not in self._names:
             raise InvalidKeyException(key)
-        return self._convert(self._names[key])
+        if self._names[key] != ttypes.Value.PVAL:
+            return InvalidValueTypeException(
+                'the type of key: {} is {} != {}'.format(key,
+                                                         self._names[key].getType(),
+                                                         ttypes.Value.PVAL))
+        return ConvertValue.convert(self._names[key])
 
     def get_relationship(self, index):
         '''
@@ -94,7 +104,26 @@ class Record(object):
         '''
         if index >= self._size:
             raise OutOfRangeException()
-        return self._convert(self._record[index])
+        if self._record[index] != ttypes.Value.EVAL:
+            return InvalidValueTypeException(
+                'the type of index: {} is {} != {}'.format(index,
+                                                           self._record[index].getType(),
+                                                           ttypes.Value.EVAL))
+        return ConvertValue.convert(self._record[index])
+
+    def get_relationship(self, key):
+        '''
+        get relationship by key
+        :return: Relationship
+        '''
+        if key not in self._names:
+            raise InvalidKeyException(key)
+        if self._names[key] != ttypes.Value.EVAL:
+            return InvalidValueTypeException(
+                'the type of key: {} is {} != {}'.format(key,
+                                                         self._names[key].getType(),
+                                                         ttypes.Value.EVAL))
+        return ConvertValue.convert(self._names[key])
 
     def get_node(self, index):
         '''
@@ -103,7 +132,12 @@ class Record(object):
         '''
         if index >= self._size:
             raise OutOfRangeException()
-        return self._convert(self._record[index])
+        if self._record[index] != ttypes.Value.VVAL:
+            return InvalidValueTypeException(
+                'the type of index: {} is {} != {}'.format(index,
+                                                           self._record[index].getType(),
+                                                           ttypes.Value.VVAL))
+        return ConvertValue.convert(self._record[index])
 
     def get_node(self, key):
         '''
@@ -112,10 +146,12 @@ class Record(object):
         '''
         if key not in self._names:
             raise InvalidKeyException(key)
-        return self._convert(self._names[key])
-
-    def _convert(self, value):
-        return ConvertValue.convert(value)
+        if self._names[key] != ttypes.Value.VVAL:
+            return InvalidValueTypeException(
+                'the type of key: {} is {} != {}'.format(key,
+                                                         self._names[key].getType(),
+                                                         ttypes.Value.VVAL))
+        return ConvertValue.convert(self._names[key])
 
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, self._record)

@@ -10,6 +10,7 @@
 import threading
 import logging
 import time
+import socket
 
 from collections import deque
 from threading import RLock
@@ -26,7 +27,8 @@ from nebula2.graph import (
 from nebula2.Exception import (
     AuthFailedException,
     IOErrorException,
-    NotValidConnectionException
+    NotValidConnectionException,
+    InValidHostname
 )
 
 from nebula2.data.ResultSet import ResultSet
@@ -105,27 +107,25 @@ class ConnectionPool(object):
         # all connections
         self._connections = dict()
         self._configs = None
-        self._user_name = None
-        self._password = None
         self._lock = RLock()
         self._pos = -1
         self._check_delay = 60  # unit seconds
 
-    def init(self, addresses, user_name, password, configs):
+    def init(self, addresses, configs):
         """
         init the connection pool
         :param addresses: the graphd servers' addresses
-        :param user_name: the user name
-        :param password: the password
         :param configs: the config
         :return: if all addresses are ok, return True else return False.
         """
-        self._user_name = user_name
-        self._password = password
         self._configs = configs
         for address in addresses:
             if address not in self._addresses:
-                self._addresses.append(address)
+                try:
+                    ip = socket.gethostbyname(address[0])
+                except Exception:
+                    raise InValidHostname(str(address[0]))
+                self._addresses.append((ip, address[1]))
             self._addresses_status[address] = self.S_BAD
             self._connections[address] = deque()
 
@@ -145,9 +145,11 @@ class ConnectionPool(object):
                 self._connections[addr].append(connection)
         return True
 
-    def get_session(self, retry_connect=True):
+    def get_session(self, user_name, password, retry_connect=True):
         """
         get session
+        :param user_name:
+        :param password:
         :param retry_connect: if auto retry connect
         :return: void
         """
@@ -155,7 +157,7 @@ class ConnectionPool(object):
         if connection is None:
             raise NotValidConnectionException()
         try:
-            session_id = connection.authenticate(self._user_name, self._password)
+            session_id = connection.authenticate(user_name, password)
             return Session(connection, session_id, self, retry_connect)
         except Exception:
             raise

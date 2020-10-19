@@ -26,7 +26,7 @@ def main_test():
         print('thread name: %s, space_name : %s' %
                 (threading.current_thread().getName(), space_name))
         # Get one client
-        client = connection_pool.get_session()
+        client = connection_pool.get_session('root', 'nebula')
         assert client is not None
 
         # Create space mySpace and schema
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     addresses.append(('127.0.0.1', 3699))
     # init connection pool
     connection_pool = ConnectionPool()
-    assert connection_pool.init(addresses, 'root', 'nebula', config)
+    assert connection_pool.init(addresses, config)
 
     # Use multi thread and reuse the session three times
     for count in range(0, 3):

@@ -15,13 +15,19 @@ class OutOfRangeException(Exception):
 
 class InvalidKeyException(Exception):
     def __init__(self, message):
-        Exception.__init__(self, message=None)
+        Exception.__init__(self, message)
         self.message = 'KeyError: '.format(message)
+
+
+class InvalidValueTypeException(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
+        self.message = 'Invalid value type: '.format(message)
 
 
 class AuthFailedException(Exception):
     def __init__(self, message):
-        Exception.__init__(self, message=None)
+        Exception.__init__(self, message)
         self.message = 'Auth failed: '.format(message)
 
 
@@ -29,6 +35,12 @@ class NotValidConnectionException(Exception):
     def __init__(self):
         Exception.__init__(self)
         self.message = 'No extra connection'
+
+
+class InValidHostname(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
+        self.message = 'Invalid hostname: '.format(message)
 
 
 class IOErrorException(Exception):

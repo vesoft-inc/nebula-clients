@@ -29,10 +29,10 @@ if __name__ == '__main__':
         addresses.append(('127.0.0.1', 3700))
         # init connection pool
         connection_pool = ConnectionPool()
-        assert connection_pool.init(addresses, 'root', 'nebula', config)
+        assert connection_pool.init(addresses, config)
 
         # get session from the pool
-        client = connection_pool.get_session()
+        client = connection_pool.get_session('root', 'nebula')
         assert client is not None
 
         client.execute('CREATE SPACE IF NOT EXISTS test; USE test;'
