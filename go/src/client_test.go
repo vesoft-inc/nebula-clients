@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
-	"github.com/vesoft-inc/nebula-clients/go/src/conf"
+	conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
 	data "github.com/vesoft-inc/nebula-clients/go/src/data"
 	nebulaNet "github.com/vesoft-inc/nebula-clients/go/src/net"
 )
@@ -24,8 +24,12 @@ const (
 	password = "password"
 )
 
-var graphConfig = conf.GraphConfig{
-	TimeOut: 0 * time.Second,
+var DefaultPoolConfig = conf.PoolConfig{
+	TimeOut:         1000 * time.Second,
+	IdleTime:        0 * time.Second,
+	MaxConnPoolSize: 100,
+	MinConnPoolSize: 3,
+	MaxRetryTimes:   3,
 }
 
 // Before run `go test -v`, you should start a nebula server listening on 3699 port.
@@ -38,6 +42,7 @@ func logoutAndClose(conn *nebulaNet.Connection, sessionID int64) {
 	conn.SignOut(sessionID)
 	conn.Close()
 }
+
 func TestConnection(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping client test in short mode")
@@ -45,29 +50,31 @@ func TestConnection(t *testing.T) {
 
 	hostAdress := data.NewHostAddress(address, port)
 	fmt.Sprintf("%s:%d", address, port)
-	conn, err := nebulaNet.Open(hostAdress, graphConfig)
+
+	conn := nebulaNet.NewConnection(hostAdress)
+	err := conn.Open(hostAdress, DefaultPoolConfig)
 	if err != nil {
-		t.Errorf("Fail to open connection, address: %s, port: %d, %s", address, port, err.Error())
+		t.Fatalf("Fail to open connection, address: %s, port: %d, %s", address, port, err.Error())
 	}
 
-	authresp, err := conn.Authenticate(username, password)
-	if err != nil {
-		t.Errorf("Fail to authenticate, username: %s, password: %s, %s", username, password, err.Error())
+	authresp, authErr := conn.Authenticate(username, password)
+	if authErr != nil {
+		t.Fatalf("Fail to authenticate, username: %s, password: %s, %s", username, password, authErr.Error())
 	}
 
 	sessionID := authresp.GetSessionID()
 
-	defer logoutAndClose(conn, sessionID)
+	defer logoutAndClose(&conn, sessionID)
 
 	checkResp := func(prefix string, authresp *graph.ExecutionResponse) {
 		if nebulaNet.IsError(authresp) {
-			t.Logf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, authresp.GetErrorCode(), authresp.GetErrorMsg())
+			t.Fatalf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, authresp.GetErrorCode(), authresp.GetErrorMsg())
 		}
 	}
 
 	resp, err := conn.Execute(sessionID, "SHOW HOSTS;")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 		return
 	}
 
@@ -78,12 +85,13 @@ func TestConnection(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-
+	checkResp("create space", resp)
 	resp, err = conn.Execute(sessionID, "DROP SPACE client_test;")
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
+	checkResp("drop space", resp)
 
 	_, err = conn.Ping(sessionID)
 	if err != nil {
@@ -91,36 +99,50 @@ func TestConnection(t *testing.T) {
 		return
 	}
 
-	checkResp("create space", resp)
-
 }
 
-// func TestClientPing(t *testing.T) {
-// 	if testing.Short() {
-// 		t.Skip("Skipping client test in short mode")
-// 	}
+func TestPool(t *testing.T) {
+	hostAdress := data.NewHostAddress(address, port)
+	hostList := []*data.HostAddress{}
+	hostList = append(hostList, &hostAdress)
+	fmt.Sprintf("%s:%d", address, port)
+	pool := nebulaNet.ConnectionPool{}
 
-// 	client, err := nebulaNet.Open(fmt.Sprintf("%s:%d", address, port))
-// 	if client.GetSessionID() != 0 {
-// 		t.Errorf("Needed SessionID")
-// 	}
+	err := pool.InitPool(hostList, &conf.DefaultPoolConfig)
+	if err != nil {
+		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+	}
 
-// 	if err != nil {
-// 		t.Errorf("Fail to create client, address: %s, port: %d, %s", address, port, err.Error())
-// 	}
+	session, err := pool.GetSession(username, password)
+	if err != nil {
+		t.Fatalf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
+			username, password, err.Error())
+	}
 
-// 	if err = client.Connect(username, password); err != nil {
-// 		t.Errorf("Fail to connect server, username: %s, password: %s, %s", username, password, err.Error())
-// 	}
+	checkResp := func(prefix string, err *graph.ExecutionResponse) {
+		if nebulaNet.IsError(err) {
+			t.Fatalf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
+		}
+	}
 
-// 	defer client.Release()
+	resp, err := session.Execute("SHOW HOSTS;")
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	checkResp("show hosts", resp)
 
-// 	result, err := client.Ping(address, port)
-// 	if err != nil {
-// 		t.Errorf("Connection lost, address: %s, port: %d, %s", address, port, err.Error())
-// 	}
-// 	if result == true {
-// 		t.Logf("Ping to server succeed, address: %s, port: %d, %s", address, port, err.Error())
-// 	}
-// 	return
-// }
+	resp, err = session.Execute("CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	checkResp("create space", resp)
+
+	resp, err = session.Execute("DROP SPACE client_test;")
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	checkResp("drop space", resp)
+}

@@ -28,12 +28,20 @@ type PoolConfig struct {
 	// The idleTime of the connection, unit: seconds
 	// If connection's idle time is longer than idleTime, it will be delete
 	IdleTime time.Duration
-	// The man connections in pool for all addresses
+	// The max connections in pool for all addresses
 	MaxConnPoolSize int
 	// The min connections in pool for all addresses
 	MinConnPoolSize int
 	// the times to retry to connect
 	MaxRetryTimes int
+}
+
+func (opt *GraphConfig) SetPoolConfDefualt() {
+	opt.TimeOut = 0 * time.Second
+	opt.IdleTime = 0 * time.Second
+	opt.MaxConnPoolSize = 100
+	opt.MinConnPoolSize = 0
+	opt.MaxRetryTimes = 3
 }
 
 var DefaultPoolConfig = PoolConfig{

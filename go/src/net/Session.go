@@ -12,24 +12,7 @@ import (
 	graph "github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 )
 
-// type GraphOptions struct {
-// 	Timeout time.Duration
-// }
-
-// func (opt *GraphOptions) SetDefualt() {
-// 	opt.Timeout = 0 * time.Second
-// }
-
-// type GraphOption func(*GraphOptions)
-
-// func WithTimeout(duration time.Duration) GraphOption {
-// 	return func(options *GraphOptions) {
-// 		options.Timeout = duration
-// 	}
-// }
-
 type Session struct {
-	// option     conf.GraphConfig
 	sessionID  int64
 	connection Connection
 	connPool   ConnectionPool
@@ -44,20 +27,6 @@ func newSession(sessionID int64, connection Connection,
 
 	return newObj
 }
-
-// func (session *Session) Open(hostaddress *data.HostAddress) error {
-// 	ip := hostaddress.GetHost(hostaddress)
-// 	port := hostaddress.GetPort(hostaddress)
-// 	portStr := strconv.Itoa(port)
-// 	newAddress := ip + ":" + portStr
-// 	_, err := Open(newAddress)
-
-// 	if err != nil {
-// 		fmt.Println("Failed to create a new connection, ", err)
-// 		return err
-// 	}
-// 	return nil
-// }
 
 func (session *Session) Authenticate(username string, password string) (int64, error) {
 	resp, err := session.connection.Authenticate(username, password)
@@ -91,33 +60,35 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 func (session *Session) Ping() (bool, error) {
 	resp, err := session.connection.Ping(session.GetSessionID())
 	if err != nil {
+		fmt.Println("Failed to ping the server, ", err)
 		return false, err
 	} else if resp != true {
+		fmt.Println("Failed to ping the server, ", err)
 		return false, err
 	}
 	return true, err
 }
 
-// func retryConnect() (session *Session, err error) {
+func (session *Session) reConnect() error {
+	newConnection, err := session.connPool.GetIdleConn(session.connection.severAddress)
+	if err != nil {
+		fmt.Println("Failed to get am odle connection, ", err)
+		return err
+	}
 
-// }
+	err = session.connection.Close()
+	if err != nil {
+		fmt.Println("Failed to close current connection, ", err)
+		return err
+	}
+	session.connection = *newConnection
+	return nil
+}
 
-// func release() {
-
-// }
-
-// • 接口定义有以下
-// • execute(string stmt): 执行ngql，返回的数据类型为 ResultSet
-// • param:
-// • stmt: 用户的ngql
-// • return: ResultSet
-// • executeJson(string stmt): 执行ngql，返回的数据类型为 Json 格式的字符串
-// • param:
-// • stmt: 用户的ngql
-// • return: Json string
-// • ping(): 用于测试和服务端的连通性
-// • return: Bool
-// • retryConnect(): 重连
-// • return: ErrorCode or raise exception
-// • release(): 做 signout，释放session id，归还connection到pool
-// • return: void
+func (session *Session) release() error {
+	err := session.connection.SignOut(session.GetSessionID())
+	if err != nil {
+		fmt.Println("Failed to release session, ", err)
+	}
+	return nil
+}

@@ -4,13 +4,15 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
+// TODO: add implement round-robin rule
+
 package nebulaNet
 
 import (
-	conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
+	data "github.com/vesoft-inc/nebula-clients/go/src/data"
 )
 
-type ObjectPool struct {
-	// loadBalancer RoundRobinLoadBalancer
-	config conf.PoolConfig
+type LoadBalancer struct {
+	addresses    *data.HostAddress
+	serverStatus map[*data.HostAddress]int
 }

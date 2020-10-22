@@ -19,10 +19,11 @@ import (
 
 type Connection struct {
 	severAddress data.HostAddress
-	graph        graph.GraphServiceClient
+	graph        *graph.GraphServiceClient
 }
 
 type ConnectionMethod interface {
+	newConnection(severAddress data.HostAddress, graph graph.GraphServiceClient)
 	getServerAddress() data.HostAddress
 	open(address data.HostAddress, timeout int)
 	authenticate(username string, password string) int64
@@ -31,10 +32,10 @@ type ConnectionMethod interface {
 	IsError(resp *graph.ExecutionResponse) bool
 }
 
-func newConnection(severAddress data.HostAddress, graph graph.GraphServiceClient) Connection {
+func NewConnection(severAddress data.HostAddress) Connection {
 	newObj := Connection{}
 	newObj.severAddress = severAddress
-	newObj.graph = graph
+	newObj.graph = nil
 
 	return newObj
 }
@@ -43,7 +44,7 @@ func (cn *Connection) GetServerAddress() data.HostAddress {
 	return cn.severAddress
 }
 
-func Open(hostAddress data.HostAddress, opts conf.GraphConfig) (conn *Connection, err error) {
+func (cn *Connection) Open(hostAddress data.HostAddress, opts conf.PoolConfig) (err error) {
 	defaultGraphOption := conf.GraphConfig{}
 	defaultGraphOption.SetDefualt()
 	options := defaultGraphOption
@@ -57,21 +58,23 @@ func Open(hostAddress data.HostAddress, opts conf.GraphConfig) (conn *Connection
 	addressOption := thrift.SocketAddr(newAdd)
 	sock, err := thrift.NewSocket(timeoutOption, addressOption)
 	if err != nil {
-		return nil, err
+		log.Printf("Failed to close transport, error: %s", err.Error())
+		return err
 	}
 
 	transport := thrift.NewBufferedTransport(sock, 128<<10)
 
 	pf := thrift.NewBinaryProtocolFactoryDefault()
-	con := &Connection{
-		graph: *graph.NewGraphServiceClientFactory(transport, pf),
-	}
+	cn.graph = graph.NewGraphServiceClientFactory(transport, pf)
 
-	if err := con.graph.Transport.Open(); err != nil {
-		return nil, err
+	if err := cn.graph.Transport.Open(); err != nil {
+		log.Printf("Failed to open transport, error: %s", err.Error())
+		return err
 	}
-
-	return con, nil
+	if cn.graph.Transport.IsOpen() == false {
+		log.Printf("Transport is off: \n")
+	}
+	return nil
 }
 
 // Open transport and authenticate
@@ -105,17 +108,21 @@ func (cn *Connection) Execute(sessionID int64, stmt string) (*graph.ExecutionRes
 // }
 
 // Signout
-func (cn *Connection) SignOut(sessionID int64) {
+func (cn *Connection) SignOut(sessionID int64) error {
 	if err := cn.graph.Signout(sessionID); err != nil {
 		log.Printf("Fail to signout, error: %s", err.Error())
+		return err
 	}
+	return nil
 }
 
 // Close transport
-func (cn *Connection) Close() {
+func (cn *Connection) Close() error {
 	if err := cn.graph.Close(); err != nil {
 		log.Printf("Fail to close transport, error: %s", err.Error())
+		return err
 	}
+	return nil
 }
 
 func IsError(resp *graph.ExecutionResponse) bool {
