@@ -41,16 +41,16 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 			fmt.Printf("Failed to reconnect, %s \n", _err.Error())
 			return nil, _err
 		}
-		resp, err = session.connection.Execute(session.sessionID, stmt)
-		if err != nil {
-			fmt.Printf("Failed to execute, %s \n", err.Error())
-			return resp, err
-		}
+		// resp, err = session.connection.Execute(session.sessionID, stmt)
+		// if err != nil {
+		// 	fmt.Printf("Failed to execute, %s \n", err.Error())
+		// 	return resp, err
+		// }
 		fmt.Printf("Successfully reconnect to host: %s, port: %d \n",
 			session.connection.severAddress.GetHost(), session.connection.severAddress.GetPort())
 		return resp, nil
 	}
-	return resp, err
+	return resp, nil
 }
 
 // Check connection to host address
@@ -67,10 +67,10 @@ func (session *Session) Ping() (bool, error) {
 }
 
 func (session *Session) reConnect() error {
-	newConnection, err := session.connPool.GetIdleConn()
+	newConnection, err := session.connPool.GetIdleConn(session)
 	if err != nil {
 		for retry := session.connPool.conf.MaxRetryTimes; retry != 0 && err != nil; retry-- {
-			newConnection, err = session.connPool.GetIdleConn()
+			newConnection, err = session.connPool.GetIdleConn(session)
 			if err == nil {
 				goto next
 			}

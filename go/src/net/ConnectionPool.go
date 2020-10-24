@@ -112,16 +112,25 @@ func (pool *ConnectionPool) GetSession(username, password string) (*Session, err
 	return &newSession, nil
 }
 
-func (pool *ConnectionPool) GetIdleConn() (*Connection, error) {
+func (pool *ConnectionPool) GetIdleConn(curSession *Session) (*Connection, error) {
 	// Take an idle connectin is avaliable
 	if pool.idleConnectionQueue.Len() > 0 {
 		// TODO add timeout
 
-		newConn := pool.idleConnectionQueue.Front().Value.(*Connection)
+		// Return an idle session that is different from the current one
+		for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
+			if ele.Value.(*Connection).GetServerAddress() != curSession.connection.severAddress {
+				return ele.Value.(*Connection), nil
+			}
+		}
+		// newConn := pool.idleConnectionQueue.Front().Next().Value.(*Connection)
+		noAvaliableConnectionErr := errors.New("Failed to reconnect: no avaliable connection to a different host can")
+
 		// Pop connection from queue
 		// pool.idleConnectionQueue.Remove(pool.idleConnectionQueue.Front())
 		// pool.activeConnectionQueue.PushBack(newConn)
-		return newConn, nil
+
+		return nil, noAvaliableConnectionErr
 	}
 
 	// Create a new connection if there is no idle connection and total connection < pool max size
@@ -131,6 +140,15 @@ func (pool *ConnectionPool) GetIdleConn() (*Connection, error) {
 	if totalConn < pool.conf.MaxConnPoolSize {
 		newConn := NewConnection(*severAddress)
 		newConn.inuse = false
+
+		// Open connection to host
+		err := newConn.Open(newConn.severAddress, *pool.conf)
+		if err != nil {
+			log.Printf("Failed to open connection, error: %s \n", err.Error())
+			return nil, err
+		}
+
+		// Add new connection into idle queue
 		pool.idleConnectionQueue.PushBack(newConn)
 		return newConn, nil
 	}

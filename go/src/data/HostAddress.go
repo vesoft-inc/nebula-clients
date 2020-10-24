@@ -9,6 +9,7 @@ package data
 type HostAddress struct {
 	Host string
 	Port int
+	// valid bool
 }
 
 func NewHostAddress(Host string, Port int) HostAddress {

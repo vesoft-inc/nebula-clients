@@ -229,7 +229,7 @@ func TestPool_MultiHosts(t *testing.T) {
 func TestReconnect(t *testing.T) {
 	hostList := poolAddress
 	pool := nebulaNet.ConnectionPool{}
-	timeoutConfig := conf.NewPoolConf(0, 0, 0, 5, 0)
+	timeoutConfig := conf.NewPoolConf(0, 0, 0, 6, 0)
 	// Initialize connectin pool
 	err := pool.InitPool(hostList, &timeoutConfig)
 	if err != nil {
@@ -257,7 +257,7 @@ func TestReconnect(t *testing.T) {
 		timer1 := time.NewTimer(1 * time.Second)
 		<-timer1.C
 		sessionList[0].Execute("SHOW HOSTS;")
-		fmt.Println("sending query...")
+		fmt.Println("Sending query...")
 	}
 	resp, err := sessionList[0].Execute("SHOW HOSTS;")
 	if err != nil {
@@ -266,16 +266,9 @@ func TestReconnect(t *testing.T) {
 	}
 	checkResp("show hosts", resp)
 
-	// resp, err = session.Execute("CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
-	// if err != nil {
-	// 	t.Fatalf(err.Error())
-	// 	return
-	// }
-	// checkResp("create space", resp)
 	err = pool.Close()
 	if err != nil {
 		t.Fatalf("Fail to close all connection in pool, %s", err.Error())
 		return
 	}
-
 }
