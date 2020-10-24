@@ -20,45 +20,31 @@ import (
 type Connection struct {
 	severAddress data.HostAddress
 	graph        *graph.GraphServiceClient
+	inuse        bool
 }
 
-type ConnectionMethod interface {
-	newConnection(severAddress data.HostAddress, graph graph.GraphServiceClient)
-	getServerAddress() data.HostAddress
-	open(address data.HostAddress, timeout int)
-	authenticate(username string, password string) int64
-	close()
-	ping()
-	IsError(resp *graph.ExecutionResponse) bool
-}
-
-func NewConnection(severAddress data.HostAddress) Connection {
+func NewConnection(severAddress data.HostAddress) *Connection {
 	newObj := Connection{}
 	newObj.severAddress = severAddress
 	newObj.graph = nil
+	newObj.inuse = true
 
-	return newObj
+	return &newObj
 }
 
 func (cn *Connection) GetServerAddress() data.HostAddress {
 	return cn.severAddress
 }
 
-func (cn *Connection) Open(hostAddress data.HostAddress, opts conf.PoolConfig) (err error) {
-	defaultGraphOption := conf.GraphConfig{}
-	defaultGraphOption.SetDefualt()
-	options := defaultGraphOption
-	// for _, opt := range opts {
-	// 	opt(&options)
-	// }
+func (cn *Connection) Open(hostAddress data.HostAddress, conf conf.PoolConfig) (err error) {
 	ip := hostAddress.GetHost()
 	port := hostAddress.GetPort()
 	newAdd := ip + ":" + strconv.Itoa(port)
-	timeoutOption := thrift.SocketTimeout(options.TimeOut)
+	timeoutOption := thrift.SocketTimeout(conf.TimeOut)
 	addressOption := thrift.SocketAddr(newAdd)
 	sock, err := thrift.NewSocket(timeoutOption, addressOption)
 	if err != nil {
-		log.Printf("Failed to close transport, error: %s", err.Error())
+		log.Printf("Failed to create a net.Conn-backed Transport,: %s", err.Error())
 		return err
 	}
 
@@ -107,12 +93,14 @@ func (cn *Connection) Execute(sessionID int64, stmt string) (*graph.ExecutionRes
 // 	return cn.graph.ExecuteJson(sessionID, []byte(stmt))
 // }
 
-// Signout
+// Sign out and release seesin ID
 func (cn *Connection) SignOut(sessionID int64) error {
+	// Release session ID to graphd
 	if err := cn.graph.Signout(sessionID); err != nil {
 		log.Printf("Fail to signout, error: %s", err.Error())
 		return err
 	}
+	cn.inuse = false
 	return nil
 }
 

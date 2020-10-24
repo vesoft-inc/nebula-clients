@@ -7,26 +7,26 @@
 package data
 
 type HostAddress struct {
-	host string
-	port int
+	Host string
+	Port int
 }
 
-func NewHostAddress(host string, port int) HostAddress {
+func NewHostAddress(Host string, Port int) HostAddress {
 	NewHostAddress := HostAddress{}
-	NewHostAddress.host = host
-	NewHostAddress.port = port
+	NewHostAddress.Host = Host
+	NewHostAddress.Port = Port
 	return NewHostAddress
 }
 
-func (hostAddress *HostAddress) SetHostAddress(host string, port int) {
-	hostAddress.host = host
-	hostAddress.port = port
+func (hostAddress *HostAddress) SetHostAddress(Host string, Port int) {
+	hostAddress.Host = Host
+	hostAddress.Port = Port
 }
 
 func (hostAddress *HostAddress) GetHost() string {
-	return hostAddress.host
+	return hostAddress.Host
 }
 
 func (hostAddress *HostAddress) GetPort() int {
-	return hostAddress.port
+	return hostAddress.Port
 }

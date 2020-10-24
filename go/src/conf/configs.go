@@ -10,17 +10,17 @@ import (
 	"time"
 )
 
-type GraphConfig struct {
-	TimeOut         time.Duration
-	IdleTime        time.Duration
-	MaxConnPoolSize int
-	MinConnPoolSize int
-	MaxRetryTimes   int
-}
+// type GraphConfig struct {
+// 	TimeOut         time.Duration
+// 	IdleTime        time.Duration
+// 	MaxConnPoolSize int
+// 	MinConnPoolSize int
+// 	MaxRetryTimes   int
+// }
 
-func (opt *GraphConfig) SetDefualt() {
-	opt.TimeOut = 0 * time.Second
-}
+// func (opt *GraphConfig) SetDefualt() {
+// 	opt.TimeOut = 0 * time.Second
+// }
 
 type PoolConfig struct {
 	// Socket timeout and Socket connection timeout, unit: seconds
@@ -36,58 +36,71 @@ type PoolConfig struct {
 	MaxRetryTimes int
 }
 
-func (opt *GraphConfig) SetPoolConfDefualt() {
-	opt.TimeOut = 0 * time.Second
-	opt.IdleTime = 0 * time.Second
-	opt.MaxConnPoolSize = 100
-	opt.MinConnPoolSize = 0
-	opt.MaxRetryTimes = 3
+// Use 0 as parameter to get the default configs
+func NewPoolConf(TimeOut time.Duration, IdleTime time.Duration, MaxConnPoolSize int,
+	MinConnPoolSize int, MaxRetryTimes int) PoolConfig {
+
+	var newPoolConfig = PoolConfig{
+		TimeOut:         1000 * time.Millisecond,
+		IdleTime:        5 * 60 * 1000 * time.Millisecond,
+		MaxConnPoolSize: 100,
+		MinConnPoolSize: 0,
+		MaxRetryTimes:   3,
+	}
+	if TimeOut != 0 {
+		newPoolConfig.TimeOut = TimeOut
+	}
+	if IdleTime != 0 {
+		newPoolConfig.IdleTime = IdleTime
+	}
+	if MaxConnPoolSize != 0 {
+		newPoolConfig.MaxConnPoolSize = MaxConnPoolSize
+	}
+	if MinConnPoolSize != 0 {
+		newPoolConfig.MinConnPoolSize = MinConnPoolSize
+	}
+	if MaxRetryTimes != 0 {
+		newPoolConfig.MaxRetryTimes = MaxRetryTimes
+	}
+	return newPoolConfig
 }
 
-var DefaultPoolConfig = PoolConfig{
-	TimeOut:         1000 * time.Second,
-	IdleTime:        0 * time.Second,
-	MaxConnPoolSize: 100,
-	MinConnPoolSize: 0,
-	MaxRetryTimes:   3,
+func (config *PoolConfig) GetMinConnPoolSize() int {
+	return config.MinConnPoolSize
 }
 
-func (pool *PoolConfig) GetMinConnPoolSize() int {
-	return pool.MinConnPoolSize
+func (config *PoolConfig) SetMinConnPoolSize(size int) {
+	config.MinConnPoolSize = size
 }
 
-func (pool *PoolConfig) SetMinConnPoolSize(size int) {
-	pool.MinConnPoolSize = size
+func (config *PoolConfig) GetMaxConnPoolSize() int {
+	return config.MaxConnPoolSize
 }
 
-func (pool *PoolConfig) GetMaxConnPoolSize() int {
-	return pool.MaxConnPoolSize
+func (config *PoolConfig) SetMaxConnPoolSize(size int) {
+	config.MaxConnPoolSize = size
 }
 
-func (pool *PoolConfig) SetMaxConnPoolSize(size int) {
-	pool.MaxConnPoolSize = size
+func (config *PoolConfig) GetTimeOut() time.Duration {
+	return config.TimeOut
 }
 
-func (pool *PoolConfig) GetTimeOut() time.Duration {
-	return pool.TimeOut
+func (config *PoolConfig) SetTimeOut(duration time.Duration) {
+	config.TimeOut = duration
 }
 
-func (pool *PoolConfig) SetTimeOut(duration time.Duration) {
-	pool.TimeOut = duration
+func (config *PoolConfig) GetIdleTime() time.Duration {
+	return config.IdleTime
 }
 
-func (pool *PoolConfig) GetIdleTime() time.Duration {
-	return pool.IdleTime
+func (config *PoolConfig) SetIdleTime(duration time.Duration) {
+	config.IdleTime = duration
 }
 
-func (pool *PoolConfig) SetIdleTime(duration time.Duration) {
-	pool.IdleTime = duration
+func (config *PoolConfig) GetMaxRetryTimes() int {
+	return config.MaxRetryTimes
 }
 
-func (pool *PoolConfig) GetMaxRetryTimes() int {
-	return pool.MaxRetryTimes
-}
-
-func (pool *PoolConfig) SetMaxRetryTimes(times int) {
-	pool.MaxRetryTimes = times
+func (config *PoolConfig) SetMaxRetryTimes(times int) {
+	config.MaxRetryTimes = times
 }

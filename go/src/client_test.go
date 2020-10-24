@@ -24,13 +24,23 @@ const (
 	password = "password"
 )
 
-var DefaultPoolConfig = conf.PoolConfig{
-	TimeOut:         1000 * time.Second,
-	IdleTime:        0 * time.Second,
-	MaxConnPoolSize: 100,
-	MinConnPoolSize: 3,
-	MaxRetryTimes:   3,
+var poolAddress = []*data.HostAddress{
+	&data.HostAddress{
+		Host: "127.0.0.1",
+		Port: 3699,
+	},
+	&data.HostAddress{
+		Host: "127.0.0.1",
+		Port: 3701,
+	},
+	&data.HostAddress{
+		Host: "127.0.0.1",
+		Port: 3710,
+	},
 }
+
+// Create default configs
+var testPoolConfig = conf.NewPoolConf(0, 0, 0, 0, 0)
 
 // Before run `go test -v`, you should start a nebula server listening on 3699 port.
 // Using docker-compose is the easiest way and you can reference this file:
@@ -49,10 +59,9 @@ func TestConnection(t *testing.T) {
 	}
 
 	hostAdress := data.NewHostAddress(address, port)
-	fmt.Sprintf("%s:%d", address, port)
 
 	conn := nebulaNet.NewConnection(hostAdress)
-	err := conn.Open(hostAdress, DefaultPoolConfig)
+	err := conn.Open(hostAdress, testPoolConfig)
 	if err != nil {
 		t.Fatalf("Fail to open connection, address: %s, port: %d, %s", address, port, err.Error())
 	}
@@ -64,7 +73,7 @@ func TestConnection(t *testing.T) {
 
 	sessionID := authresp.GetSessionID()
 
-	defer logoutAndClose(&conn, sessionID)
+	defer logoutAndClose(conn, sessionID)
 
 	checkResp := func(prefix string, authresp *graph.ExecutionResponse) {
 		if nebulaNet.IsError(authresp) {
@@ -101,14 +110,14 @@ func TestConnection(t *testing.T) {
 
 }
 
-func TestPool(t *testing.T) {
+func TestPool_SingleHost(t *testing.T) {
 	hostAdress := data.NewHostAddress(address, port)
 	hostList := []*data.HostAddress{}
 	hostList = append(hostList, &hostAdress)
-	fmt.Sprintf("%s:%d", address, port)
 	pool := nebulaNet.ConnectionPool{}
 
-	err := pool.InitPool(hostList, &conf.DefaultPoolConfig)
+	// Initialize connectin pool
+	err := pool.InitPool(hostList, &testPoolConfig)
 	if err != nil {
 		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
 	}
@@ -121,7 +130,7 @@ func TestPool(t *testing.T) {
 
 	checkResp := func(prefix string, err *graph.ExecutionResponse) {
 		if nebulaNet.IsError(err) {
-			t.Fatalf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
+			t.Errorf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
 		}
 	}
 
@@ -145,4 +154,128 @@ func TestPool(t *testing.T) {
 		return
 	}
 	checkResp("drop space", resp)
+
+	err = session.Release()
+	if err != nil {
+		t.Fatalf("Fail to release session, %s", err.Error())
+		return
+	}
+
+	err = pool.Close()
+	if err != nil {
+		t.Fatalf("Fail to close all connection in pool, %s", err.Error())
+		return
+	}
+}
+
+func TestPool_MultiHosts(t *testing.T) {
+	hostList := poolAddress
+	pool := nebulaNet.ConnectionPool{}
+
+	// Try to get session while no idle connection avaliable
+	pool.Close()
+
+	_, err := pool.GetSession(username, password)
+	if err != nil {
+		t.Logf("Expected Failue: Fail to get session: no avaliable connection")
+	}
+
+	// Initialize connectin pool
+	err = pool.InitPool(hostList, &testPoolConfig)
+	if err != nil {
+		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s \n", address, port, err.Error())
+	}
+
+	var sessionList []*nebulaNet.Session
+
+	// Take all idle connection and try to create a new session
+	for i := 0; i < 3; i++ {
+		session, err := pool.GetSession(username, password)
+		if err != nil {
+			t.Errorf("Fail to create a new session from connection pool, %s", err.Error())
+		}
+		sessionList = append(sessionList, session)
+	}
+	_, err = pool.GetSession(username, password)
+	if err != nil {
+		t.Logf("Expected Failue: No avaliable connection, %s", err.Error())
+	}
+
+	// Release 1 connectin back to pool
+	sessionToRelease := sessionList[0]
+	err = sessionToRelease.Release()
+	sessionList = sessionList[1:]
+
+	// Try again to get connection
+	newSession, err := pool.GetSession(username, password)
+	if err != nil {
+		t.Logf("Expected Failue: No avaliable connection, %s", err.Error())
+	}
+
+	checkResp := func(prefix string, err *graph.ExecutionResponse) {
+		if nebulaNet.IsError(err) {
+			t.Fatalf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
+		}
+	}
+
+	resp, err := newSession.Execute("SHOW HOSTS;")
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	checkResp("show hosts", resp)
+}
+
+func TestReconnect(t *testing.T) {
+	hostList := poolAddress
+	pool := nebulaNet.ConnectionPool{}
+	timeoutConfig := conf.NewPoolConf(0, 0, 0, 5, 0)
+	// Initialize connectin pool
+	err := pool.InitPool(hostList, &timeoutConfig)
+	if err != nil {
+		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+	}
+
+	var sessionList []*nebulaNet.Session
+
+	// Create session
+	for i := 0; i < 3; i++ {
+		session, err := pool.GetSession(username, password)
+		if err != nil {
+			t.Errorf("Fail to create a new session from connection pool, %s", err.Error())
+		}
+		sessionList = append(sessionList, session)
+	}
+
+	checkResp := func(prefix string, err *graph.ExecutionResponse) {
+		if nebulaNet.IsError(err) {
+			t.Errorf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
+		}
+	}
+
+	for {
+		timer1 := time.NewTimer(1 * time.Second)
+		<-timer1.C
+		sessionList[0].Execute("SHOW HOSTS;")
+		fmt.Println("sending query...")
+	}
+	resp, err := sessionList[0].Execute("SHOW HOSTS;")
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	checkResp("show hosts", resp)
+
+	// resp, err = session.Execute("CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
+	// if err != nil {
+	// 	t.Fatalf(err.Error())
+	// 	return
+	// }
+	// checkResp("create space", resp)
+	err = pool.Close()
+	if err != nil {
+		t.Fatalf("Fail to close all connection in pool, %s", err.Error())
+		return
+	}
+
 }

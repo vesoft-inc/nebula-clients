@@ -7,6 +7,7 @@
 package nebulaNet
 
 import (
+	"container/list"
 	"errors"
 	"fmt"
 	"log"
@@ -16,7 +17,7 @@ import (
 	data "github.com/vesoft-inc/nebula-clients/go/src/data"
 )
 
-var defaultPoolConfigs = conf.DefaultPoolConfig
+var defaultPoolConfigs = conf.NewPoolConf(0, 0, 0, 0, 0)
 
 type RespData struct {
 	Resp *graph.ExecutionResponse
@@ -24,18 +25,10 @@ type RespData struct {
 }
 
 type ConnectionPool struct {
-	session               []*Session
-	idleConnectionQueue   []*Connection
-	activeConnectionQueue []*Connection
+	idleConnectionQueue   list.List
+	activeConnectionQueue list.List
 	addresses             []*data.HostAddress
 	conf                  *conf.PoolConfig
-}
-
-type ConnectionPoolMethod interface {
-	initPool(addresses []string, conf conf.PoolConfig)
-	getSession(username, password string)
-	Execute(stmt string) <-chan RespData
-	Close()
 }
 
 func (pool *ConnectionPool) InitPool(addresses []*data.HostAddress, conf *conf.PoolConfig) error {
@@ -63,41 +56,42 @@ func (pool *ConnectionPool) InitPool(addresses []*data.HostAddress, conf *conf.P
 		// Open connection to host
 		err := newConn.Open(newConn.severAddress, *pool.conf)
 		if err != nil {
-			log.Printf("Failed to open connection, error: %s", err.Error())
+			log.Printf("Failed to open connection, error: %s \n", err.Error())
 			return err
 		}
 		// Add newly created connection to idle queue
-		pool.idleConnectionQueue = append(pool.idleConnectionQueue, &newConn)
+		pool.idleConnectionQueue.PushBack(newConn)
 	}
 	// Create connections to fullfill MinConnPoolSize
-	if len(pool.idleConnectionQueue) < pool.conf.MinConnPoolSize {
-		connNum := pool.conf.MinConnPoolSize - len(pool.idleConnectionQueue)
+	if pool.idleConnectionQueue.Len() < pool.conf.MinConnPoolSize {
+		connNum := pool.conf.MinConnPoolSize - pool.idleConnectionQueue.Len()
 		for i := 0; i < connNum; i++ {
 			newConn := NewConnection(*pool.addresses[i%len(addresses)])
-
+			// not being used
+			newConn.inuse = false
 			// Open connection to host
 			err := newConn.Open(newConn.severAddress, *pool.conf)
 			if err != nil {
-				log.Printf("Failed to open connection, error: %s", err.Error())
+				log.Printf("Failed to open connection, error: %s \n", err.Error())
 				return err
 			}
 			// Add newly created connection to idle queue
-			pool.idleConnectionQueue = append(pool.idleConnectionQueue, &newConn)
+			pool.idleConnectionQueue.PushBack(newConn)
 		}
 	}
 	return nil
 }
 
 func (pool *ConnectionPool) GetSession(username, password string) (*Session, error) {
-	if len(pool.idleConnectionQueue) == 0 {
+	if pool.idleConnectionQueue.Len() == 0 {
 		noAvaliableConnectionErr := errors.New("Failed to get sessoin: no avaliable connection")
 		if noAvaliableConnectionErr != nil {
-			fmt.Print(noAvaliableConnectionErr)
+			fmt.Println(noAvaliableConnectionErr)
 		}
 		return nil, noAvaliableConnectionErr
 	}
 	// Authenticate
-	chosenConn := *pool.idleConnectionQueue[0]
+	chosenConn := pool.idleConnectionQueue.Front().Value.(*Connection)
 	resp, err := chosenConn.Authenticate(username, password)
 	if err != nil {
 		log.Printf("Failed to authenticate with the given credential, error: %s", err.Error())
@@ -105,28 +99,43 @@ func (pool *ConnectionPool) GetSession(username, password string) (*Session, err
 	}
 	sessionID := resp.GetSessionID()
 	// Create new session
-	newSession := newSession(sessionID, chosenConn, *pool)
+	newSession := newSession(sessionID, chosenConn, pool)
+
 	// Add connction to active queue and pop it from idle queue
-	pool.activeConnectionQueue = append(pool.activeConnectionQueue, &chosenConn)
-	pool.idleConnectionQueue = pool.idleConnectionQueue[1:]
+	newSession.connPool.activeConnectionQueue.PushBack(chosenConn)
+	for ele := newSession.connPool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
+		if ele.Value == chosenConn {
+			newSession.connPool.idleConnectionQueue.Remove(ele)
+		}
+	}
+
 	return &newSession, nil
 }
 
-func (pool *ConnectionPool) GetIdleConn(severAddress data.HostAddress) (*Connection, error) {
+func (pool *ConnectionPool) GetIdleConn() (*Connection, error) {
 	// Take an idle connectin is avaliable
-	if len(pool.idleConnectionQueue) > 0 {
-		newConn := pool.idleConnectionQueue[0]
-		pool.idleConnectionQueue = pool.idleConnectionQueue[1:]
-		pool.activeConnectionQueue = append(pool.activeConnectionQueue, newConn)
+	if pool.idleConnectionQueue.Len() > 0 {
+		// TODO add timeout
+
+		newConn := pool.idleConnectionQueue.Front().Value.(*Connection)
+		// Pop connection from queue
+		// pool.idleConnectionQueue.Remove(pool.idleConnectionQueue.Front())
+		// pool.activeConnectionQueue.PushBack(newConn)
 		return newConn, nil
 	}
+
 	// Create a new connection if there is no idle connection and total connection < pool max size
-	totalConn := len(pool.idleConnectionQueue) + len(pool.activeConnectionQueue)
+	totalConn := pool.idleConnectionQueue.Len() + pool.activeConnectionQueue.Len()
+	// TODO: use load balencer to decide the host to connect
+	severAddress := pool.addresses[0]
 	if totalConn < pool.conf.MaxConnPoolSize {
-		newConn := NewConnection(severAddress)
-		pool.activeConnectionQueue = append(pool.activeConnectionQueue, &newConn)
-		return &newConn, nil
+		newConn := NewConnection(*severAddress)
+		newConn.inuse = false
+		pool.idleConnectionQueue.PushBack(newConn)
+		return newConn, nil
 	}
+	// If no idle avaliable, wait for timeout and reconnect
+
 	// If no idle avaliable and the number of total connection reaches the max pool size, return error/wait for timeout
 	noAvaliableConnectionErr := errors.New("Failed to reconnect: no avaliable connection in the connection pool")
 	if noAvaliableConnectionErr != nil {
@@ -136,10 +145,22 @@ func (pool *ConnectionPool) GetIdleConn(severAddress data.HostAddress) (*Connect
 }
 
 // Close all connection
-func (pool *ConnectionPool) Close() {
-	for _, conn := range pool.activeConnectionQueue {
-		conn.Close()
+func (pool *ConnectionPool) Close() error {
+	for conn := pool.idleConnectionQueue.Front(); conn != nil; conn = conn.Next() {
+		err := conn.Value.(*Connection).Close()
+		if err != nil {
+			log.Printf("Failed to close connection, error: %s", err.Error())
+			return err
+		}
 	}
+	for conn := pool.activeConnectionQueue.Front(); conn != nil; conn = conn.Next() {
+		err := conn.Value.(*Connection).Close()
+		if err != nil {
+			log.Printf("Failed to close connection, error: %s", err.Error())
+			return err
+		}
+	}
+	return nil
 }
 
 func (rsp RespData) String() string {
