@@ -27,16 +27,16 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
+public class ColumnDef implements TBase, java.io.Serializable, Cloneable, Comparable<ColumnDef> {
   private static final TStruct STRUCT_DESC = new TStruct("ColumnDef");
   private static final TField NAME_FIELD_DESC = new TField("name", TType.STRING, (short)1);
   private static final TField TYPE_FIELD_DESC = new TField("type", TType.STRUCT, (short)2);
-  private static final TField DEFAULT_VALUE_FIELD_DESC = new TField("default_value", TType.STRUCT, (short)3);
+  private static final TField DEFAULT_VALUE_FIELD_DESC = new TField("default_value", TType.STRING, (short)3);
   private static final TField NULLABLE_FIELD_DESC = new TField("nullable", TType.BOOL, (short)4);
 
   public byte[] name;
   public ColumnTypeDef type;
-  public com.vesoft.nebula.Value default_value;
+  public byte[] default_value;
   public boolean nullable;
   public static final int NAME = 1;
   public static final int TYPE = 2;
@@ -56,7 +56,7 @@ public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
     tmpMetaDataMap.put(TYPE, new FieldMetaData("type", TFieldRequirementType.REQUIRED, 
         new StructMetaData(TType.STRUCT, ColumnTypeDef.class)));
     tmpMetaDataMap.put(DEFAULT_VALUE, new FieldMetaData("default_value", TFieldRequirementType.OPTIONAL, 
-        new StructMetaData(TType.STRUCT, com.vesoft.nebula.Value.class)));
+        new FieldValueMetaData(TType.STRING)));
     tmpMetaDataMap.put(NULLABLE, new FieldMetaData("nullable", TFieldRequirementType.OPTIONAL, 
         new FieldValueMetaData(TType.BOOL)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
@@ -83,7 +83,7 @@ public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
   public ColumnDef(
     byte[] name,
     ColumnTypeDef type,
-    com.vesoft.nebula.Value default_value,
+    byte[] default_value,
     boolean nullable)
   {
     this();
@@ -169,11 +169,11 @@ public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
     }
   }
 
-  public com.vesoft.nebula.Value  getDefault_value() {
+  public byte[]  getDefault_value() {
     return this.default_value;
   }
 
-  public ColumnDef setDefault_value(com.vesoft.nebula.Value default_value) {
+  public ColumnDef setDefault_value(byte[] default_value) {
     this.default_value = default_value;
     return this;
   }
@@ -238,7 +238,7 @@ public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
       if (value == null) {
         unsetDefault_value();
       } else {
-        setDefault_value((com.vesoft.nebula.Value)value);
+        setDefault_value((byte[])value);
       }
       break;
 
@@ -328,7 +328,7 @@ public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
     if (this_present_default_value || that_present_default_value) {
       if (!(this_present_default_value && that_present_default_value))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.default_value, that.default_value))
+      if (!TBaseHelper.equalsSlow(this.default_value, that.default_value))
         return false;
     }
 
@@ -371,6 +371,53 @@ public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
     return builder.toHashCode();
   }
 
+  @Override
+  public int compareTo(ColumnDef other) {
+    if (other == null) {
+      // See java.lang.Comparable docs
+      throw new NullPointerException();
+    }
+
+    if (other == this) {
+      return 0;
+    }
+    int lastComparison = 0;
+
+    lastComparison = Boolean.valueOf(isSetName()).compareTo(other.isSetName());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(name, other.name);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetType()).compareTo(other.isSetType());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(type, other.type);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetDefault_value()).compareTo(other.isSetDefault_value());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(default_value, other.default_value);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetNullable()).compareTo(other.isSetNullable());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(nullable, other.nullable);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    return 0;
+  }
+
   public void read(TProtocol iprot) throws TException {
     TField field;
     iprot.readStructBegin(metaDataMap);
@@ -398,9 +445,8 @@ public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
           }
           break;
         case DEFAULT_VALUE:
-          if (field.type == TType.STRUCT) {
-            this.default_value = new com.vesoft.nebula.Value();
-            this.default_value.read(iprot);
+          if (field.type == TType.STRING) {
+            this.default_value = iprot.readBinary();
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -443,7 +489,7 @@ public class ColumnDef implements TBase, java.io.Serializable, Cloneable {
     if (this.default_value != null) {
       if (isSetDefault_value()) {
         oprot.writeFieldBegin(DEFAULT_VALUE_FIELD_DESC);
-        this.default_value.write(oprot);
+        oprot.writeBinary(this.default_value);
         oprot.writeFieldEnd();
       }
     }
@@ -513,7 +559,12 @@ String space = prettyPrint ? " " : "";
       if (this. getDefault_value() == null) {
         sb.append("null");
       } else {
-        sb.append(TBaseHelper.toString(this. getDefault_value(), indent + 1, prettyPrint));
+          int __default_value_size = Math.min(this. getDefault_value().length, 128);
+          for (int i = 0; i < __default_value_size; i++) {
+            if (i != 0) sb.append(" ");
+            sb.append(Integer.toHexString(this. getDefault_value()[i]).length() > 1 ? Integer.toHexString(this. getDefault_value()[i]).substring(Integer.toHexString(this. getDefault_value()[i]).length() - 2).toUpperCase() : "0" + Integer.toHexString(this. getDefault_value()[i]).toUpperCase());
+          }
+          if (this. getDefault_value().length > 128) sb.append(" ...");
       }
       first = false;
     }

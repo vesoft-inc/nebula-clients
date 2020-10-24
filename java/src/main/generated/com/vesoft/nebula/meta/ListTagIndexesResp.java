@@ -27,7 +27,7 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class ListTagIndexesResp implements TBase, java.io.Serializable, Cloneable {
+public class ListTagIndexesResp implements TBase, java.io.Serializable, Cloneable, Comparable<ListTagIndexesResp> {
   private static final TStruct STRUCT_DESC = new TStruct("ListTagIndexesResp");
   private static final TField CODE_FIELD_DESC = new TField("code", TType.I32, (short)1);
   private static final TField LEADER_FIELD_DESC = new TField("leader", TType.STRUCT, (short)2);
@@ -311,6 +311,45 @@ public class ListTagIndexesResp implements TBase, java.io.Serializable, Cloneabl
       builder.append(items);
 
     return builder.toHashCode();
+  }
+
+  @Override
+  public int compareTo(ListTagIndexesResp other) {
+    if (other == null) {
+      // See java.lang.Comparable docs
+      throw new NullPointerException();
+    }
+
+    if (other == this) {
+      return 0;
+    }
+    int lastComparison = 0;
+
+    lastComparison = Boolean.valueOf(isSetCode()).compareTo(other.isSetCode());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(code, other.code);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetLeader()).compareTo(other.isSetLeader());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(leader, other.leader);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetItems()).compareTo(other.isSetItems());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(items, other.items);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    return 0;
   }
 
   public void read(TProtocol iprot) throws TException {

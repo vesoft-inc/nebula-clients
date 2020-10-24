@@ -27,15 +27,15 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<Zone> {
-  private static final TStruct STRUCT_DESC = new TStruct("Zone");
-  private static final TField ZONE_NAME_FIELD_DESC = new TField("zone_name", TType.STRING, (short)1);
-  private static final TField NODES_FIELD_DESC = new TField("nodes", TType.LIST, (short)2);
+public class AddHostIntoZoneReq implements TBase, java.io.Serializable, Cloneable, Comparable<AddHostIntoZoneReq> {
+  private static final TStruct STRUCT_DESC = new TStruct("AddHostIntoZoneReq");
+  private static final TField NODE_FIELD_DESC = new TField("node", TType.STRUCT, (short)1);
+  private static final TField ZONE_NAME_FIELD_DESC = new TField("zone_name", TType.STRING, (short)2);
 
+  public com.vesoft.nebula.HostAddr node;
   public byte[] zone_name;
-  public List<com.vesoft.nebula.HostAddr> nodes;
-  public static final int ZONE_NAME = 1;
-  public static final int NODES = 2;
+  public static final int NODE = 1;
+  public static final int ZONE_NAME = 2;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -43,56 +43,79 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
+    tmpMetaDataMap.put(NODE, new FieldMetaData("node", TFieldRequirementType.DEFAULT, 
+        new StructMetaData(TType.STRUCT, com.vesoft.nebula.HostAddr.class)));
     tmpMetaDataMap.put(ZONE_NAME, new FieldMetaData("zone_name", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.STRING)));
-    tmpMetaDataMap.put(NODES, new FieldMetaData("nodes", TFieldRequirementType.DEFAULT, 
-        new ListMetaData(TType.LIST, 
-            new StructMetaData(TType.STRUCT, com.vesoft.nebula.HostAddr.class))));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(Zone.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(AddHostIntoZoneReq.class, metaDataMap);
   }
 
-  public Zone() {
+  public AddHostIntoZoneReq() {
   }
 
-  public Zone(
-    byte[] zone_name,
-    List<com.vesoft.nebula.HostAddr> nodes)
+  public AddHostIntoZoneReq(
+    com.vesoft.nebula.HostAddr node,
+    byte[] zone_name)
   {
     this();
+    this.node = node;
     this.zone_name = zone_name;
-    this.nodes = nodes;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public Zone(Zone other) {
+  public AddHostIntoZoneReq(AddHostIntoZoneReq other) {
+    if (other.isSetNode()) {
+      this.node = TBaseHelper.deepCopy(other.node);
+    }
     if (other.isSetZone_name()) {
       this.zone_name = TBaseHelper.deepCopy(other.zone_name);
     }
-    if (other.isSetNodes()) {
-      this.nodes = TBaseHelper.deepCopy(other.nodes);
-    }
   }
 
-  public Zone deepCopy() {
-    return new Zone(this);
+  public AddHostIntoZoneReq deepCopy() {
+    return new AddHostIntoZoneReq(this);
   }
 
   @Deprecated
-  public Zone clone() {
-    return new Zone(this);
+  public AddHostIntoZoneReq clone() {
+    return new AddHostIntoZoneReq(this);
+  }
+
+  public com.vesoft.nebula.HostAddr  getNode() {
+    return this.node;
+  }
+
+  public AddHostIntoZoneReq setNode(com.vesoft.nebula.HostAddr node) {
+    this.node = node;
+    return this;
+  }
+
+  public void unsetNode() {
+    this.node = null;
+  }
+
+  // Returns true if field node is set (has been assigned a value) and false otherwise
+  public boolean isSetNode() {
+    return this.node != null;
+  }
+
+  public void setNodeIsSet(boolean value) {
+    if (!value) {
+      this.node = null;
+    }
   }
 
   public byte[]  getZone_name() {
     return this.zone_name;
   }
 
-  public Zone setZone_name(byte[] zone_name) {
+  public AddHostIntoZoneReq setZone_name(byte[] zone_name) {
     this.zone_name = zone_name;
     return this;
   }
@@ -112,46 +135,21 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     }
   }
 
-  public List<com.vesoft.nebula.HostAddr>  getNodes() {
-    return this.nodes;
-  }
-
-  public Zone setNodes(List<com.vesoft.nebula.HostAddr> nodes) {
-    this.nodes = nodes;
-    return this;
-  }
-
-  public void unsetNodes() {
-    this.nodes = null;
-  }
-
-  // Returns true if field nodes is set (has been assigned a value) and false otherwise
-  public boolean isSetNodes() {
-    return this.nodes != null;
-  }
-
-  public void setNodesIsSet(boolean value) {
-    if (!value) {
-      this.nodes = null;
-    }
-  }
-
-  @SuppressWarnings("unchecked")
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
+    case NODE:
+      if (value == null) {
+        unsetNode();
+      } else {
+        setNode((com.vesoft.nebula.HostAddr)value);
+      }
+      break;
+
     case ZONE_NAME:
       if (value == null) {
         unsetZone_name();
       } else {
         setZone_name((byte[])value);
-      }
-      break;
-
-    case NODES:
-      if (value == null) {
-        unsetNodes();
-      } else {
-        setNodes((List<com.vesoft.nebula.HostAddr>)value);
       }
       break;
 
@@ -162,11 +160,11 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
+    case NODE:
+      return getNode();
+
     case ZONE_NAME:
       return getZone_name();
-
-    case NODES:
-      return getNodes();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -176,10 +174,10 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
+    case NODE:
+      return isSetNode();
     case ZONE_NAME:
       return isSetZone_name();
-    case NODES:
-      return isSetNodes();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -189,16 +187,25 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof Zone)
-      return this.equals((Zone)that);
+    if (that instanceof AddHostIntoZoneReq)
+      return this.equals((AddHostIntoZoneReq)that);
     return false;
   }
 
-  public boolean equals(Zone that) {
+  public boolean equals(AddHostIntoZoneReq that) {
     if (that == null)
       return false;
     if (this == that)
       return true;
+
+    boolean this_present_node = true && this.isSetNode();
+    boolean that_present_node = true && that.isSetNode();
+    if (this_present_node || that_present_node) {
+      if (!(this_present_node && that_present_node))
+        return false;
+      if (!TBaseHelper.equalsNobinary(this.node, that.node))
+        return false;
+    }
 
     boolean this_present_zone_name = true && this.isSetZone_name();
     boolean that_present_zone_name = true && that.isSetZone_name();
@@ -209,15 +216,6 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
         return false;
     }
 
-    boolean this_present_nodes = true && this.isSetNodes();
-    boolean that_present_nodes = true && that.isSetNodes();
-    if (this_present_nodes || that_present_nodes) {
-      if (!(this_present_nodes && that_present_nodes))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.nodes, that.nodes))
-        return false;
-    }
-
     return true;
   }
 
@@ -225,21 +223,21 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
   public int hashCode() {
     HashCodeBuilder builder = new HashCodeBuilder();
 
+    boolean present_node = true && (isSetNode());
+    builder.append(present_node);
+    if (present_node)
+      builder.append(node);
+
     boolean present_zone_name = true && (isSetZone_name());
     builder.append(present_zone_name);
     if (present_zone_name)
       builder.append(zone_name);
 
-    boolean present_nodes = true && (isSetNodes());
-    builder.append(present_nodes);
-    if (present_nodes)
-      builder.append(nodes);
-
     return builder.toHashCode();
   }
 
   @Override
-  public int compareTo(Zone other) {
+  public int compareTo(AddHostIntoZoneReq other) {
     if (other == null) {
       // See java.lang.Comparable docs
       throw new NullPointerException();
@@ -250,19 +248,19 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     }
     int lastComparison = 0;
 
+    lastComparison = Boolean.valueOf(isSetNode()).compareTo(other.isSetNode());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(node, other.node);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
     lastComparison = Boolean.valueOf(isSetZone_name()).compareTo(other.isSetZone_name());
     if (lastComparison != 0) {
       return lastComparison;
     }
     lastComparison = TBaseHelper.compareTo(zone_name, other.zone_name);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = Boolean.valueOf(isSetNodes()).compareTo(other.isSetNodes());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(nodes, other.nodes);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -280,29 +278,17 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
       }
       switch (field.id)
       {
-        case ZONE_NAME:
-          if (field.type == TType.STRING) {
-            this.zone_name = iprot.readBinary();
+        case NODE:
+          if (field.type == TType.STRUCT) {
+            this.node = new com.vesoft.nebula.HostAddr();
+            this.node.read(iprot);
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
-        case NODES:
-          if (field.type == TType.LIST) {
-            {
-              TList _list177 = iprot.readListBegin();
-              this.nodes = new ArrayList<com.vesoft.nebula.HostAddr>(Math.max(0, _list177.size));
-              for (int _i178 = 0; 
-                   (_list177.size < 0) ? iprot.peekList() : (_i178 < _list177.size); 
-                   ++_i178)
-              {
-                com.vesoft.nebula.HostAddr _elem179;
-                _elem179 = new com.vesoft.nebula.HostAddr();
-                _elem179.read(iprot);
-                this.nodes.add(_elem179);
-              }
-              iprot.readListEnd();
-            }
+        case ZONE_NAME:
+          if (field.type == TType.STRING) {
+            this.zone_name = iprot.readBinary();
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -324,20 +310,14 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
+    if (this.node != null) {
+      oprot.writeFieldBegin(NODE_FIELD_DESC);
+      this.node.write(oprot);
+      oprot.writeFieldEnd();
+    }
     if (this.zone_name != null) {
       oprot.writeFieldBegin(ZONE_NAME_FIELD_DESC);
       oprot.writeBinary(this.zone_name);
-      oprot.writeFieldEnd();
-    }
-    if (this.nodes != null) {
-      oprot.writeFieldBegin(NODES_FIELD_DESC);
-      {
-        oprot.writeListBegin(new TList(TType.STRUCT, this.nodes.size()));
-        for (com.vesoft.nebula.HostAddr _iter180 : this.nodes)        {
-          _iter180.write(oprot);
-        }
-        oprot.writeListEnd();
-      }
       oprot.writeFieldEnd();
     }
     oprot.writeFieldStop();
@@ -359,12 +339,23 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("Zone");
+    StringBuilder sb = new StringBuilder("AddHostIntoZoneReq");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
     boolean first = true;
 
+    sb.append(indentStr);
+    sb.append("node");
+    sb.append(space);
+    sb.append(":").append(space);
+    if (this. getNode() == null) {
+      sb.append("null");
+    } else {
+      sb.append(TBaseHelper.toString(this. getNode(), indent + 1, prettyPrint));
+    }
+    first = false;
+    if (!first) sb.append("," + newLine);
     sb.append(indentStr);
     sb.append("zone_name");
     sb.append(space);
@@ -378,17 +369,6 @@ String space = prettyPrint ? " " : "";
           sb.append(Integer.toHexString(this. getZone_name()[i]).length() > 1 ? Integer.toHexString(this. getZone_name()[i]).substring(Integer.toHexString(this. getZone_name()[i]).length() - 2).toUpperCase() : "0" + Integer.toHexString(this. getZone_name()[i]).toUpperCase());
         }
         if (this. getZone_name().length > 128) sb.append(" ...");
-    }
-    first = false;
-    if (!first) sb.append("," + newLine);
-    sb.append(indentStr);
-    sb.append("nodes");
-    sb.append(space);
-    sb.append(":").append(space);
-    if (this. getNodes() == null) {
-      sb.append("null");
-    } else {
-      sb.append(TBaseHelper.toString(this. getNodes(), indent + 1, prettyPrint));
     }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

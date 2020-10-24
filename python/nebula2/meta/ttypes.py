@@ -31,7 +31,7 @@ if not '__pypy__' in sys.builtin_module_names:
 all_structs = []
 UTF8STRINGS = bool(0) or sys.version_info.major >= 3
 
-__all__ = ['UTF8STRINGS', 'ErrorCode', 'AlterSchemaOp', 'RoleType', 'PropertyType', 'HostStatus', 'SnapshotStatus', 'AdminJobOp', 'AdminCmd', 'JobStatus', 'ListHostType', 'HostRole', 'TaskResult', 'ConfigModule', 'ConfigMode', 'ID', 'ColumnTypeDef', 'ColumnDef', 'SchemaProp', 'Schema', 'IdName', 'SpaceDesc', 'SpaceItem', 'TagItem', 'AlterSchemaItem', 'EdgeItem', 'SchemaID', 'IndexItem', 'HostItem', 'UserItem', 'RoleItem', 'ExecResp', 'AdminJobReq', 'JobDesc', 'TaskDesc', 'AdminJobResult', 'AdminJobResp', 'CreateSpaceReq', 'DropSpaceReq', 'ListSpacesReq', 'ListSpacesResp', 'GetSpaceReq', 'GetSpaceResp', 'CreateTagReq', 'AlterTagReq', 'DropTagReq', 'ListTagsReq', 'ListTagsResp', 'GetTagReq', 'GetTagResp', 'CreateEdgeReq', 'AlterEdgeReq', 'GetEdgeReq', 'GetEdgeResp', 'DropEdgeReq', 'ListEdgesReq', 'ListEdgesResp', 'ListHostsReq', 'ListHostsResp', 'PartItem', 'ListPartsReq', 'ListPartsResp', 'GetPartsAllocReq', 'GetPartsAllocResp', 'MultiPutReq', 'GetReq', 'GetResp', 'MultiGetReq', 'MultiGetResp', 'RemoveReq', 'RemoveRangeReq', 'ScanReq', 'ScanResp', 'HBResp', 'HBReq', 'CreateTagIndexReq', 'DropTagIndexReq', 'GetTagIndexReq', 'GetTagIndexResp', 'ListTagIndexesReq', 'ListTagIndexesResp', 'CreateEdgeIndexReq', 'DropEdgeIndexReq', 'GetEdgeIndexReq', 'GetEdgeIndexResp', 'ListEdgeIndexesReq', 'ListEdgeIndexesResp', 'RebuildIndexReq', 'CreateUserReq', 'DropUserReq', 'AlterUserReq', 'GrantRoleReq', 'RevokeRoleReq', 'ListUsersReq', 'ListUsersResp', 'ListRolesReq', 'ListRolesResp', 'GetUserRolesReq', 'ChangePasswordReq', 'BalanceReq', 'BalanceTask', 'BalanceResp', 'LeaderBalanceReq', 'ConfigItem', 'RegConfigReq', 'GetConfigReq', 'GetConfigResp', 'SetConfigReq', 'ListConfigsReq', 'ListConfigsResp', 'CreateSnapshotReq', 'DropSnapshotReq', 'ListSnapshotsReq', 'Snapshot', 'ListSnapshotsResp', 'ListIndexStatusReq', 'IndexStatus', 'ListIndexStatusResp', 'SchemaVer', 'ClusterID']
+__all__ = ['UTF8STRINGS', 'ErrorCode', 'AlterSchemaOp', 'RoleType', 'PropertyType', 'HostStatus', 'SnapshotStatus', 'AdminJobOp', 'AdminCmd', 'JobStatus', 'ListHostType', 'HostRole', 'TaskResult', 'ConfigModule', 'ConfigMode', 'ID', 'ColumnTypeDef', 'ColumnDef', 'SchemaProp', 'Schema', 'IdName', 'SpaceDesc', 'SpaceItem', 'TagItem', 'AlterSchemaItem', 'EdgeItem', 'SchemaID', 'IndexItem', 'HostItem', 'UserItem', 'RoleItem', 'ExecResp', 'AdminJobReq', 'JobDesc', 'TaskDesc', 'AdminJobResult', 'AdminJobResp', 'CreateSpaceReq', 'DropSpaceReq', 'ListSpacesReq', 'ListSpacesResp', 'GetSpaceReq', 'GetSpaceResp', 'CreateTagReq', 'AlterTagReq', 'DropTagReq', 'ListTagsReq', 'ListTagsResp', 'GetTagReq', 'GetTagResp', 'CreateEdgeReq', 'AlterEdgeReq', 'GetEdgeReq', 'GetEdgeResp', 'DropEdgeReq', 'ListEdgesReq', 'ListEdgesResp', 'ListHostsReq', 'ListHostsResp', 'PartItem', 'ListPartsReq', 'ListPartsResp', 'GetPartsAllocReq', 'GetPartsAllocResp', 'MultiPutReq', 'GetReq', 'GetResp', 'MultiGetReq', 'MultiGetResp', 'RemoveReq', 'RemoveRangeReq', 'ScanReq', 'ScanResp', 'HBResp', 'HBReq', 'CreateTagIndexReq', 'DropTagIndexReq', 'GetTagIndexReq', 'GetTagIndexResp', 'ListTagIndexesReq', 'ListTagIndexesResp', 'CreateEdgeIndexReq', 'DropEdgeIndexReq', 'GetEdgeIndexReq', 'GetEdgeIndexResp', 'ListEdgeIndexesReq', 'ListEdgeIndexesResp', 'RebuildIndexReq', 'CreateUserReq', 'DropUserReq', 'AlterUserReq', 'GrantRoleReq', 'RevokeRoleReq', 'ListUsersReq', 'ListUsersResp', 'ListRolesReq', 'ListRolesResp', 'GetUserRolesReq', 'ChangePasswordReq', 'BalanceReq', 'BalanceTask', 'BalanceResp', 'LeaderBalanceReq', 'ConfigItem', 'RegConfigReq', 'GetConfigReq', 'GetConfigResp', 'SetConfigReq', 'ListConfigsReq', 'ListConfigsResp', 'CreateSnapshotReq', 'DropSnapshotReq', 'ListSnapshotsReq', 'Snapshot', 'ListSnapshotsResp', 'ListIndexStatusReq', 'IndexStatus', 'ListIndexStatusResp', 'AddZoneReq', 'DropZoneReq', 'AddHostIntoZoneReq', 'DropHostFromZoneReq', 'GetZoneReq', 'GetZoneResp', 'ListZonesReq', 'Zone', 'ListZonesResp', 'DrainZoneReq', 'AddGroupReq', 'DropGroupReq', 'AddZoneIntoGroupReq', 'DropZoneFromGroupReq', 'GetGroupReq', 'GetGroupResp', 'ListGroupsReq', 'Group', 'ListGroupsResp', 'SchemaVer', 'ClusterID']
 
 class ErrorCode:
   SUCCEEDED = 0
@@ -71,6 +71,7 @@ class ErrorCode:
   E_ADD_JOB_FAILURE = -55
   E_STOP_JOB_FAILURE = -56
   E_SAVE_JOB_FAILURE = -57
+  E_BALANCER_FAILURE = -58
   E_UNKNOWN = -99
 
   _VALUES_TO_NAMES = {
@@ -111,6 +112,7 @@ class ErrorCode:
     -55: "E_ADD_JOB_FAILURE",
     -56: "E_STOP_JOB_FAILURE",
     -57: "E_SAVE_JOB_FAILURE",
+    -58: "E_BALANCER_FAILURE",
     -99: "E_UNKNOWN",
   }
 
@@ -152,6 +154,7 @@ class ErrorCode:
     "E_ADD_JOB_FAILURE": -55,
     "E_STOP_JOB_FAILURE": -56,
     "E_SAVE_JOB_FAILURE": -57,
+    "E_BALANCER_FAILURE": -58,
     "E_UNKNOWN": -99,
   }
 
@@ -778,9 +781,8 @@ class ColumnDef:
         else:
           iprot.skip(ftype)
       elif fid == 3:
-        if ftype == TType.STRUCT:
-          self.default_value = nebula2.common.ttypes.Value()
-          self.default_value.read(iprot)
+        if ftype == TType.STRING:
+          self.default_value = iprot.readString()
         else:
           iprot.skip(ftype)
       elif fid == 4:
@@ -820,8 +822,8 @@ class ColumnDef:
       self.type.write(oprot)
       oprot.writeFieldEnd()
     if self.default_value != None:
-      oprot.writeFieldBegin('default_value', TType.STRUCT, 3)
-      self.default_value.write(oprot)
+      oprot.writeFieldBegin('default_value', TType.STRING, 3)
+      oprot.writeString(self.default_value)
       oprot.writeFieldEnd()
     if self.nullable != None and self.nullable != self.thrift_spec[4][4]:
       oprot.writeFieldBegin('nullable', TType.BOOL, 4)
@@ -1168,8 +1170,8 @@ class SpaceDesc:
    - replica_factor
    - charset_name
    - collate_name
-   - vid_size
    - vid_type
+   - group_name
   """
 
   thrift_spec = None
@@ -1220,13 +1222,14 @@ class SpaceDesc:
         else:
           iprot.skip(ftype)
       elif fid == 6:
-        if ftype == TType.I16:
-          self.vid_size = iprot.readI16()
+        if ftype == TType.STRUCT:
+          self.vid_type = ColumnTypeDef()
+          self.vid_type.read(iprot)
         else:
           iprot.skip(ftype)
       elif fid == 7:
-        if ftype == TType.I32:
-          self.vid_type = iprot.readI32()
+        if ftype == TType.STRING:
+          self.group_name = iprot.readString()
         else:
           iprot.skip(ftype)
       else:
@@ -1266,13 +1269,13 @@ class SpaceDesc:
       oprot.writeFieldBegin('collate_name', TType.STRING, 5)
       oprot.writeString(self.collate_name)
       oprot.writeFieldEnd()
-    if self.vid_size != None:
-      oprot.writeFieldBegin('vid_size', TType.I16, 6)
-      oprot.writeI16(self.vid_size)
-      oprot.writeFieldEnd()
     if self.vid_type != None:
-      oprot.writeFieldBegin('vid_type', TType.I32, 7)
-      oprot.writeI32(self.vid_type)
+      oprot.writeFieldBegin('vid_type', TType.STRUCT, 6)
+      self.vid_type.write(oprot)
+      oprot.writeFieldEnd()
+    if self.group_name != None:
+      oprot.writeFieldBegin('group_name', TType.STRING, 7)
+      oprot.writeString(self.group_name)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1300,14 +1303,14 @@ class SpaceDesc:
       value = pprint.pformat(self.collate_name, indent=0)
       value = padding.join(value.splitlines(True))
       L.append('    collate_name=%s' % (value))
-    if self.vid_size is not None:
-      value = pprint.pformat(self.vid_size, indent=0)
-      value = padding.join(value.splitlines(True))
-      L.append('    vid_size=%s' % (value))
     if self.vid_type is not None:
       value = pprint.pformat(self.vid_type, indent=0)
       value = padding.join(value.splitlines(True))
       L.append('    vid_type=%s' % (value))
+    if self.group_name is not None:
+      value = pprint.pformat(self.group_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    group_name=%s' % (value))
     return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
 
   def __eq__(self, other):
@@ -2031,6 +2034,7 @@ class HostItem:
    - all_parts
    - role
    - git_info_sha
+   - zone_name
   """
 
   thrift_spec = None
@@ -2150,6 +2154,11 @@ class HostItem:
           self.git_info_sha = iprot.readString()
         else:
           iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -2205,6 +2214,10 @@ class HostItem:
       oprot.writeFieldBegin('git_info_sha', TType.STRING, 6)
       oprot.writeString(self.git_info_sha)
       oprot.writeFieldEnd()
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 7)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -2235,6 +2248,10 @@ class HostItem:
       value = pprint.pformat(self.git_info_sha, indent=0)
       value = padding.join(value.splitlines(True))
       L.append('    git_info_sha=%s' % (value))
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
     return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
 
   def __eq__(self, other):
@@ -11836,6 +11853,1815 @@ class ListIndexStatusResp:
   if not six.PY2:
     __hash__ = object.__hash__
 
+class AddZoneReq:
+  """
+  Attributes:
+   - zone_name
+   - nodes
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.LIST:
+          self.nodes = []
+          (_etype374, _size371) = iprot.readListBegin()
+          if _size371 >= 0:
+            for _i375 in six.moves.range(_size371):
+              _elem376 = nebula2.common.ttypes.HostAddr()
+              _elem376.read(iprot)
+              self.nodes.append(_elem376)
+          else: 
+            while iprot.peekList():
+              _elem377 = nebula2.common.ttypes.HostAddr()
+              _elem377.read(iprot)
+              self.nodes.append(_elem377)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('AddZoneReq')
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 1)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    if self.nodes != None:
+      oprot.writeFieldBegin('nodes', TType.LIST, 2)
+      oprot.writeListBegin(TType.STRUCT, len(self.nodes))
+      for iter378 in self.nodes:
+        iter378.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    if self.nodes is not None:
+      value = pprint.pformat(self.nodes, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    nodes=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class DropZoneReq:
+  """
+  Attributes:
+   - zone_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('DropZoneReq')
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 1)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class AddHostIntoZoneReq:
+  """
+  Attributes:
+   - node
+   - zone_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRUCT:
+          self.node = nebula2.common.ttypes.HostAddr()
+          self.node.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('AddHostIntoZoneReq')
+    if self.node != None:
+      oprot.writeFieldBegin('node', TType.STRUCT, 1)
+      self.node.write(oprot)
+      oprot.writeFieldEnd()
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 2)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.node is not None:
+      value = pprint.pformat(self.node, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    node=%s' % (value))
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class DropHostFromZoneReq:
+  """
+  Attributes:
+   - node
+   - zone_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRUCT:
+          self.node = nebula2.common.ttypes.HostAddr()
+          self.node.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('DropHostFromZoneReq')
+    if self.node != None:
+      oprot.writeFieldBegin('node', TType.STRUCT, 1)
+      self.node.write(oprot)
+      oprot.writeFieldEnd()
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 2)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.node is not None:
+      value = pprint.pformat(self.node, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    node=%s' % (value))
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class GetZoneReq:
+  """
+  Attributes:
+   - zone_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('GetZoneReq')
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 1)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class GetZoneResp:
+  """
+  Attributes:
+   - code
+   - leader
+   - hosts
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.code = iprot.readI32()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.leader = nebula2.common.ttypes.HostAddr()
+          self.leader.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.LIST:
+          self.hosts = []
+          (_etype382, _size379) = iprot.readListBegin()
+          if _size379 >= 0:
+            for _i383 in six.moves.range(_size379):
+              _elem384 = nebula2.common.ttypes.HostAddr()
+              _elem384.read(iprot)
+              self.hosts.append(_elem384)
+          else: 
+            while iprot.peekList():
+              _elem385 = nebula2.common.ttypes.HostAddr()
+              _elem385.read(iprot)
+              self.hosts.append(_elem385)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('GetZoneResp')
+    if self.code != None:
+      oprot.writeFieldBegin('code', TType.I32, 1)
+      oprot.writeI32(self.code)
+      oprot.writeFieldEnd()
+    if self.leader != None:
+      oprot.writeFieldBegin('leader', TType.STRUCT, 2)
+      self.leader.write(oprot)
+      oprot.writeFieldEnd()
+    if self.hosts != None:
+      oprot.writeFieldBegin('hosts', TType.LIST, 3)
+      oprot.writeListBegin(TType.STRUCT, len(self.hosts))
+      for iter386 in self.hosts:
+        iter386.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.code is not None:
+      value = pprint.pformat(self.code, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    code=%s' % (value))
+    if self.leader is not None:
+      value = pprint.pformat(self.leader, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    leader=%s' % (value))
+    if self.hosts is not None:
+      value = pprint.pformat(self.hosts, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    hosts=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class ListZonesReq:
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('ListZonesReq')
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class Zone:
+  """
+  Attributes:
+   - zone_name
+   - nodes
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.LIST:
+          self.nodes = []
+          (_etype390, _size387) = iprot.readListBegin()
+          if _size387 >= 0:
+            for _i391 in six.moves.range(_size387):
+              _elem392 = nebula2.common.ttypes.HostAddr()
+              _elem392.read(iprot)
+              self.nodes.append(_elem392)
+          else: 
+            while iprot.peekList():
+              _elem393 = nebula2.common.ttypes.HostAddr()
+              _elem393.read(iprot)
+              self.nodes.append(_elem393)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('Zone')
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 1)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    if self.nodes != None:
+      oprot.writeFieldBegin('nodes', TType.LIST, 2)
+      oprot.writeListBegin(TType.STRUCT, len(self.nodes))
+      for iter394 in self.nodes:
+        iter394.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    if self.nodes is not None:
+      value = pprint.pformat(self.nodes, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    nodes=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class ListZonesResp:
+  """
+  Attributes:
+   - code
+   - leader
+   - zones
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.code = iprot.readI32()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.leader = nebula2.common.ttypes.HostAddr()
+          self.leader.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.LIST:
+          self.zones = []
+          (_etype398, _size395) = iprot.readListBegin()
+          if _size395 >= 0:
+            for _i399 in six.moves.range(_size395):
+              _elem400 = Zone()
+              _elem400.read(iprot)
+              self.zones.append(_elem400)
+          else: 
+            while iprot.peekList():
+              _elem401 = Zone()
+              _elem401.read(iprot)
+              self.zones.append(_elem401)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('ListZonesResp')
+    if self.code != None:
+      oprot.writeFieldBegin('code', TType.I32, 1)
+      oprot.writeI32(self.code)
+      oprot.writeFieldEnd()
+    if self.leader != None:
+      oprot.writeFieldBegin('leader', TType.STRUCT, 2)
+      self.leader.write(oprot)
+      oprot.writeFieldEnd()
+    if self.zones != None:
+      oprot.writeFieldBegin('zones', TType.LIST, 3)
+      oprot.writeListBegin(TType.STRUCT, len(self.zones))
+      for iter402 in self.zones:
+        iter402.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.code is not None:
+      value = pprint.pformat(self.code, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    code=%s' % (value))
+    if self.leader is not None:
+      value = pprint.pformat(self.leader, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    leader=%s' % (value))
+    if self.zones is not None:
+      value = pprint.pformat(self.zones, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zones=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class DrainZoneReq:
+  """
+  Attributes:
+   - zone_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('DrainZoneReq')
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 1)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class AddGroupReq:
+  """
+  Attributes:
+   - group_name
+   - zone_names
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.group_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.LIST:
+          self.zone_names = []
+          (_etype406, _size403) = iprot.readListBegin()
+          if _size403 >= 0:
+            for _i407 in six.moves.range(_size403):
+              _elem408 = iprot.readString()
+              self.zone_names.append(_elem408)
+          else: 
+            while iprot.peekList():
+              _elem409 = iprot.readString()
+              self.zone_names.append(_elem409)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('AddGroupReq')
+    if self.group_name != None:
+      oprot.writeFieldBegin('group_name', TType.STRING, 1)
+      oprot.writeString(self.group_name)
+      oprot.writeFieldEnd()
+    if self.zone_names != None:
+      oprot.writeFieldBegin('zone_names', TType.LIST, 2)
+      oprot.writeListBegin(TType.STRING, len(self.zone_names))
+      for iter410 in self.zone_names:
+        oprot.writeString(iter410)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.group_name is not None:
+      value = pprint.pformat(self.group_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    group_name=%s' % (value))
+    if self.zone_names is not None:
+      value = pprint.pformat(self.zone_names, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_names=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class DropGroupReq:
+  """
+  Attributes:
+   - group_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.group_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('DropGroupReq')
+    if self.group_name != None:
+      oprot.writeFieldBegin('group_name', TType.STRING, 1)
+      oprot.writeString(self.group_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.group_name is not None:
+      value = pprint.pformat(self.group_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    group_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class AddZoneIntoGroupReq:
+  """
+  Attributes:
+   - zone_name
+   - group_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.group_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('AddZoneIntoGroupReq')
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 1)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    if self.group_name != None:
+      oprot.writeFieldBegin('group_name', TType.STRING, 2)
+      oprot.writeString(self.group_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    if self.group_name is not None:
+      value = pprint.pformat(self.group_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    group_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class DropZoneFromGroupReq:
+  """
+  Attributes:
+   - zone_name
+   - group_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.zone_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.group_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('DropZoneFromGroupReq')
+    if self.zone_name != None:
+      oprot.writeFieldBegin('zone_name', TType.STRING, 1)
+      oprot.writeString(self.zone_name)
+      oprot.writeFieldEnd()
+    if self.group_name != None:
+      oprot.writeFieldBegin('group_name', TType.STRING, 2)
+      oprot.writeString(self.group_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.zone_name is not None:
+      value = pprint.pformat(self.zone_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_name=%s' % (value))
+    if self.group_name is not None:
+      value = pprint.pformat(self.group_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    group_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class GetGroupReq:
+  """
+  Attributes:
+   - group_name
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.group_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('GetGroupReq')
+    if self.group_name != None:
+      oprot.writeFieldBegin('group_name', TType.STRING, 1)
+      oprot.writeString(self.group_name)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.group_name is not None:
+      value = pprint.pformat(self.group_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    group_name=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class GetGroupResp:
+  """
+  Attributes:
+   - code
+   - leader
+   - zone_names
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.code = iprot.readI32()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.leader = nebula2.common.ttypes.HostAddr()
+          self.leader.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.LIST:
+          self.zone_names = []
+          (_etype414, _size411) = iprot.readListBegin()
+          if _size411 >= 0:
+            for _i415 in six.moves.range(_size411):
+              _elem416 = iprot.readString()
+              self.zone_names.append(_elem416)
+          else: 
+            while iprot.peekList():
+              _elem417 = iprot.readString()
+              self.zone_names.append(_elem417)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('GetGroupResp')
+    if self.code != None:
+      oprot.writeFieldBegin('code', TType.I32, 1)
+      oprot.writeI32(self.code)
+      oprot.writeFieldEnd()
+    if self.leader != None:
+      oprot.writeFieldBegin('leader', TType.STRUCT, 2)
+      self.leader.write(oprot)
+      oprot.writeFieldEnd()
+    if self.zone_names != None:
+      oprot.writeFieldBegin('zone_names', TType.LIST, 3)
+      oprot.writeListBegin(TType.STRING, len(self.zone_names))
+      for iter418 in self.zone_names:
+        oprot.writeString(iter418)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.code is not None:
+      value = pprint.pformat(self.code, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    code=%s' % (value))
+    if self.leader is not None:
+      value = pprint.pformat(self.leader, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    leader=%s' % (value))
+    if self.zone_names is not None:
+      value = pprint.pformat(self.zone_names, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_names=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class ListGroupsReq:
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('ListGroupsReq')
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class Group:
+  """
+  Attributes:
+   - group_name
+   - zone_names
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.group_name = iprot.readString()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.LIST:
+          self.zone_names = []
+          (_etype422, _size419) = iprot.readListBegin()
+          if _size419 >= 0:
+            for _i423 in six.moves.range(_size419):
+              _elem424 = iprot.readString()
+              self.zone_names.append(_elem424)
+          else: 
+            while iprot.peekList():
+              _elem425 = iprot.readString()
+              self.zone_names.append(_elem425)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('Group')
+    if self.group_name != None:
+      oprot.writeFieldBegin('group_name', TType.STRING, 1)
+      oprot.writeString(self.group_name)
+      oprot.writeFieldEnd()
+    if self.zone_names != None:
+      oprot.writeFieldBegin('zone_names', TType.LIST, 2)
+      oprot.writeListBegin(TType.STRING, len(self.zone_names))
+      for iter426 in self.zone_names:
+        oprot.writeString(iter426)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.group_name is not None:
+      value = pprint.pformat(self.group_name, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    group_name=%s' % (value))
+    if self.zone_names is not None:
+      value = pprint.pformat(self.zone_names, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    zone_names=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
+class ListGroupsResp:
+  """
+  Attributes:
+   - code
+   - leader
+   - groups
+  """
+
+  thrift_spec = None
+  thrift_field_annotations = None
+  thrift_struct_annotations = None
+  __init__ = None
+  @staticmethod
+  def isUnion():
+    return False
+
+  def read(self, iprot):
+    if (isinstance(iprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0)
+      self.checkRequired()
+      return
+    if (isinstance(iprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(iprot, THeaderProtocol.THeaderProtocolAccelerate) and iprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastproto is not None:
+      fastproto.decode(self, iprot.trans, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2)
+      self.checkRequired()
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.code = iprot.readI32()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.leader = nebula2.common.ttypes.HostAddr()
+          self.leader.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.LIST:
+          self.groups = []
+          (_etype430, _size427) = iprot.readListBegin()
+          if _size427 >= 0:
+            for _i431 in six.moves.range(_size427):
+              _elem432 = Group()
+              _elem432.read(iprot)
+              self.groups.append(_elem432)
+          else: 
+            while iprot.peekList():
+              _elem433 = Group()
+              _elem433.read(iprot)
+              self.groups.append(_elem433)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+    self.checkRequired()
+
+  def checkRequired(self):
+    return
+
+  def write(self, oprot):
+    if (isinstance(oprot, TBinaryProtocol.TBinaryProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_BINARY_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=0))
+      return
+    if (isinstance(oprot, TCompactProtocol.TCompactProtocolAccelerated) or (isinstance(oprot, THeaderProtocol.THeaderProtocolAccelerate) and oprot.get_protocol_id() == THeaderProtocol.THeaderProtocol.T_COMPACT_PROTOCOL)) and self.thrift_spec is not None and fastproto is not None:
+      oprot.trans.write(fastproto.encode(self, [self.__class__, self.thrift_spec, False], utf8strings=UTF8STRINGS, protoid=2))
+      return
+    oprot.writeStructBegin('ListGroupsResp')
+    if self.code != None:
+      oprot.writeFieldBegin('code', TType.I32, 1)
+      oprot.writeI32(self.code)
+      oprot.writeFieldEnd()
+    if self.leader != None:
+      oprot.writeFieldBegin('leader', TType.STRUCT, 2)
+      self.leader.write(oprot)
+      oprot.writeFieldEnd()
+    if self.groups != None:
+      oprot.writeFieldBegin('groups', TType.LIST, 3)
+      oprot.writeListBegin(TType.STRUCT, len(self.groups))
+      for iter434 in self.groups:
+        iter434.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def __repr__(self):
+    L = []
+    padding = ' ' * 4
+    if self.code is not None:
+      value = pprint.pformat(self.code, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    code=%s' % (value))
+    if self.leader is not None:
+      value = pprint.pformat(self.leader, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    leader=%s' % (value))
+    if self.groups is not None:
+      value = pprint.pformat(self.groups, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    groups=%s' % (value))
+    return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+
+    return self.__dict__ == other.__dict__ 
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  # Override the __hash__ function for Python3 - t10434117
+  if not six.PY2:
+    __hash__ = object.__hash__
+
 SchemaVer = UnimplementedTypedef()
 ClusterID = UnimplementedTypedef()
 all_structs.append(ID)
@@ -11910,7 +13736,7 @@ ColumnDef.thrift_spec = (
   None, # 0
   (1, TType.STRING, 'name', False, None, 0, ), # 1
   (2, TType.STRUCT, 'type', [ColumnTypeDef, ColumnTypeDef.thrift_spec, False], None, 0, ), # 2
-  (3, TType.STRUCT, 'default_value', [nebula2.common.ttypes.Value, nebula2.common.ttypes.Value.thrift_spec, True], None, 1, ), # 3
+  (3, TType.STRING, 'default_value', False, None, 1, ), # 3
   (4, TType.BOOL, 'nullable', None, False, 1, ), # 4
 )
 
@@ -12023,8 +13849,11 @@ SpaceDesc.thrift_spec = (
   (3, TType.I32, 'replica_factor', None, 0, 2, ), # 3
   (4, TType.STRING, 'charset_name', False, None, 2, ), # 4
   (5, TType.STRING, 'collate_name', False, None, 2, ), # 5
-  (6, TType.I16, 'vid_size', None, 8, 2, ), # 6
-  (7, TType.I32, 'vid_type', PropertyType,   7, 2, ), # 7
+  (6, TType.STRUCT, 'vid_type', [ColumnTypeDef, ColumnTypeDef.thrift_spec, False], ColumnTypeDef(**{
+    "type" :     7,
+    "type_length" : 8,
+  }), 2, ), # 6
+  (7, TType.STRING, 'group_name', False, None, 1, ), # 7
 )
 
 SpaceDesc.thrift_struct_annotations = {
@@ -12032,14 +13861,19 @@ SpaceDesc.thrift_struct_annotations = {
 SpaceDesc.thrift_field_annotations = {
 }
 
-def SpaceDesc__init__(self, space_name=None, partition_num=SpaceDesc.thrift_spec[2][4], replica_factor=SpaceDesc.thrift_spec[3][4], charset_name=None, collate_name=None, vid_size=SpaceDesc.thrift_spec[6][4], vid_type=SpaceDesc.thrift_spec[7][4],):
+def SpaceDesc__init__(self, space_name=None, partition_num=SpaceDesc.thrift_spec[2][4], replica_factor=SpaceDesc.thrift_spec[3][4], charset_name=None, collate_name=None, vid_type=SpaceDesc.thrift_spec[6][4], group_name=None,):
   self.space_name = space_name
   self.partition_num = partition_num
   self.replica_factor = replica_factor
   self.charset_name = charset_name
   self.collate_name = collate_name
-  self.vid_size = vid_size
+  if vid_type is self.thrift_spec[6][4]:
+    vid_type = ColumnTypeDef(**{
+    "type" :     7,
+    "type_length" : 8,
+  })
   self.vid_type = vid_type
+  self.group_name = group_name
 
 SpaceDesc.__init__ = SpaceDesc__init__
 
@@ -12049,8 +13883,11 @@ def SpaceDesc__setstate__(self, state):
   state.setdefault('replica_factor', 0)
   state.setdefault('charset_name', None)
   state.setdefault('collate_name', None)
-  state.setdefault('vid_size', 8)
-  state.setdefault('vid_type',   7)
+  state.setdefault('vid_type', ColumnTypeDef(**{
+    "type" :     7,
+    "type_length" : 8,
+  }))
+  state.setdefault('group_name', None)
   self.__dict__ = state
 
 SpaceDesc.__getstate__ = lambda self: self.__dict__.copy()
@@ -12242,6 +14079,7 @@ HostItem.thrift_spec = (
   (4, TType.MAP, 'all_parts', (TType.STRING,False,TType.LIST,(TType.I32,None)), None, 2, ), # 4
   (5, TType.I32, 'role', HostRole, None, 2, ), # 5
   (6, TType.STRING, 'git_info_sha', False, None, 2, ), # 6
+  (7, TType.STRING, 'zone_name', False, None, 1, ), # 7
 )
 
 HostItem.thrift_struct_annotations = {
@@ -12249,13 +14087,14 @@ HostItem.thrift_struct_annotations = {
 HostItem.thrift_field_annotations = {
 }
 
-def HostItem__init__(self, hostAddr=None, status=None, leader_parts=None, all_parts=None, role=None, git_info_sha=None,):
+def HostItem__init__(self, hostAddr=None, status=None, leader_parts=None, all_parts=None, role=None, git_info_sha=None, zone_name=None,):
   self.hostAddr = hostAddr
   self.status = status
   self.leader_parts = leader_parts
   self.all_parts = all_parts
   self.role = role
   self.git_info_sha = git_info_sha
+  self.zone_name = zone_name
 
 HostItem.__init__ = HostItem__init__
 
@@ -12266,6 +14105,7 @@ def HostItem__setstate__(self, state):
   state.setdefault('all_parts', None)
   state.setdefault('role', None)
   state.setdefault('git_info_sha', None)
+  state.setdefault('zone_name', None)
   self.__dict__ = state
 
 HostItem.__getstate__ = lambda self: self.__dict__.copy()
@@ -14688,6 +16528,463 @@ def ListIndexStatusResp__setstate__(self, state):
 
 ListIndexStatusResp.__getstate__ = lambda self: self.__dict__.copy()
 ListIndexStatusResp.__setstate__ = ListIndexStatusResp__setstate__
+
+all_structs.append(AddZoneReq)
+AddZoneReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'zone_name', False, None, 2, ), # 1
+  (2, TType.LIST, 'nodes', (TType.STRUCT,[nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False]), None, 2, ), # 2
+)
+
+AddZoneReq.thrift_struct_annotations = {
+}
+AddZoneReq.thrift_field_annotations = {
+}
+
+def AddZoneReq__init__(self, zone_name=None, nodes=None,):
+  self.zone_name = zone_name
+  self.nodes = nodes
+
+AddZoneReq.__init__ = AddZoneReq__init__
+
+def AddZoneReq__setstate__(self, state):
+  state.setdefault('zone_name', None)
+  state.setdefault('nodes', None)
+  self.__dict__ = state
+
+AddZoneReq.__getstate__ = lambda self: self.__dict__.copy()
+AddZoneReq.__setstate__ = AddZoneReq__setstate__
+
+all_structs.append(DropZoneReq)
+DropZoneReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'zone_name', False, None, 2, ), # 1
+)
+
+DropZoneReq.thrift_struct_annotations = {
+}
+DropZoneReq.thrift_field_annotations = {
+}
+
+def DropZoneReq__init__(self, zone_name=None,):
+  self.zone_name = zone_name
+
+DropZoneReq.__init__ = DropZoneReq__init__
+
+def DropZoneReq__setstate__(self, state):
+  state.setdefault('zone_name', None)
+  self.__dict__ = state
+
+DropZoneReq.__getstate__ = lambda self: self.__dict__.copy()
+DropZoneReq.__setstate__ = DropZoneReq__setstate__
+
+all_structs.append(AddHostIntoZoneReq)
+AddHostIntoZoneReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRUCT, 'node', [nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False], None, 2, ), # 1
+  (2, TType.STRING, 'zone_name', False, None, 2, ), # 2
+)
+
+AddHostIntoZoneReq.thrift_struct_annotations = {
+}
+AddHostIntoZoneReq.thrift_field_annotations = {
+}
+
+def AddHostIntoZoneReq__init__(self, node=None, zone_name=None,):
+  self.node = node
+  self.zone_name = zone_name
+
+AddHostIntoZoneReq.__init__ = AddHostIntoZoneReq__init__
+
+def AddHostIntoZoneReq__setstate__(self, state):
+  state.setdefault('node', None)
+  state.setdefault('zone_name', None)
+  self.__dict__ = state
+
+AddHostIntoZoneReq.__getstate__ = lambda self: self.__dict__.copy()
+AddHostIntoZoneReq.__setstate__ = AddHostIntoZoneReq__setstate__
+
+all_structs.append(DropHostFromZoneReq)
+DropHostFromZoneReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRUCT, 'node', [nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False], None, 2, ), # 1
+  (2, TType.STRING, 'zone_name', False, None, 2, ), # 2
+)
+
+DropHostFromZoneReq.thrift_struct_annotations = {
+}
+DropHostFromZoneReq.thrift_field_annotations = {
+}
+
+def DropHostFromZoneReq__init__(self, node=None, zone_name=None,):
+  self.node = node
+  self.zone_name = zone_name
+
+DropHostFromZoneReq.__init__ = DropHostFromZoneReq__init__
+
+def DropHostFromZoneReq__setstate__(self, state):
+  state.setdefault('node', None)
+  state.setdefault('zone_name', None)
+  self.__dict__ = state
+
+DropHostFromZoneReq.__getstate__ = lambda self: self.__dict__.copy()
+DropHostFromZoneReq.__setstate__ = DropHostFromZoneReq__setstate__
+
+all_structs.append(GetZoneReq)
+GetZoneReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'zone_name', False, None, 2, ), # 1
+)
+
+GetZoneReq.thrift_struct_annotations = {
+}
+GetZoneReq.thrift_field_annotations = {
+}
+
+def GetZoneReq__init__(self, zone_name=None,):
+  self.zone_name = zone_name
+
+GetZoneReq.__init__ = GetZoneReq__init__
+
+def GetZoneReq__setstate__(self, state):
+  state.setdefault('zone_name', None)
+  self.__dict__ = state
+
+GetZoneReq.__getstate__ = lambda self: self.__dict__.copy()
+GetZoneReq.__setstate__ = GetZoneReq__setstate__
+
+all_structs.append(GetZoneResp)
+GetZoneResp.thrift_spec = (
+  None, # 0
+  (1, TType.I32, 'code', ErrorCode, None, 2, ), # 1
+  (2, TType.STRUCT, 'leader', [nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False], None, 2, ), # 2
+  (3, TType.LIST, 'hosts', (TType.STRUCT,[nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False]), None, 2, ), # 3
+)
+
+GetZoneResp.thrift_struct_annotations = {
+}
+GetZoneResp.thrift_field_annotations = {
+}
+
+def GetZoneResp__init__(self, code=None, leader=None, hosts=None,):
+  self.code = code
+  self.leader = leader
+  self.hosts = hosts
+
+GetZoneResp.__init__ = GetZoneResp__init__
+
+def GetZoneResp__setstate__(self, state):
+  state.setdefault('code', None)
+  state.setdefault('leader', None)
+  state.setdefault('hosts', None)
+  self.__dict__ = state
+
+GetZoneResp.__getstate__ = lambda self: self.__dict__.copy()
+GetZoneResp.__setstate__ = GetZoneResp__setstate__
+
+all_structs.append(ListZonesReq)
+ListZonesReq.thrift_spec = (
+)
+
+ListZonesReq.thrift_struct_annotations = {
+}
+ListZonesReq.thrift_field_annotations = {
+}
+
+all_structs.append(Zone)
+Zone.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'zone_name', False, None, 2, ), # 1
+  (2, TType.LIST, 'nodes', (TType.STRUCT,[nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False]), None, 2, ), # 2
+)
+
+Zone.thrift_struct_annotations = {
+}
+Zone.thrift_field_annotations = {
+}
+
+def Zone__init__(self, zone_name=None, nodes=None,):
+  self.zone_name = zone_name
+  self.nodes = nodes
+
+Zone.__init__ = Zone__init__
+
+def Zone__setstate__(self, state):
+  state.setdefault('zone_name', None)
+  state.setdefault('nodes', None)
+  self.__dict__ = state
+
+Zone.__getstate__ = lambda self: self.__dict__.copy()
+Zone.__setstate__ = Zone__setstate__
+
+all_structs.append(ListZonesResp)
+ListZonesResp.thrift_spec = (
+  None, # 0
+  (1, TType.I32, 'code', ErrorCode, None, 2, ), # 1
+  (2, TType.STRUCT, 'leader', [nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False], None, 2, ), # 2
+  (3, TType.LIST, 'zones', (TType.STRUCT,[Zone, Zone.thrift_spec, False]), None, 2, ), # 3
+)
+
+ListZonesResp.thrift_struct_annotations = {
+}
+ListZonesResp.thrift_field_annotations = {
+}
+
+def ListZonesResp__init__(self, code=None, leader=None, zones=None,):
+  self.code = code
+  self.leader = leader
+  self.zones = zones
+
+ListZonesResp.__init__ = ListZonesResp__init__
+
+def ListZonesResp__setstate__(self, state):
+  state.setdefault('code', None)
+  state.setdefault('leader', None)
+  state.setdefault('zones', None)
+  self.__dict__ = state
+
+ListZonesResp.__getstate__ = lambda self: self.__dict__.copy()
+ListZonesResp.__setstate__ = ListZonesResp__setstate__
+
+all_structs.append(DrainZoneReq)
+DrainZoneReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'zone_name', False, None, 2, ), # 1
+)
+
+DrainZoneReq.thrift_struct_annotations = {
+}
+DrainZoneReq.thrift_field_annotations = {
+}
+
+def DrainZoneReq__init__(self, zone_name=None,):
+  self.zone_name = zone_name
+
+DrainZoneReq.__init__ = DrainZoneReq__init__
+
+def DrainZoneReq__setstate__(self, state):
+  state.setdefault('zone_name', None)
+  self.__dict__ = state
+
+DrainZoneReq.__getstate__ = lambda self: self.__dict__.copy()
+DrainZoneReq.__setstate__ = DrainZoneReq__setstate__
+
+all_structs.append(AddGroupReq)
+AddGroupReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'group_name', False, None, 2, ), # 1
+  (2, TType.LIST, 'zone_names', (TType.STRING,False), None, 2, ), # 2
+)
+
+AddGroupReq.thrift_struct_annotations = {
+}
+AddGroupReq.thrift_field_annotations = {
+}
+
+def AddGroupReq__init__(self, group_name=None, zone_names=None,):
+  self.group_name = group_name
+  self.zone_names = zone_names
+
+AddGroupReq.__init__ = AddGroupReq__init__
+
+def AddGroupReq__setstate__(self, state):
+  state.setdefault('group_name', None)
+  state.setdefault('zone_names', None)
+  self.__dict__ = state
+
+AddGroupReq.__getstate__ = lambda self: self.__dict__.copy()
+AddGroupReq.__setstate__ = AddGroupReq__setstate__
+
+all_structs.append(DropGroupReq)
+DropGroupReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'group_name', False, None, 2, ), # 1
+)
+
+DropGroupReq.thrift_struct_annotations = {
+}
+DropGroupReq.thrift_field_annotations = {
+}
+
+def DropGroupReq__init__(self, group_name=None,):
+  self.group_name = group_name
+
+DropGroupReq.__init__ = DropGroupReq__init__
+
+def DropGroupReq__setstate__(self, state):
+  state.setdefault('group_name', None)
+  self.__dict__ = state
+
+DropGroupReq.__getstate__ = lambda self: self.__dict__.copy()
+DropGroupReq.__setstate__ = DropGroupReq__setstate__
+
+all_structs.append(AddZoneIntoGroupReq)
+AddZoneIntoGroupReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'zone_name', False, None, 2, ), # 1
+  (2, TType.STRING, 'group_name', False, None, 2, ), # 2
+)
+
+AddZoneIntoGroupReq.thrift_struct_annotations = {
+}
+AddZoneIntoGroupReq.thrift_field_annotations = {
+}
+
+def AddZoneIntoGroupReq__init__(self, zone_name=None, group_name=None,):
+  self.zone_name = zone_name
+  self.group_name = group_name
+
+AddZoneIntoGroupReq.__init__ = AddZoneIntoGroupReq__init__
+
+def AddZoneIntoGroupReq__setstate__(self, state):
+  state.setdefault('zone_name', None)
+  state.setdefault('group_name', None)
+  self.__dict__ = state
+
+AddZoneIntoGroupReq.__getstate__ = lambda self: self.__dict__.copy()
+AddZoneIntoGroupReq.__setstate__ = AddZoneIntoGroupReq__setstate__
+
+all_structs.append(DropZoneFromGroupReq)
+DropZoneFromGroupReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'zone_name', False, None, 2, ), # 1
+  (2, TType.STRING, 'group_name', False, None, 2, ), # 2
+)
+
+DropZoneFromGroupReq.thrift_struct_annotations = {
+}
+DropZoneFromGroupReq.thrift_field_annotations = {
+}
+
+def DropZoneFromGroupReq__init__(self, zone_name=None, group_name=None,):
+  self.zone_name = zone_name
+  self.group_name = group_name
+
+DropZoneFromGroupReq.__init__ = DropZoneFromGroupReq__init__
+
+def DropZoneFromGroupReq__setstate__(self, state):
+  state.setdefault('zone_name', None)
+  state.setdefault('group_name', None)
+  self.__dict__ = state
+
+DropZoneFromGroupReq.__getstate__ = lambda self: self.__dict__.copy()
+DropZoneFromGroupReq.__setstate__ = DropZoneFromGroupReq__setstate__
+
+all_structs.append(GetGroupReq)
+GetGroupReq.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'group_name', False, None, 2, ), # 1
+)
+
+GetGroupReq.thrift_struct_annotations = {
+}
+GetGroupReq.thrift_field_annotations = {
+}
+
+def GetGroupReq__init__(self, group_name=None,):
+  self.group_name = group_name
+
+GetGroupReq.__init__ = GetGroupReq__init__
+
+def GetGroupReq__setstate__(self, state):
+  state.setdefault('group_name', None)
+  self.__dict__ = state
+
+GetGroupReq.__getstate__ = lambda self: self.__dict__.copy()
+GetGroupReq.__setstate__ = GetGroupReq__setstate__
+
+all_structs.append(GetGroupResp)
+GetGroupResp.thrift_spec = (
+  None, # 0
+  (1, TType.I32, 'code', ErrorCode, None, 2, ), # 1
+  (2, TType.STRUCT, 'leader', [nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False], None, 2, ), # 2
+  (3, TType.LIST, 'zone_names', (TType.STRING,False), None, 2, ), # 3
+)
+
+GetGroupResp.thrift_struct_annotations = {
+}
+GetGroupResp.thrift_field_annotations = {
+}
+
+def GetGroupResp__init__(self, code=None, leader=None, zone_names=None,):
+  self.code = code
+  self.leader = leader
+  self.zone_names = zone_names
+
+GetGroupResp.__init__ = GetGroupResp__init__
+
+def GetGroupResp__setstate__(self, state):
+  state.setdefault('code', None)
+  state.setdefault('leader', None)
+  state.setdefault('zone_names', None)
+  self.__dict__ = state
+
+GetGroupResp.__getstate__ = lambda self: self.__dict__.copy()
+GetGroupResp.__setstate__ = GetGroupResp__setstate__
+
+all_structs.append(ListGroupsReq)
+ListGroupsReq.thrift_spec = (
+)
+
+ListGroupsReq.thrift_struct_annotations = {
+}
+ListGroupsReq.thrift_field_annotations = {
+}
+
+all_structs.append(Group)
+Group.thrift_spec = (
+  None, # 0
+  (1, TType.STRING, 'group_name', False, None, 2, ), # 1
+  (2, TType.LIST, 'zone_names', (TType.STRING,False), None, 2, ), # 2
+)
+
+Group.thrift_struct_annotations = {
+}
+Group.thrift_field_annotations = {
+}
+
+def Group__init__(self, group_name=None, zone_names=None,):
+  self.group_name = group_name
+  self.zone_names = zone_names
+
+Group.__init__ = Group__init__
+
+def Group__setstate__(self, state):
+  state.setdefault('group_name', None)
+  state.setdefault('zone_names', None)
+  self.__dict__ = state
+
+Group.__getstate__ = lambda self: self.__dict__.copy()
+Group.__setstate__ = Group__setstate__
+
+all_structs.append(ListGroupsResp)
+ListGroupsResp.thrift_spec = (
+  None, # 0
+  (1, TType.I32, 'code', ErrorCode, None, 2, ), # 1
+  (2, TType.STRUCT, 'leader', [nebula2.common.ttypes.HostAddr, nebula2.common.ttypes.HostAddr.thrift_spec, False], None, 2, ), # 2
+  (3, TType.LIST, 'groups', (TType.STRUCT,[Group, Group.thrift_spec, False]), None, 2, ), # 3
+)
+
+ListGroupsResp.thrift_struct_annotations = {
+}
+ListGroupsResp.thrift_field_annotations = {
+}
+
+def ListGroupsResp__init__(self, code=None, leader=None, groups=None,):
+  self.code = code
+  self.leader = leader
+  self.groups = groups
+
+ListGroupsResp.__init__ = ListGroupsResp__init__
+
+def ListGroupsResp__setstate__(self, state):
+  state.setdefault('code', None)
+  state.setdefault('leader', None)
+  state.setdefault('groups', None)
+  self.__dict__ = state
+
+ListGroupsResp.__getstate__ = lambda self: self.__dict__.copy()
+ListGroupsResp.__setstate__ = ListGroupsResp__setstate__
 
 fix_spec(all_structs)
 del all_structs
