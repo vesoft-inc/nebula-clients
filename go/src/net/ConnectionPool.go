@@ -54,7 +54,7 @@ func (pool *ConnectionPool) InitPool(addresses []*data.HostAddress, conf *conf.P
 	for _, host := range addresses {
 		newConn := NewConnection(*host)
 		// Open connection to host
-		err := newConn.Open(newConn.severAddress, *pool.conf)
+		err := newConn.Open(newConn.SeverAddress, *pool.conf)
 		if err != nil {
 			log.Printf("Failed to open connection, error: %s \n", err.Error())
 			return err
@@ -66,11 +66,12 @@ func (pool *ConnectionPool) InitPool(addresses []*data.HostAddress, conf *conf.P
 	if pool.idleConnectionQueue.Len() < pool.conf.MinConnPoolSize {
 		connNum := pool.conf.MinConnPoolSize - pool.idleConnectionQueue.Len()
 		for i := 0; i < connNum; i++ {
+			// Simple round-robin
 			newConn := NewConnection(*pool.addresses[i%len(addresses)])
-			// not being used
+			// Not being used
 			newConn.inuse = false
 			// Open connection to host
-			err := newConn.Open(newConn.severAddress, *pool.conf)
+			err := newConn.Open(newConn.SeverAddress, *pool.conf)
 			if err != nil {
 				log.Printf("Failed to open connection, error: %s \n", err.Error())
 				return err
@@ -115,20 +116,22 @@ func (pool *ConnectionPool) GetSession(username, password string) (*Session, err
 func (pool *ConnectionPool) GetIdleConn(curSession *Session) (*Connection, error) {
 	// Take an idle connectin is avaliable
 	if pool.idleConnectionQueue.Len() > 0 {
-		// TODO add timeout
-
+		// Update status of server's avaliability
+		for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
+			if ele.Value.(*Connection).SeverAddress == curSession.connection.SeverAddress {
+				ele.Value.(*Connection).SeverAddress.IsAvaliable = false
+			}
+		}
+		// Mark the current host as non-avaliable
+		curSession.connection.SeverAddress.IsAvaliable = false
 		// Return an idle session that is different from the current one
 		for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
-			if ele.Value.(*Connection).GetServerAddress() != curSession.connection.severAddress {
+			if ele.Value.(*Connection).SeverAddress != curSession.connection.SeverAddress &&
+				ele.Value.(*Connection).SeverAddress.IsAvaliable == true {
 				return ele.Value.(*Connection), nil
 			}
 		}
-		// newConn := pool.idleConnectionQueue.Front().Next().Value.(*Connection)
-		noAvaliableConnectionErr := errors.New("Failed to reconnect: no avaliable connection to a different host can")
-
-		// Pop connection from queue
-		// pool.idleConnectionQueue.Remove(pool.idleConnectionQueue.Front())
-		// pool.activeConnectionQueue.PushBack(newConn)
+		noAvaliableConnectionErr := errors.New("Failed to reconnect: no avaliable connection to a different host can be found")
 
 		return nil, noAvaliableConnectionErr
 	}
@@ -136,13 +139,28 @@ func (pool *ConnectionPool) GetIdleConn(curSession *Session) (*Connection, error
 	// Create a new connection if there is no idle connection and total connection < pool max size
 	totalConn := pool.idleConnectionQueue.Len() + pool.activeConnectionQueue.Len()
 	// TODO: use load balencer to decide the host to connect
-	severAddress := pool.addresses[0]
+	var severAddress *data.HostAddress
+	severAddress = nil
+	// Check if there is valid host in the pool
 	if totalConn < pool.conf.MaxConnPoolSize {
+		for _, host := range pool.addresses {
+			if host.IsAvaliable == true {
+				severAddress = host
+			}
+		}
+		// No valid host in the pool
+		if severAddress == nil {
+			noAvaliableHost := errors.New("Failed to reconnect: no avaliable host in the connection pool")
+			if noAvaliableHost != nil {
+				fmt.Print(noAvaliableHost)
+			}
+			return nil, noAvaliableHost
+		}
 		newConn := NewConnection(*severAddress)
 		newConn.inuse = false
 
 		// Open connection to host
-		err := newConn.Open(newConn.severAddress, *pool.conf)
+		err := newConn.Open(newConn.SeverAddress, *pool.conf)
 		if err != nil {
 			log.Printf("Failed to open connection, error: %s \n", err.Error())
 			return nil, err
@@ -152,7 +170,7 @@ func (pool *ConnectionPool) GetIdleConn(curSession *Session) (*Connection, error
 		pool.idleConnectionQueue.PushBack(newConn)
 		return newConn, nil
 	}
-	// If no idle avaliable, wait for timeout and reconnect
+	// TODO: If no idle avaliable, wait for timeout and reconnect
 
 	// If no idle avaliable and the number of total connection reaches the max pool size, return error/wait for timeout
 	noAvaliableConnectionErr := errors.New("Failed to reconnect: no avaliable connection in the connection pool")

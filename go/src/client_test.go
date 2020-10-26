@@ -19,23 +19,26 @@ import (
 
 const (
 	address  = "127.0.0.1"
-	port     = 34187
+	port     = 3699
 	username = "user"
 	password = "password"
 )
 
 var poolAddress = []*data.HostAddress{
 	&data.HostAddress{
-		Host: "127.0.0.1",
-		Port: 3699,
+		Host:        "127.0.0.1",
+		Port:        3699,
+		IsAvaliable: true,
 	},
 	&data.HostAddress{
-		Host: "127.0.0.1",
-		Port: 3701,
+		Host:        "127.0.0.1",
+		Port:        3701,
+		IsAvaliable: true,
 	},
 	&data.HostAddress{
-		Host: "127.0.0.1",
-		Port: 3710,
+		Host:        "127.0.0.1",
+		Port:        3710,
+		IsAvaliable: true,
 	},
 }
 
@@ -253,7 +256,7 @@ func TestReconnect(t *testing.T) {
 		}
 	}
 
-	for {
+	for i := 0; i < 10; i++ {
 		timer1 := time.NewTimer(1 * time.Second)
 		<-timer1.C
 		sessionList[0].Execute("SHOW HOSTS;")
@@ -265,6 +268,12 @@ func TestReconnect(t *testing.T) {
 		return
 	}
 	checkResp("show hosts", resp)
+
+	err = sessionList[0].Release()
+	if err != nil {
+		t.Fatalf("Fail to release session, %s", err.Error())
+		return
+	}
 
 	err = pool.Close()
 	if err != nil {

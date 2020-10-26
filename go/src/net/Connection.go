@@ -18,23 +18,25 @@ import (
 )
 
 type Connection struct {
-	severAddress data.HostAddress
+	SeverAddress data.HostAddress
 	graph        *graph.GraphServiceClient
 	inuse        bool
 }
 
 func NewConnection(severAddress data.HostAddress) *Connection {
 	newObj := Connection{}
-	newObj.severAddress = severAddress
+	newObj.SeverAddress = severAddress
 	newObj.graph = nil
 	newObj.inuse = true
 
 	return &newObj
 }
 
-func (cn *Connection) GetServerAddress() data.HostAddress {
-	return cn.severAddress
-}
+// func (cn *Connection) SetServerAddress(Host string, Port int, IsAvaliable bool) {
+// 	cn.severAddress.Host = Host
+// 	cn.severAddress.Port = Port
+// 	cn.severAddress.IsAvaliable = IsAvaliable
+// }
 
 func (cn *Connection) Open(hostAddress data.HostAddress, conf conf.PoolConfig) (err error) {
 	ip := hostAddress.GetHost()

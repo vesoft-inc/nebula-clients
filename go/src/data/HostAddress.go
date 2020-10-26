@@ -7,21 +7,23 @@
 package data
 
 type HostAddress struct {
-	Host string
-	Port int
-	// valid bool
+	Host        string
+	Port        int
+	IsAvaliable bool
 }
 
 func NewHostAddress(Host string, Port int) HostAddress {
 	NewHostAddress := HostAddress{}
 	NewHostAddress.Host = Host
 	NewHostAddress.Port = Port
+	NewHostAddress.IsAvaliable = true
 	return NewHostAddress
 }
 
 func (hostAddress *HostAddress) SetHostAddress(Host string, Port int) {
 	hostAddress.Host = Host
 	hostAddress.Port = Port
+	hostAddress.IsAvaliable = true
 }
 
 func (hostAddress *HostAddress) GetHost() string {

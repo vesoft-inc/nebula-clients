@@ -41,13 +41,9 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 			fmt.Printf("Failed to reconnect, %s \n", _err.Error())
 			return nil, _err
 		}
-		// resp, err = session.connection.Execute(session.sessionID, stmt)
-		// if err != nil {
-		// 	fmt.Printf("Failed to execute, %s \n", err.Error())
-		// 	return resp, err
-		// }
+
 		fmt.Printf("Successfully reconnect to host: %s, port: %d \n",
-			session.connection.severAddress.GetHost(), session.connection.severAddress.GetPort())
+			session.connection.SeverAddress.GetHost(), session.connection.SeverAddress.GetPort())
 		return resp, nil
 	}
 	return resp, nil
