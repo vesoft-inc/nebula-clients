@@ -10,6 +10,8 @@ package nebulaNet
 
 import (
 	"container/heap"
+	"errors"
+	"log"
 
 	data "github.com/vesoft-inc/nebula-clients/go/src/data"
 )
@@ -64,4 +66,42 @@ func (pq *PriorityQueue) update(serverStatus *ServerStatus, isAvaliable bool,
 	serverStatus.isAvaliable = isAvaliable
 	serverStatus.currentLoad = currentLoad
 	heap.Fix(pq, serverStatus.index)
+}
+
+// Update status of server's avaliability when reconncect
+func (pool *ConnectionPool) UpdateStatus(curSession *Session) error {
+	if pool == nil {
+		invalidPoolError := errors.New("Failed to update host status, pool is invalid")
+		log.Print(invalidPoolError)
+		return invalidPoolError
+	}
+	for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
+		if ele.Value.(*Connection).SeverAddress == curSession.connection.SeverAddress {
+			ele.Value.(*Connection).SeverAddress.IsAvaliable = false
+		}
+	}
+	return nil
+}
+
+// Returns the first host in the host list that is valid
+func (pool *ConnectionPool) GetValidHost() (*data.HostAddress, error) {
+	for _, host := range pool.addresses {
+		if host.IsAvaliable == true {
+			return host, nil
+		}
+	}
+	noAvaliableHost := errors.New("Failed to find an avaliable host in the connection pool")
+	log.Print(noAvaliableHost)
+	return nil, noAvaliableHost
+}
+
+// Returns the first connection in the idle connection queue that has a valid host
+func (pool *ConnectionPool) GetValidConn() (*Connection, error) {
+	for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
+		if ele.Value.(*Connection).SeverAddress.IsAvaliable == true {
+			return ele.Value.(*Connection), nil
+		}
+	}
+	noAvaliableConnectionErr := errors.New("Failed to reconnect: no avaliable connection to a different host can be found")
+	return nil, noAvaliableConnectionErr
 }

@@ -118,7 +118,7 @@ func TestPool_SingleHost(t *testing.T) {
 	hostList := []*data.HostAddress{}
 	hostList = append(hostList, &hostAdress)
 	pool := nebulaNet.ConnectionPool{}
-
+	testPoolConfig = conf.NewPoolConf(0, 0, 0, 1, 0)
 	// Initialize connectin pool
 	err := pool.InitPool(hostList, &testPoolConfig)
 	if err != nil {
@@ -183,8 +183,10 @@ func TestPool_MultiHosts(t *testing.T) {
 		t.Logf("Expected Failue: Fail to get session: no avaliable connection")
 	}
 
+	// Minimun pool size < hosts number
+	multiHostsConfig := conf.NewPoolConf(0, 0, 0, 1, 0)
 	// Initialize connectin pool
-	err = pool.InitPool(hostList, &testPoolConfig)
+	err = pool.InitPool(hostList, &multiHostsConfig)
 	if err != nil {
 		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s \n", address, port, err.Error())
 	}
@@ -250,12 +252,7 @@ func TestReconnect(t *testing.T) {
 		sessionList = append(sessionList, session)
 	}
 
-	checkResp := func(prefix string, err *graph.ExecutionResponse) {
-		if nebulaNet.IsError(err) {
-			t.Errorf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
-		}
-	}
-
+	// Send query to server periodically
 	for i := 0; i < 10; i++ {
 		timer1 := time.NewTimer(1 * time.Second)
 		<-timer1.C
@@ -266,7 +263,6 @@ func TestReconnect(t *testing.T) {
 			t.Errorf("Error info: %s", err.Error())
 			return
 		}
-		//checkResp("show hosts", resp)
 	}
 
 	resp, err := sessionList[0].Execute("SHOW HOSTS;")
@@ -274,7 +270,11 @@ func TestReconnect(t *testing.T) {
 		t.Fatalf(err.Error())
 		return
 	}
-	checkResp("show hosts", resp)
+
+	// This assertion will pass only when reconnection happens
+	if assert.Equal(t, resp.GetErrorCode(), graph.ErrorCode_E_SESSION_INVALID) {
+		t.Logf("Expected error: E_SESSION_INVALID")
+	}
 
 	err = sessionList[0].Release()
 	if err != nil {

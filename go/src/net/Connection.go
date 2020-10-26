@@ -32,12 +32,6 @@ func NewConnection(severAddress data.HostAddress) *Connection {
 	return &newObj
 }
 
-// func (cn *Connection) SetServerAddress(Host string, Port int, IsAvaliable bool) {
-// 	cn.severAddress.Host = Host
-// 	cn.severAddress.Port = Port
-// 	cn.severAddress.IsAvaliable = IsAvaliable
-// }
-
 func (cn *Connection) Open(hostAddress data.HostAddress, conf conf.PoolConfig) (err error) {
 	ip := hostAddress.GetHost()
 	port := hostAddress.GetPort()

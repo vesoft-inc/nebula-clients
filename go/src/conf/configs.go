@@ -10,18 +10,6 @@ import (
 	"time"
 )
 
-// type GraphConfig struct {
-// 	TimeOut         time.Duration
-// 	IdleTime        time.Duration
-// 	MaxConnPoolSize int
-// 	MinConnPoolSize int
-// 	MaxRetryTimes   int
-// }
-
-// func (opt *GraphConfig) SetDefualt() {
-// 	opt.TimeOut = 0 * time.Second
-// }
-
 type PoolConfig struct {
 	// Socket timeout and Socket connection timeout, unit: seconds
 	TimeOut time.Duration
