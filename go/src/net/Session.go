@@ -9,6 +9,7 @@ package nebulaNet
 import (
 	"fmt"
 
+	"github.com/facebook/fbthrift/thrift/lib/go/thrift"
 	graph "github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 )
 
@@ -36,26 +37,28 @@ func newSession(sessionID int64, connection *Connection,
 func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 	resp, err := session.connection.Execute(session.sessionID, stmt)
 	if err != nil {
-		_err := session.reConnect()
-		if _err != nil {
-			fmt.Printf("Failed to reconnect, %s \n", _err.Error())
-			return nil, _err
+		// Reconnect only if the tranport is closed
+		if err, ok := err.(thrift.TransportException); ok && err.TypeID() == thrift.END_OF_FILE {
+			_err := session.reConnect()
+			if _err != nil {
+				fmt.Printf("Failed to reconnect, %s \n", _err.Error())
+				return nil, _err
+			}
+			fmt.Printf("Successfully reconnect to host: %s, port: %d \n",
+				session.connection.SeverAddress.GetHost(), session.connection.SeverAddress.GetPort())
+			return resp, nil
 		}
 
-		fmt.Printf("Successfully reconnect to host: %s, port: %d \n",
-			session.connection.SeverAddress.GetHost(), session.connection.SeverAddress.GetPort())
-		return resp, nil
+		fmt.Sprintf("Error info: %s", err.Error())
+		return resp, err
 	}
 	return resp, nil
 }
 
 // Check connection to host address
 func (session *Session) Ping() (bool, error) {
-	resp, err := session.connection.Ping(session.sessionID)
+	_, err := session.connection.Ping(session.sessionID)
 	if err != nil {
-		fmt.Println("Failed to ping the server, ", err)
-		return false, err
-	} else if resp != true {
 		fmt.Println("Failed to ping the server, ", err)
 		return false, err
 	}
@@ -101,13 +104,7 @@ func (session *Session) Release() error {
 	}
 
 	// Release connection to pool
-	session.connPool.idleConnectionQueue.PushBack(session.connection)
-
-	for ele := session.connPool.activeConnectionQueue.Front(); ele != nil; ele = ele.Next() {
-		if ele.Value == session.connection {
-			session.connPool.activeConnectionQueue.Remove(ele)
-		}
-	}
+	session.connPool.ReturnObject(session)
 
 	return nil
 }

@@ -9,7 +9,6 @@ package nebulaNet
 import (
 	"container/list"
 	"errors"
-	"fmt"
 	"log"
 
 	graph "github.com/vesoft-inc/nebula-clients/go/nebula/graph"
@@ -32,24 +31,24 @@ type ConnectionPool struct {
 }
 
 func (pool *ConnectionPool) InitPool(addresses []*data.HostAddress, conf *conf.PoolConfig) error {
+	// Process domain to IP
+	data.DomainToIP(addresses)
+
 	pool.addresses = addresses
 	pool.conf = conf
 
 	// Check input
 	if len(addresses) == 0 {
 		noAddresErr := errors.New("Failed to reconnect: no avaliable connection in the connection pool")
-		if noAddresErr != nil {
-			fmt.Print(noAddresErr)
-		}
+		log.Print(noAddresErr)
 		return noAddresErr
 	}
 	if conf == nil {
 		noConfErr := errors.New("Failed to reconnect: no avaliable connection in the connection pool")
-		if noConfErr != nil {
-			fmt.Print(noConfErr)
-		}
+		log.Print(noConfErr)
 		return noConfErr
 	}
+
 	// Create connection to given hosts
 	for _, host := range addresses {
 		newConn := NewConnection(*host)
@@ -86,9 +85,7 @@ func (pool *ConnectionPool) InitPool(addresses []*data.HostAddress, conf *conf.P
 func (pool *ConnectionPool) GetSession(username, password string) (*Session, error) {
 	if pool.idleConnectionQueue.Len() == 0 {
 		noAvaliableConnectionErr := errors.New("Failed to get sessoin: no avaliable connection")
-		if noAvaliableConnectionErr != nil {
-			fmt.Println(noAvaliableConnectionErr)
-		}
+		log.Println(noAvaliableConnectionErr)
 		return nil, noAvaliableConnectionErr
 	}
 	// Authenticate
@@ -103,13 +100,12 @@ func (pool *ConnectionPool) GetSession(username, password string) (*Session, err
 	newSession := newSession(sessionID, chosenConn, pool)
 
 	// Add connction to active queue and pop it from idle queue
-	newSession.connPool.activeConnectionQueue.PushBack(chosenConn)
-	for ele := newSession.connPool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
+	pool.activeConnectionQueue.PushBack(chosenConn)
+	for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
 		if ele.Value == chosenConn {
-			newSession.connPool.idleConnectionQueue.Remove(ele)
+			pool.idleConnectionQueue.Remove(ele)
 		}
 	}
-
 	return &newSession, nil
 }
 
@@ -151,9 +147,7 @@ func (pool *ConnectionPool) GetIdleConn(curSession *Session) (*Connection, error
 		// No valid host in the pool
 		if severAddress == nil {
 			noAvaliableHost := errors.New("Failed to reconnect: no avaliable host in the connection pool")
-			if noAvaliableHost != nil {
-				fmt.Print(noAvaliableHost)
-			}
+			log.Print(noAvaliableHost)
 			return nil, noAvaliableHost
 		}
 		newConn := NewConnection(*severAddress)
@@ -174,10 +168,19 @@ func (pool *ConnectionPool) GetIdleConn(curSession *Session) (*Connection, error
 
 	// If no idle avaliable and the number of total connection reaches the max pool size, return error/wait for timeout
 	noAvaliableConnectionErr := errors.New("Failed to reconnect: no avaliable connection in the connection pool")
-	if noAvaliableConnectionErr != nil {
-		fmt.Print(noAvaliableConnectionErr)
-	}
+	log.Print(noAvaliableConnectionErr)
 	return nil, noAvaliableConnectionErr
+}
+
+// Release connection to pool
+func (pool *ConnectionPool) ReturnObject(session *Session) {
+	pool.idleConnectionQueue.PushBack(session.connection)
+
+	for ele := pool.activeConnectionQueue.Front(); ele != nil; ele = ele.Next() {
+		if ele.Value == session.connection {
+			pool.activeConnectionQueue.Remove(ele)
+		}
+	}
 }
 
 // Close all connection
@@ -197,11 +200,4 @@ func (pool *ConnectionPool) Close() error {
 		}
 	}
 	return nil
-}
-
-func (rsp RespData) String() string {
-	if rsp.Err != nil {
-		return fmt.Sprintf("Error: %s", rsp.Err.Error())
-	}
-	return rsp.Resp.String()
 }

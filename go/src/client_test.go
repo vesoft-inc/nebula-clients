@@ -8,9 +8,11 @@ package ngdb
 
 import (
 	"fmt"
+	"net"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 	conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
 	data "github.com/vesoft-inc/nebula-clients/go/src/data"
@@ -48,8 +50,6 @@ var testPoolConfig = conf.NewPoolConf(0, 0, 0, 0, 0)
 // Before run `go test -v`, you should start a nebula server listening on 3699 port.
 // Using docker-compose is the easiest way and you can reference this file:
 //   https://github.com/vesoft-inc/nebula/blob/master/docker/docker-compose.yaml
-//
-// TODO(yee): introduce mock server
 
 func logoutAndClose(conn *nebulaNet.Connection, sessionID int64) {
 	conn.SignOut(sessionID)
@@ -78,9 +78,9 @@ func TestConnection(t *testing.T) {
 
 	defer logoutAndClose(conn, sessionID)
 
-	checkResp := func(prefix string, authresp *graph.ExecutionResponse) {
-		if nebulaNet.IsError(authresp) {
-			t.Fatalf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, authresp.GetErrorCode(), authresp.GetErrorMsg())
+	checkResp := func(prefix string, execResp *graph.ExecutionResponse) {
+		if nebulaNet.IsError(execResp) {
+			t.Fatalf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, execResp.GetErrorCode(), execResp.GetErrorMsg())
 		}
 	}
 
@@ -212,7 +212,7 @@ func TestPool_MultiHosts(t *testing.T) {
 	// Try again to get connection
 	newSession, err := pool.GetSession(username, password)
 	if err != nil {
-		t.Logf("Expected Failue: No avaliable connection, %s", err.Error())
+		t.Logf("Fail to create a new session, %s", err.Error())
 	}
 
 	checkResp := func(prefix string, err *graph.ExecutionResponse) {
@@ -259,9 +259,16 @@ func TestReconnect(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		timer1 := time.NewTimer(1 * time.Second)
 		<-timer1.C
-		sessionList[0].Execute("SHOW HOSTS;")
+		_, err := sessionList[0].Execute("SHOW HOSTS;")
 		fmt.Println("Sending query...")
+
+		if err != nil {
+			t.Errorf("Error info: %s", err.Error())
+			return
+		}
+		//checkResp("show hosts", resp)
 	}
+
 	resp, err := sessionList[0].Execute("SHOW HOSTS;")
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -280,4 +287,21 @@ func TestReconnect(t *testing.T) {
 		t.Fatalf("Fail to close all connection in pool, %s", err.Error())
 		return
 	}
+}
+
+func TestIpLookup(t *testing.T) {
+	ips, err := net.LookupIP("google.com")
+	if err != nil {
+		t.Errorf("Could not get IPs: %v\n", err)
+	}
+	for _, ip := range ips {
+		fmt.Printf("google.com. IN A %s\n", ip.String())
+	}
+}
+
+func TestIPV4Validation(t *testing.T) {
+	result := data.IsIPv4("192.168.0.1")
+	assert.Equal(t, result, true, "192.168.0.1 is an IPV4 address")
+	result = data.IsIPv4("::FFFF:C0A8:1")
+	assert.Equal(t, result, false, "::FFFF:C0A8:1 is not an IPV4 address")
 }
