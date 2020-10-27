@@ -40,7 +40,6 @@ jobs:
         sleep 10
         popd
         popd
-
     - name: Build with Maven
       run: mvn -B package --file java/pom.xml
 
@@ -98,4 +97,3 @@ jobs:
           popd
           cd go
           go test -v -race
-
