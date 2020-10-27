@@ -20,12 +20,9 @@ if __name__ == '__main__':
     try:
         config = Config()
         config.max_connection_pool_size = 1
-
-        addresses = list()
-        addresses.append(('127.0.0.1', 3699))
         # init connection pool
         connection_pool = ConnectionPool()
-        assert connection_pool.init(addresses, config)
+        assert connection_pool.init([('127.0.0.1', 3700), ('127.0.0.1', 3699)], config)
 
         # get session from the pool
         client = connection_pool.get_session('root', 'nebula')

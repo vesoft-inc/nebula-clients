@@ -14,10 +14,8 @@ class Config(object):
     # the max connection in pool
     max_connection_pool_size = 10
 
-    max_retry_time = 3
+    # connection or execute timeout, unit ms, 0 means no timeout
+    timeout = 0
 
-    # connection or execute timeout, unit ms
-    timeout = 10000
-
-    # unit s
-    idle_time = 5 * 60
+    # unit s, 0 means will never close the idle connection
+    idle_time = 0
