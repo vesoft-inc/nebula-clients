@@ -113,6 +113,8 @@ class ConnectionPool(object):
         self._lock = RLock()
         self._pos = -1
         self._check_delay = 60  # unit seconds
+        self._close = False
+        self._init = False
 
     def __del__(self):
         self.close()
@@ -124,6 +126,9 @@ class ConnectionPool(object):
         :param configs: the config
         :return: if all addresses are ok, return True else return False.
         """
+        if self._close:
+            logging.error('The pool has init or closed.')
+            return False
         self._configs = configs
         for address in addresses:
             if address not in self._addresses:
@@ -149,6 +154,7 @@ class ConnectionPool(object):
                 connection = Connection()
                 connection.open(addr[0], addr[1], self._configs.timeout)
                 self._connections[addr].append(connection)
+        self._init = True
         return True
 
     def get_session(self, user_name, password, retry_connect=True):
@@ -173,6 +179,10 @@ class ConnectionPool(object):
         get available connection
         :return: Connection Object
         """
+        if self._close:
+            logging.error('The pool is closed')
+            raise NotValidConnectionException()
+
         with self._lock:
             try:
                 ok_num = self.get_ok_servers_num()
@@ -233,6 +243,7 @@ class ConnectionPool(object):
                     if connection.is_used:
                         logging.error('The connection using by someone, but now want to close it')
                     connection.close()
+            self._close = True
 
     def connnects(self):
         """

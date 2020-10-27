@@ -8,6 +8,7 @@
 
 import sys
 import os
+import pytest
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.join(current_dir, '..')
@@ -148,7 +149,7 @@ class TestConnectionPool(TestCase):
         except NotValidConnectionException:
             assert True
         except Exception as e:
-            assert False, "We don't expect reach here.".format(e)
+            assert False, "We don't expect reach here:{}".format(e)
 
         try:
             session.execute('SHOW SPACES')

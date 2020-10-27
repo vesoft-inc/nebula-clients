@@ -73,7 +73,7 @@ jobs:
         popd
         popd
         cd python/tests
-        pytest -s
+        pytest -s -v
   
   go-client:
     runs-on: ubuntu-latest
@@ -103,7 +103,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [8.x, 10.x, 12.x]
+        node-version: [10.x, 12.x]
 
     steps:
     - uses: actions/checkout@v2
