@@ -14,7 +14,7 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Session extends Object {
+public class Session {
     private long sessionID;
     private SyncConnection connection;
     private final GenericObjectPool<SyncConnection> pool;
@@ -22,9 +22,11 @@ public class Session extends Object {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public Session(SyncConnection connection,
+                   long sessionID,
                    GenericObjectPool<SyncConnection> connPool,
                    Boolean retryConnect) {
         this.connection = connection;
+        this.sessionID = sessionID;
         this.pool = connPool;
         this.retryConnect = retryConnect;
     }
@@ -65,38 +67,6 @@ public class Session extends Object {
                 }
             }
             throw ie;
-        }
-    }
-
-    public void auth(String userName, String password)
-            throws AuthFailedException, IOErrorException {
-        try {
-            this.sessionID = connection.authenticate(userName, password);
-        } catch (AuthFailedException e) {
-            throw e;
-        } catch (IOErrorException ie) {
-            if (ie.getType() == IOErrorException.E_CONNECT_BROKEN) {
-                if (this.pool.getFactory() instanceof ConnObjectPool) {
-                    ((ConnObjectPool)this.pool.getFactory()).updateServerStatus();
-                }
-                try {
-                    this.pool.invalidateObject(this.connection);
-                } catch (Exception e) {
-                    log.error("Return object failed");
-                }
-
-                if (this.retryConnect) {
-                    if (retryConnect()) {
-                        this.sessionID = connection.authenticate(userName, password);
-                    } else {
-                        throw new IOErrorException(IOErrorException.E_ALL_BROKEN,
-                                "All servers are broken.");
-                    }
-                }
-                throw ie;
-            } else {
-                throw ie;
-            }
         }
     }
 

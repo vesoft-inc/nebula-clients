@@ -55,8 +55,8 @@ public class NebulaPool {
             log.info(String.format("Get connection to %s:%d",
                     connection.getServerAddress().getHost(),
                     connection.getServerAddress().getPort()));
-            Session session = new Session(connection, this.objectPool, reconnect);
-            session.auth(userName, password);
+            long sessionID = connection.authenticate(userName, password);
+            Session session = new Session(connection, sessionID, this.objectPool, reconnect);
             return session;
         } catch (NotValidConnectionException | AuthFailedException | IOErrorException e) {
             throw e;
