@@ -44,7 +44,7 @@ func NewLoadbalancer(addresses []*data.HostAddress, pool *ConnectionPool) *LoadB
 // Test if the host is valid
 func PingHost(hostAddress *data.HostAddress) (bool, error) {
 	conn := NewConnection(*hostAddress)
-	conf := conf.NewPoolConf(0, 0, 0, 0)
+	conf := conf.GetDefaultConf()
 	err := conn.Open(*hostAddress, conf)
 	if err != nil {
 		log.Printf("Error: %s", err.Error())

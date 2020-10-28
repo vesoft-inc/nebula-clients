@@ -74,11 +74,9 @@ func (session *Session) Ping() (bool, error) {
 func (session *Session) reConnect() error {
 	newConnection, err := session.connPool.GetIdleConn()
 	if err != nil {
-		for retry := session.connPool.conf.MaxRetryTimes; retry != 0 && err != nil; retry-- {
-			newConnection, err = session.connPool.GetIdleConn()
-			if err == nil {
-				goto next
-			}
+		newConnection, err = session.connPool.GetIdleConn()
+		if err == nil {
+			goto next
 		}
 		fmt.Println("Failed to reconnect: No idle connection, ", err)
 		return err
@@ -88,28 +86,12 @@ next:
 	// Close current connection
 	session.connection.Close()
 
-	// Ready to use the new connection
-	session.connPool.ConnectionInUse[newConnection] = true
-
-	session.connPool.activeConnectionQueue.PushBack(newConnection)
-	for e := session.connPool.idleConnectionQueue.Front(); e != nil; e = e.Next() {
-		if e.Value == newConnection {
-			session.connPool.idleConnectionQueue.Remove(e)
-		}
-	}
-
 	session.connection = newConnection
 	return nil
 }
 
-func (session *Session) Release() error {
-	err := session.connection.SignOut(session.sessionID)
-	if err != nil {
-		fmt.Println("Failed to release session, ", err)
-	}
-
+func (session *Session) Release() {
+	session.connection.SignOut(session.sessionID)
 	// Release connection to pool
 	session.connPool.ReturnObject(session.connection)
-
-	return nil
 }

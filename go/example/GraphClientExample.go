@@ -29,7 +29,7 @@ func main() {
 	pool := nebulaNet.ConnectionPool{}
 
 	// Create configs for connection pool using default values
-	testPoolConfig := conf.NewPoolConf(0, 0, 0, 0)
+	testPoolConfig := conf.GetDefaultConf()
 	// Initialize connectin pool
 	err := pool.InitPool(hostList, &testPoolConfig)
 	if err != nil {
@@ -69,11 +69,7 @@ func main() {
 	}
 	checkResp("drop space", resp)
 	// Release session and return connection back to connection pool
-	err = session.Release()
-	if err != nil {
-		fmt.Printf("Fail to release session, %s", err.Error())
-		return
-	}
+	session.Release()
 	// Close all connections in the pool
 	pool.Close()
 

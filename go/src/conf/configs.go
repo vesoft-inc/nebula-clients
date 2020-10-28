@@ -7,6 +7,7 @@
 package conf
 
 import (
+	"log"
 	"time"
 )
 
@@ -21,11 +22,9 @@ type PoolConfig struct {
 	MaxConnPoolSize int
 	// The min connections in pool for all addresses
 	MinConnPoolSize int
-	// the times to retry to connect
-	MaxRetryTimes int
 }
 
-// Use 0 as parameter to get the default configs
+// Create a new poolConfig object with given parameters
 func NewPoolConf(TimeOut time.Duration, IdleTime time.Duration, MaxConnPoolSize int,
 	MinConnPoolSize int) PoolConfig {
 
@@ -34,19 +33,33 @@ func NewPoolConf(TimeOut time.Duration, IdleTime time.Duration, MaxConnPoolSize 
 		IdleTime:        0 * time.Millisecond,
 		MaxConnPoolSize: 10,
 		MinConnPoolSize: 0,
-		MaxRetryTimes:   3,
 	}
-	if TimeOut != 0 {
-		newPoolConfig.TimeOut = TimeOut
+	if TimeOut < 0 {
+		log.Printf("Illegal Timeout value")
 	}
-	if IdleTime != 0 {
-		newPoolConfig.IdleTime = IdleTime
+	newPoolConfig.TimeOut = TimeOut
+	if IdleTime < 0 {
+		log.Printf("Invalid IdleTime value")
 	}
-	if MaxConnPoolSize != 0 {
-		newPoolConfig.MaxConnPoolSize = MaxConnPoolSize
+	newPoolConfig.IdleTime = IdleTime
+	if MaxConnPoolSize < 1 {
+		log.Printf("Invalid MaxConnPoolSize value: %d", MaxConnPoolSize)
 	}
-	if MinConnPoolSize != 0 {
-		newPoolConfig.MinConnPoolSize = MinConnPoolSize
+	newPoolConfig.MaxConnPoolSize = MaxConnPoolSize
+	if MinConnPoolSize < 0 {
+		log.Printf("Invalid MinConnPoolSize value: %d", MinConnPoolSize)
+	}
+	newPoolConfig.MinConnPoolSize = MinConnPoolSize
+	return newPoolConfig
+}
+
+// Return the default config
+func GetDefaultConf() PoolConfig {
+	var newPoolConfig = PoolConfig{
+		TimeOut:         0 * time.Millisecond,
+		IdleTime:        0 * time.Millisecond,
+		MaxConnPoolSize: 10,
+		MinConnPoolSize: 0,
 	}
 	return newPoolConfig
 }
@@ -81,12 +94,4 @@ func (config *PoolConfig) GetIdleTime() time.Duration {
 
 func (config *PoolConfig) SetIdleTime(duration time.Duration) {
 	config.IdleTime = duration
-}
-
-func (config *PoolConfig) GetMaxRetryTimes() int {
-	return config.MaxRetryTimes
-}
-
-func (config *PoolConfig) SetMaxRetryTimes(times int) {
-	config.MaxRetryTimes = times
 }

@@ -9,6 +9,7 @@ package ngdb
 import (
 	"fmt"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -45,7 +46,7 @@ var poolAddress = []*data.HostAddress{
 }
 
 // Create default configs
-var testPoolConfig = conf.NewPoolConf(0, 0, 0, 0)
+var testPoolConfig = conf.GetDefaultConf()
 
 // Before run `go test -v`, you should start a nebula server listening on 3699 port.
 // Using docker-compose is the easiest way and you can reference this file:
@@ -119,7 +120,7 @@ func TestPool_SingleHost(t *testing.T) {
 	hostList = append(hostList, &hostAdress)
 	pool := nebulaNet.ConnectionPool{}
 
-	testPoolConfig = conf.NewPoolConf(0, 0, 0, 1)
+	testPoolConfig = conf.NewPoolConf(0, 0, 10, 1)
 	// Initialize connectin pool
 	err := pool.InitPool(hostList, &testPoolConfig)
 	if err != nil {
@@ -159,11 +160,8 @@ func TestPool_SingleHost(t *testing.T) {
 	}
 	checkResp("drop space", resp)
 	// Release session and return connection back to connection pool
-	err = session.Release()
-	if err != nil {
-		t.Fatalf("Fail to release session, %s", err.Error())
-		return
-	}
+	session.Release()
+
 	// Close all connections in the pool
 	pool.Close()
 }
@@ -205,7 +203,7 @@ func TestPool_MultiHosts(t *testing.T) {
 
 	// Release 1 connectin back to pool
 	sessionToRelease := sessionList[0]
-	err = sessionToRelease.Release()
+	sessionToRelease.Release()
 	sessionList = sessionList[1:]
 
 	// Try again to get connection
@@ -228,10 +226,52 @@ func TestPool_MultiHosts(t *testing.T) {
 	checkResp("show hosts", resp)
 }
 
+func TestMultiThreads(t *testing.T) {
+	hostAdress := data.NewHostAddress(address, port)
+	hostList := []*data.HostAddress{}
+	hostList = append(hostList, &hostAdress)
+	pool := nebulaNet.ConnectionPool{}
+
+	testPoolConfig = conf.NewPoolConf(0, 0, 1000, 1)
+	// Initialize connectin pool
+	err := pool.InitPool(hostList, &testPoolConfig)
+	if err != nil {
+		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+	}
+	var sessionList []*nebulaNet.Session
+
+	var w sync.WaitGroup
+	var mu sync.RWMutex
+	// Create multiple session
+	for i := 0; i < 1000; i++ {
+		w.Add(1)
+		go func(wg *sync.WaitGroup) {
+			session, err := pool.GetSession(username, password)
+			if err != nil {
+				t.Errorf("Fail to create a new session from connection pool, %s", err.Error())
+			}
+			mu.Lock()
+			sessionList = append(sessionList, session)
+			mu.Unlock()
+			wg.Done()
+		}(&w)
+	}
+	w.Wait()
+	if assert.Equal(t, pool.GetActiveConnCount(), 1000) {
+		t.Logf("Expected total active connections: 1000")
+	}
+	for i := 0; i < 1000; i++ {
+		sessionList[i].Release()
+	}
+	if assert.Equal(t, pool.GetIdleConnCount(), 1000) {
+		t.Logf("Expected total idle connections: 1000")
+	}
+}
+
 func TestReconnect(t *testing.T) {
 	hostList := poolAddress
 	pool := nebulaNet.ConnectionPool{}
-	timeoutConfig := conf.NewPoolConf(0, 0, 0, 6)
+	timeoutConfig := conf.NewPoolConf(0, 0, 10, 6)
 	// Initialize connectin pool
 	err := pool.InitPool(hostList, &timeoutConfig)
 	if err != nil {
@@ -273,7 +313,7 @@ func TestReconnect(t *testing.T) {
 		t.Logf("Expected error: E_SESSION_INVALID")
 	}
 
-	err = sessionList[0].Release()
+	sessionList[0].Release()
 	if err != nil {
 		t.Fatalf("Fail to release session, %s", err.Error())
 		return

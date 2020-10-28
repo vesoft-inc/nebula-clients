@@ -53,7 +53,7 @@ graph "github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 
 func  main() {
 	// Create configs for connection pool using default values
-	nebulaPoolConfig conf.PoolConfig = conf.NewPoolConf(0, 0, 0, 0)
+	nebulaPoolConfig conf.PoolConfig = conf.GetDefaultConf()
 	// Build a list of host address
 	hostAdress := data.NewHostAddress(address, port)
 	hostList := []*data.HostAddress{}
@@ -72,13 +72,6 @@ func  main() {
 	username, password, err.Error())
 	}
 
-	  
-	// Method used to check execution response
-	checkResp :=  func(prefix string, err *graph.ExecutionResponse) {
-	if nebulaNet.IsError(err) {
-			t.Errorf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
-		}
-	}
 
 	// Excute a query
 	resp, err := session.Execute("SHOW HOSTS;")
@@ -86,26 +79,12 @@ func  main() {
 		t.Fatalf(err.Error())
 		return
 	}
-	checkResp("show hosts", resp)
-	  
-	// Create a new space
-	resp, err = session.Execute("CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
-	if err !=  nil {
-		t.Fatalf(err.Error())
-		return
-	}
-	checkResp("create space", resp)
+
 	  
 	// Release session and return connection back to connection pool
-	err = session.Release()
-		if err !=  nil {
-		t.Fatalf("Fail to release session, %s", err.Error())
-		return
-	}
-
+	session.Release()
 	// Close all connections in the pool
 	pool.Close()
-
 }
 
   
