@@ -15,6 +15,7 @@ type PoolConfig struct {
 	TimeOut time.Duration
 	// The idleTime of the connection, unit: seconds
 	// If connection's idle time is longer than idleTime, it will be delete
+	// 0 value means the connection will not expire
 	IdleTime time.Duration
 	// The max connections in pool for all addresses
 	MaxConnPoolSize int
@@ -26,12 +27,12 @@ type PoolConfig struct {
 
 // Use 0 as parameter to get the default configs
 func NewPoolConf(TimeOut time.Duration, IdleTime time.Duration, MaxConnPoolSize int,
-	MinConnPoolSize int, MaxRetryTimes int) PoolConfig {
+	MinConnPoolSize int) PoolConfig {
 
 	var newPoolConfig = PoolConfig{
-		TimeOut:         1000 * time.Millisecond,
-		IdleTime:        5 * 60 * 1000 * time.Millisecond,
-		MaxConnPoolSize: 100,
+		TimeOut:         0 * time.Millisecond,
+		IdleTime:        0 * time.Millisecond,
+		MaxConnPoolSize: 10,
 		MinConnPoolSize: 0,
 		MaxRetryTimes:   3,
 	}
@@ -46,9 +47,6 @@ func NewPoolConf(TimeOut time.Duration, IdleTime time.Duration, MaxConnPoolSize 
 	}
 	if MinConnPoolSize != 0 {
 		newPoolConfig.MinConnPoolSize = MinConnPoolSize
-	}
-	if MaxRetryTimes != 0 {
-		newPoolConfig.MaxRetryTimes = MaxRetryTimes
 	}
 	return newPoolConfig
 }

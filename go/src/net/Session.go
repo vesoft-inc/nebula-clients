@@ -44,8 +44,14 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 				fmt.Printf("Failed to reconnect, %s \n", _err.Error())
 				return nil, _err
 			}
+
 			fmt.Printf("Successfully reconnect to host: %s, port: %d \n",
 				session.connection.SeverAddress.GetHost(), session.connection.SeverAddress.GetPort())
+			// Execute with the new connetion
+			resp, err := session.connection.Execute(session.sessionID, stmt)
+			if err != nil {
+				fmt.Sprintf("Error info: %s", err.Error())
+			}
 			return resp, nil
 		}
 
@@ -57,7 +63,7 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 
 // Check connection to host address
 func (session *Session) Ping() (bool, error) {
-	_, err := session.connection.Ping(session.sessionID)
+	_, err := session.connection.Ping()
 	if err != nil {
 		fmt.Println("Failed to ping the server, ", err)
 		return false, err
@@ -66,10 +72,10 @@ func (session *Session) Ping() (bool, error) {
 }
 
 func (session *Session) reConnect() error {
-	newConnection, err := session.connPool.GetIdleConn(session)
+	newConnection, err := session.connPool.GetIdleConn()
 	if err != nil {
 		for retry := session.connPool.conf.MaxRetryTimes; retry != 0 && err != nil; retry-- {
-			newConnection, err = session.connPool.GetIdleConn(session)
+			newConnection, err = session.connPool.GetIdleConn()
 			if err == nil {
 				goto next
 			}
@@ -79,13 +85,12 @@ func (session *Session) reConnect() error {
 	}
 
 next:
-	err = session.connection.Close()
-	if err != nil {
-		fmt.Println("Failed to reconnect: Cannot close current connection, ", err)
-		return err
-	}
+	// Close current connection
+	session.connection.Close()
+
 	// Ready to use the new connection
-	newConnection.inuse = true
+	session.connPool.ConnectionInUse[newConnection] = true
+
 	session.connPool.activeConnectionQueue.PushBack(newConnection)
 	for e := session.connPool.idleConnectionQueue.Front(); e != nil; e = e.Next() {
 		if e.Value == newConnection {
@@ -104,7 +109,7 @@ func (session *Session) Release() error {
 	}
 
 	// Release connection to pool
-	session.connPool.ReturnObject(session)
+	session.connPool.ReturnObject(session.connection)
 
 	return nil
 }

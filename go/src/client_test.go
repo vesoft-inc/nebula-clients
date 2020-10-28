@@ -45,7 +45,7 @@ var poolAddress = []*data.HostAddress{
 }
 
 // Create default configs
-var testPoolConfig = conf.NewPoolConf(0, 0, 0, 0, 0)
+var testPoolConfig = conf.NewPoolConf(0, 0, 0, 0)
 
 // Before run `go test -v`, you should start a nebula server listening on 3699 port.
 // Using docker-compose is the easiest way and you can reference this file:
@@ -105,7 +105,7 @@ func TestConnection(t *testing.T) {
 	}
 	checkResp("drop space", resp)
 
-	_, err = conn.Ping(sessionID)
+	_, err = conn.Ping()
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -118,32 +118,33 @@ func TestPool_SingleHost(t *testing.T) {
 	hostList := []*data.HostAddress{}
 	hostList = append(hostList, &hostAdress)
 	pool := nebulaNet.ConnectionPool{}
-	testPoolConfig = conf.NewPoolConf(0, 0, 0, 1, 0)
+
+	testPoolConfig = conf.NewPoolConf(0, 0, 0, 1)
 	// Initialize connectin pool
 	err := pool.InitPool(hostList, &testPoolConfig)
 	if err != nil {
 		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
 	}
-
+	// Create session
 	session, err := pool.GetSession(username, password)
 	if err != nil {
 		t.Fatalf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
 			username, password, err.Error())
 	}
-
+	// Method used to check execution response
 	checkResp := func(prefix string, err *graph.ExecutionResponse) {
 		if nebulaNet.IsError(err) {
 			t.Errorf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
 		}
 	}
-
+	// Excute a query
 	resp, err := session.Execute("SHOW HOSTS;")
 	if err != nil {
 		t.Fatalf(err.Error())
 		return
 	}
 	checkResp("show hosts", resp)
-
+	// Create a new space
 	resp, err = session.Execute("CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -157,18 +158,14 @@ func TestPool_SingleHost(t *testing.T) {
 		return
 	}
 	checkResp("drop space", resp)
-
+	// Release session and return connection back to connection pool
 	err = session.Release()
 	if err != nil {
 		t.Fatalf("Fail to release session, %s", err.Error())
 		return
 	}
-
-	err = pool.Close()
-	if err != nil {
-		t.Fatalf("Fail to close all connection in pool, %s", err.Error())
-		return
-	}
+	// Close all connections in the pool
+	pool.Close()
 }
 
 func TestPool_MultiHosts(t *testing.T) {
@@ -179,12 +176,12 @@ func TestPool_MultiHosts(t *testing.T) {
 	pool.Close()
 
 	_, err := pool.GetSession(username, password)
-	if err != nil {
-		t.Logf("Expected Failue: Fail to get session: no avaliable connection")
+	if assert.Equal(t, err.Error(), "Failed to get session: There is no config in the connection pool") {
+		t.Logf("Expected error: Failed to get session: There is no config in the connection pool")
 	}
 
 	// Minimun pool size < hosts number
-	multiHostsConfig := conf.NewPoolConf(0, 0, 0, 1, 0)
+	multiHostsConfig := conf.NewPoolConf(0, 0, 3, 1)
 	// Initialize connectin pool
 	err = pool.InitPool(hostList, &multiHostsConfig)
 	if err != nil {
@@ -234,7 +231,7 @@ func TestPool_MultiHosts(t *testing.T) {
 func TestReconnect(t *testing.T) {
 	hostList := poolAddress
 	pool := nebulaNet.ConnectionPool{}
-	timeoutConfig := conf.NewPoolConf(0, 0, 0, 6, 0)
+	timeoutConfig := conf.NewPoolConf(0, 0, 0, 6)
 	// Initialize connectin pool
 	err := pool.InitPool(hostList, &timeoutConfig)
 	if err != nil {
@@ -281,12 +278,7 @@ func TestReconnect(t *testing.T) {
 		t.Fatalf("Fail to release session, %s", err.Error())
 		return
 	}
-
-	err = pool.Close()
-	if err != nil {
-		t.Fatalf("Fail to close all connection in pool, %s", err.Error())
-		return
-	}
+	pool.Close()
 }
 
 func TestIpLookup(t *testing.T) {

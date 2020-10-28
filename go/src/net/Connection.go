@@ -20,15 +20,13 @@ import (
 type Connection struct {
 	SeverAddress data.HostAddress
 	graph        *graph.GraphServiceClient
-	inuse        bool
+	isValid      bool
 }
 
 func NewConnection(severAddress data.HostAddress) *Connection {
 	newObj := Connection{}
 	newObj.SeverAddress = severAddress
 	newObj.graph = nil
-	newObj.inuse = true
-
 	return &newObj
 }
 
@@ -96,30 +94,38 @@ func (cn *Connection) SignOut(sessionID int64) error {
 		log.Printf("Fail to signout, error: %s", err.Error())
 		return err
 	}
-	cn.inuse = false
 	return nil
 }
 
 // Close transport
-func (cn *Connection) Close() error {
-	if err := cn.graph.Close(); err != nil {
-		log.Printf("Fail to close transport, error: %s", err.Error())
-		return err
-	}
-	return nil
+func (cn *Connection) Close() {
+	cn.graph.Close()
+
 }
 
 func IsError(resp *graph.ExecutionResponse) bool {
 	return resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED
 }
 
+func (cn *Connection) ValidateConnection() {
+	cn.isValid = true
+}
+
+func (cn *Connection) InvalidateConnection() {
+	cn.isValid = false
+}
+
+func (cn *Connection) GetisValid() bool {
+	return cn.isValid
+}
+
 // Check connection to host address
-func (cn *Connection) Ping(sessionID int64) (bool, error) {
-	resp, err := cn.Execute(sessionID, "YIELD 1")
-	if err != nil {
-		return false, err
-	} else if IsError(resp) == true {
+func (cn *Connection) Ping() (bool, error) {
+	_, err := cn.Execute(1, "YIELD 1")
+	if err, ok := err.(thrift.TransportException); ok &&
+		(err.TypeID() == thrift.END_OF_FILE || err.TypeID() == thrift.UNKNOWN_TRANSPORT_EXCEPTION) {
+		cn.isValid = false
 		return false, err
 	}
-	return true, err
+	return true, nil
 }

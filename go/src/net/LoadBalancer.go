@@ -9,85 +9,79 @@
 package nebulaNet
 
 import (
-	"container/heap"
 	"errors"
 	"log"
+	"sort"
 
+	conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
 	data "github.com/vesoft-inc/nebula-clients/go/src/data"
 )
 
 type ServerStatus struct {
-	address     data.HostAddress
-	isAvaliable bool
-	currentLoad int
-	index       int
+	address  *data.HostAddress
+	isValid  bool
+	workLoad int
 }
 
-// type LoadBalancer struct {
-// 	addresses    *data.HostAddress
-// 	ServerStatus map[*data.HostAddress]bool
-// 	ServerStatus map[*data.HostAddress]int
-// }
-
-type PriorityQueue []*ServerStatus
-
-func (pq PriorityQueue) Len() int { return len(pq) }
-
-func (pq PriorityQueue) Less(i, j int) bool {
-	return pq[i].currentLoad < pq[j].currentLoad
+type LoadBalancer struct {
+	pool             *ConnectionPool
+	ServerStatusList []*ServerStatus
 }
 
-func (pq PriorityQueue) Swap(i, j int) {
-	pq[i], pq[j] = pq[j], pq[i]
-	pq[i].index = i
-	pq[j].index = j
-}
-
-func (pq *PriorityQueue) Push(x interface{}) {
-	n := len(*pq)
-	item := x.(*ServerStatus)
-	item.index = n
-	*pq = append(*pq, item)
-}
-
-func (pq *PriorityQueue) Pop() interface{} {
-	old := *pq
-	n := len(old)
-	item := old[n-1]
-	old[n-1] = nil  // avoid memory leak
-	item.index = -1 // for safety
-	*pq = old[0 : n-1]
-	return item
-}
-
-// update modifies the priority and value of an Item in the queue.
-func (pq *PriorityQueue) update(serverStatus *ServerStatus, isAvaliable bool,
-	currentLoad int, index int) {
-	serverStatus.isAvaliable = isAvaliable
-	serverStatus.currentLoad = currentLoad
-	heap.Fix(pq, serverStatus.index)
-}
-
-// Update status of server's avaliability when reconncect
-func (pool *ConnectionPool) UpdateStatus(curSession *Session) error {
-	if pool == nil {
-		invalidPoolError := errors.New("Failed to update host status, pool is invalid")
-		log.Print(invalidPoolError)
-		return invalidPoolError
+func NewLoadbalancer(addresses []*data.HostAddress, pool *ConnectionPool) *LoadBalancer {
+	newLoadBalancer := LoadBalancer{}
+	newLoadBalancer.pool = pool
+	for _, host := range addresses {
+		newServerStatus := ServerStatus{}
+		newServerStatus.address = host
+		newServerStatus.isValid = false
+		newServerStatus.workLoad = 0
+		newLoadBalancer.ServerStatusList = append(newLoadBalancer.ServerStatusList, &newServerStatus)
 	}
-	for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
-		if ele.Value.(*Connection).SeverAddress == curSession.connection.SeverAddress {
-			ele.Value.(*Connection).SeverAddress.IsAvaliable = false
+	return &newLoadBalancer
+}
+
+// Test if the host is valid
+func PingHost(hostAddress *data.HostAddress) (bool, error) {
+	conn := NewConnection(*hostAddress)
+	conf := conf.NewPoolConf(0, 0, 0, 0)
+	err := conn.Open(*hostAddress, conf)
+	if err != nil {
+		log.Printf("Error: %s", err.Error())
+		return false, err
+	}
+	conn.Close()
+	return true, nil
+}
+
+// Update all server's status (isValid)
+func (loadBalancer *LoadBalancer) UpdateServerStatus() {
+	for _, status := range loadBalancer.ServerStatusList {
+		_, err := PingHost(status.address)
+		if err != nil {
+			log.Printf("Error: %s", err.Error())
+			status.isValid = false
+			status.address.IsAvaliable = false
+			continue
 		}
+		status.isValid = true
 	}
-	return nil
+}
+
+// Sort host by workload
+func (loadBalancer *LoadBalancer) SortHosts() {
+	sort.Slice(loadBalancer.ServerStatusList, func(i, j int) bool {
+		return loadBalancer.ServerStatusList[i].workLoad < loadBalancer.ServerStatusList[j].workLoad
+	})
 }
 
 // Returns the first host in the host list that is valid
-func (pool *ConnectionPool) GetValidHost() (*data.HostAddress, error) {
-	for _, host := range pool.addresses {
-		if host.IsAvaliable == true {
-			return host, nil
+// TODO: add tset for worklaod
+func (loadBalancer *LoadBalancer) GetValidHost() (*data.HostAddress, error) {
+	loadBalancer.SortHosts()
+	for _, status := range loadBalancer.ServerStatusList {
+		if status.isValid == true {
+			return status.address, nil
 		}
 	}
 	noAvaliableHost := errors.New("Failed to find an avaliable host in the connection pool")
@@ -95,13 +89,12 @@ func (pool *ConnectionPool) GetValidHost() (*data.HostAddress, error) {
 	return nil, noAvaliableHost
 }
 
-// Returns the first connection in the idle connection queue that has a valid host
-func (pool *ConnectionPool) GetValidConn() (*Connection, error) {
-	for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
-		if ele.Value.(*Connection).SeverAddress.IsAvaliable == true {
-			return ele.Value.(*Connection), nil
+// Mark the host as valid and increases its workload
+func (loadBalancer *LoadBalancer) ValidateHost(SeverAddress *data.HostAddress) {
+	for _, status := range loadBalancer.ServerStatusList {
+		if status.address == SeverAddress {
+			status.isValid = true
+			status.workLoad = status.workLoad + 1
 		}
 	}
-	noAvaliableConnectionErr := errors.New("Failed to reconnect: no avaliable connection to a different host can be found")
-	return nil, noAvaliableConnectionErr
 }
