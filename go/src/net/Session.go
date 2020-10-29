@@ -7,7 +7,7 @@
 package nebulaNet
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/facebook/fbthrift/thrift/lib/go/thrift"
 	graph "github.com/vesoft-inc/nebula-clients/go/nebula/graph"
@@ -41,46 +41,42 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 		if err, ok := err.(thrift.TransportException); ok && err.TypeID() == thrift.END_OF_FILE {
 			_err := session.reConnect()
 			if _err != nil {
-				fmt.Printf("Failed to reconnect, %s \n", _err.Error())
+				log.Printf("Failed to reconnect, %s \n", _err.Error())
 				return nil, _err
 			}
-
-			fmt.Printf("Successfully reconnect to host: %s, port: %d \n",
+			log.Printf("Successfully reconnect to host: %s, port: %d \n",
 				session.connection.SeverAddress.GetHost(), session.connection.SeverAddress.GetPort())
 			// Execute with the new connetion
 			resp, err := session.connection.Execute(session.sessionID, stmt)
 			if err != nil {
-				fmt.Sprintf("Error info: %s", err.Error())
+				log.Printf("Error info: %s", err.Error())
 			}
 			return resp, nil
 		}
-
-		fmt.Sprintf("Error info: %s", err.Error())
+		// Reconnect fail
+		log.Printf("Error info: %s", err.Error())
 		return resp, err
 	}
 	return resp, nil
 }
 
 // Check connection to host address
-func (session *Session) Ping() (bool, error) {
-	_, err := session.connection.Ping()
-	if err != nil {
-		fmt.Println("Failed to ping the server, ", err)
-		return false, err
+func (session *Session) Ping() bool {
+	res := session.connection.Ping()
+	if res != true {
+		log.Printf("Failed to ping the server \n")
+		return false
 	}
-	return true, err
+	return true
 }
 
 func (session *Session) reConnect() error {
 	newConnection, err := session.connPool.GetIdleConn()
-	if err != nil {
-		newConnection, err = session.connPool.GetIdleConn()
-		if err == nil {
-			goto next
-		}
-		fmt.Println("Failed to reconnect: No idle connection, ", err)
-		return err
+	if err == nil {
+		goto next
 	}
+	log.Printf("Failed to reconnect: No idle connection, %s", err.Error())
+	return err
 
 next:
 	// Close current connection

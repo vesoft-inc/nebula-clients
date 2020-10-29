@@ -12,6 +12,7 @@ import (
 	"errors"
 	"log"
 	"sort"
+	"sync"
 
 	conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
 	data "github.com/vesoft-inc/nebula-clients/go/src/data"
@@ -26,6 +27,7 @@ type ServerStatus struct {
 type LoadBalancer struct {
 	pool             *ConnectionPool
 	ServerStatusList []*ServerStatus
+	RWlock           sync.RWMutex
 }
 
 func NewLoadbalancer(addresses []*data.HostAddress, pool *ConnectionPool) *LoadBalancer {
@@ -54,8 +56,10 @@ func PingHost(hostAddress *data.HostAddress) (bool, error) {
 	return true, nil
 }
 
-// Update all server's status (isValid)
+// Update all server's status (validility)
 func (loadBalancer *LoadBalancer) UpdateServerStatus() {
+	loadBalancer.RWlock.Lock()
+	defer loadBalancer.RWlock.Unlock()
 	for _, status := range loadBalancer.ServerStatusList {
 		_, err := PingHost(status.address)
 		if err != nil {
@@ -70,15 +74,19 @@ func (loadBalancer *LoadBalancer) UpdateServerStatus() {
 
 // Sort host by workload
 func (loadBalancer *LoadBalancer) SortHosts() {
+	loadBalancer.RWlock.Lock()
+	defer loadBalancer.RWlock.Unlock()
 	sort.Slice(loadBalancer.ServerStatusList, func(i, j int) bool {
 		return loadBalancer.ServerStatusList[i].workLoad < loadBalancer.ServerStatusList[j].workLoad
 	})
 }
 
 // Returns the first host in the host list that is valid
-// TODO: add tset for worklaod
+// TODO: add test for worklaod
 func (loadBalancer *LoadBalancer) GetValidHost() (*data.HostAddress, error) {
 	loadBalancer.SortHosts()
+	loadBalancer.RWlock.RLock()
+	defer loadBalancer.RWlock.RUnlock()
 	for _, status := range loadBalancer.ServerStatusList {
 		if status.isValid == true {
 			return status.address, nil
@@ -89,12 +97,39 @@ func (loadBalancer *LoadBalancer) GetValidHost() (*data.HostAddress, error) {
 	return nil, noAvaliableHost
 }
 
-// Mark the host as valid and increases its workload
+// Mark the host as valid
 func (loadBalancer *LoadBalancer) ValidateHost(SeverAddress *data.HostAddress) {
+	loadBalancer.RWlock.Lock()
+	defer loadBalancer.RWlock.Unlock()
 	for _, status := range loadBalancer.ServerStatusList {
-		if status.address == SeverAddress {
+		if *status.address == *SeverAddress {
 			status.isValid = true
+		}
+	}
+}
+
+// Increase Workload
+func (loadBalancer *LoadBalancer) IncreaseWorkload(SeverAddress *data.HostAddress) {
+	loadBalancer.RWlock.Lock()
+	defer loadBalancer.RWlock.Unlock()
+	for _, status := range loadBalancer.ServerStatusList {
+		if *status.address == *SeverAddress {
 			status.workLoad = status.workLoad + 1
 		}
 	}
+}
+
+// Decrease Workload
+func (loadBalancer *LoadBalancer) DecreaseWorkload(SeverAddress *data.HostAddress) {
+	loadBalancer.RWlock.Lock()
+	defer loadBalancer.RWlock.Unlock()
+	for _, status := range loadBalancer.ServerStatusList {
+		if *status.address == *SeverAddress {
+			status.workLoad = status.workLoad - 1
+		}
+	}
+}
+
+// TODO: Add timer to track idle time of connections and release them
+func (loadBalancer *LoadBalancer) ClearIdleConn(SeverAddress *data.HostAddress) {
 }

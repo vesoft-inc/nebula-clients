@@ -7,7 +7,6 @@
 package nebulaNet
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -57,7 +56,7 @@ func (cn *Connection) Open(hostAddress data.HostAddress, conf conf.PoolConfig) (
 	return nil
 }
 
-// Open transport and authenticate
+// Authenticate
 func (cn *Connection) Authenticate(username, password string) (*graph.AuthResponse, error) {
 	resp, err := cn.graph.Authenticate([]byte(username), []byte(password))
 	if err != nil {
@@ -68,14 +67,7 @@ func (cn *Connection) Authenticate(username, password string) (*graph.AuthRespon
 		return nil, err
 	}
 
-	if resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED {
-		log.Printf("Authentication fails, ErrorCode: %v, ErrorMsg: %s", resp.GetErrorCode(), string(resp.GetErrorMsg()))
-		return nil, fmt.Errorf(string(resp.GetErrorMsg()))
-	}
-
-	// client.sessionID = resp.GetSessionID()
-
-	return resp, nil
+	return resp, err
 }
 
 func (cn *Connection) Execute(sessionID int64, stmt string) (*graph.ExecutionResponse, error) {
@@ -87,20 +79,28 @@ func (cn *Connection) Execute(sessionID int64, stmt string) (*graph.ExecutionRes
 // 	return cn.graph.ExecuteJson(sessionID, []byte(stmt))
 // }
 
+// Check connection to host address
+func (cn *Connection) Ping() bool {
+	_, err := cn.Execute(1, "YIELD 1")
+	if err, ok := err.(thrift.TransportException); ok &&
+		(err.TypeID() == thrift.END_OF_FILE || err.TypeID() == thrift.UNKNOWN_TRANSPORT_EXCEPTION) {
+		cn.isValid = false
+		return false
+	}
+	return true
+}
+
 // Sign out and release seesin ID
-func (cn *Connection) SignOut(sessionID int64) error {
+func (cn *Connection) SignOut(sessionID int64) {
 	// Release session ID to graphd
 	if err := cn.graph.Signout(sessionID); err != nil {
-		log.Printf("Fail to signout, error: %s", err.Error())
-		return err
+		log.Printf("Fail to signout \n")
 	}
-	return nil
 }
 
 // Close transport
 func (cn *Connection) Close() {
 	cn.graph.Close()
-
 }
 
 func IsError(resp *graph.ExecutionResponse) bool {
@@ -117,15 +117,4 @@ func (cn *Connection) InvalidateConnection() {
 
 func (cn *Connection) GetisValid() bool {
 	return cn.isValid
-}
-
-// Check connection to host address
-func (cn *Connection) Ping() (bool, error) {
-	_, err := cn.Execute(1, "YIELD 1")
-	if err, ok := err.(thrift.TransportException); ok &&
-		(err.TypeID() == thrift.END_OF_FILE || err.TypeID() == thrift.UNKNOWN_TRANSPORT_EXCEPTION) {
-		cn.isValid = false
-		return false, err
-	}
-	return true, nil
 }

@@ -31,7 +31,7 @@ type ConnectionPool struct {
 	conf                  *conf.PoolConfig
 	loadBalancer          *LoadBalancer
 	ConnectionInUse       map[*Connection]bool
-	mu                    sync.RWMutex
+	rwLock                sync.RWMutex
 }
 
 func (pool *ConnectionPool) InitPool(addresses []*data.HostAddress, conf *conf.PoolConfig) error {
@@ -71,10 +71,9 @@ func (pool *ConnectionPool) InitPool(addresses []*data.HostAddress, conf *conf.P
 			return err
 		}
 
+		pool.loadBalancer.IncreaseWorkload(&newConn.SeverAddress)
 		// Mark connection as in use
 		pool.ConnectionInUse[newConn] = false
-		// Update host status
-		pool.loadBalancer.ValidateHost(&newConn.SeverAddress)
 		pool.idleConnectionQueue.PushBack(newConn)
 	}
 	return nil
@@ -100,31 +99,32 @@ func (pool *ConnectionPool) GetSession(username, password string) (*Session, err
 		log.Printf("Failed to authenticate with the given credential, error: %s", err.Error())
 		return nil, err
 	}
-	pool.mu.Lock()
+
+	pool.loadBalancer.ValidateHost(&conn.SeverAddress)
+
 	sessionID := resp.GetSessionID()
 	// Create new session
 	newSession := newSession(sessionID, conn, pool)
 
+	pool.rwLock.Lock()
 	// Mark connection as in use
 	pool.ConnectionInUse[conn] = true
-
 	// Add connction to active queue
 	pool.activeConnectionQueue.PushBack(conn)
 
-	// Update host status, mark as valid and increase workload
-	pool.loadBalancer.ValidateHost(&conn.SeverAddress)
-	defer pool.mu.Unlock()
+	defer pool.rwLock.Unlock()
 
 	return &newSession, nil
 }
 
 func (pool *ConnectionPool) GetIdleConn() (*Connection, error) {
-	pool.mu.Lock()
-	defer pool.mu.Unlock()
 	// Update status of all server's avaliability
 	pool.loadBalancer.UpdateServerStatus()
 
-	// Take an idle connection if possible
+	pool.rwLock.Lock()
+	defer pool.rwLock.Unlock()
+
+	// Take an idle valid connection if possible
 	if pool.idleConnectionQueue.Len() > 0 {
 		pool.UpdateConnectionStatus()
 		newConn, err := pool.GetValidConn()
@@ -159,6 +159,8 @@ func (pool *ConnectionPool) GetIdleConn() (*Connection, error) {
 			log.Printf("Failed to open connection, error: %s \n", err.Error())
 			return nil, err
 		}
+		// Increase workload
+		pool.loadBalancer.IncreaseWorkload(&newConn.SeverAddress)
 		return newConn, nil
 	}
 	// TODO: If no idle avaliable, wait for timeout and reconnect
@@ -171,7 +173,7 @@ func (pool *ConnectionPool) GetIdleConn() (*Connection, error) {
 
 // Release connection to pool
 func (pool *ConnectionPool) ReturnObject(conn *Connection) {
-	pool.mu.Lock()
+	pool.rwLock.Lock()
 	// Check if the connection is in use
 	if pool.ConnectionInUse[conn] == true {
 		pool.idleConnectionQueue.PushBack(conn)
@@ -182,18 +184,14 @@ func (pool *ConnectionPool) ReturnObject(conn *Connection) {
 				pool.activeConnectionQueue.Remove(ele)
 			}
 		}
-		for _, status := range pool.loadBalancer.ServerStatusList {
-			if *status.address == conn.SeverAddress {
-				status.workLoad = status.workLoad - 1
-			}
-		}
+		// pool.loadBalancer.DecreaseWorkload(&conn.SeverAddress)
 	}
-	defer pool.mu.Unlock()
+	defer pool.rwLock.Unlock()
 }
 
 // Close all connection
 func (pool *ConnectionPool) Close() {
-	pool.mu.Lock()
+	pool.rwLock.Lock()
 	for conn := pool.idleConnectionQueue.Front(); conn != nil; conn = conn.Next() {
 		conn.Value.(*Connection).Close()
 		pool.idleConnectionQueue.Remove(conn)
@@ -202,21 +200,21 @@ func (pool *ConnectionPool) Close() {
 		conn.Value.(*Connection).Close()
 		pool.activeConnectionQueue.Remove(conn)
 	}
-	defer pool.mu.Unlock()
+	defer pool.rwLock.Unlock()
 }
 
 // Ping all connection in the idle queue and update remove unresponsive connection
 func (pool *ConnectionPool) UpdateConnectionStatus() {
-	// pool.mu.Lock()
+	// pool.rwLock.Lock()
 	for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
-		if _, err := ele.Value.(*Connection).Ping(); err != nil {
+		if res := ele.Value.(*Connection).Ping(); res != true {
 			// If the connection is not valid, close it and remove from queue
 			ele.Value.(*Connection).Close()
 			pool.idleConnectionQueue.Remove(ele)
 		}
 		ele.Value.(*Connection).ValidateConnection()
 	}
-	// defer pool.mu.Unlock()
+	// defer pool.rwLock.Unlock()
 }
 
 // Return the first connection in the idle connection queue that has a valid host
@@ -241,4 +239,9 @@ func (pool *ConnectionPool) GetActiveConnCount() int {
 
 func (pool *ConnectionPool) GetIdleConnCount() int {
 	return pool.idleConnectionQueue.Len()
+}
+
+// Return the workload at given index in ServerStatusList
+func (pool *ConnectionPool) GetServerWorkload(index int) int {
+	return pool.loadBalancer.ServerStatusList[index].workLoad
 }

@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 	"github.com/vesoft-inc/nebula-clients/go/src/conf"
@@ -47,31 +48,77 @@ func main() {
 			fmt.Printf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
 		}
 	}
-	// Excute a query
-	resp, err := session.Execute("SHOW HOSTS;")
-	if err != nil {
-		fmt.Printf(err.Error())
-		return
-	}
-	checkResp("show hosts", resp)
-	// Create a new space
-	resp, err = session.Execute("CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
-	if err != nil {
-		fmt.Printf(err.Error())
-		return
-	}
-	checkResp("create space", resp)
+	{
+		createSchema := "CREATE SPACE IF NOT EXISTS test; " +
+			"USE test;" +
+			"CREATE TAG IF NOT EXISTS person(name string, age int);" +
+			"CREATE EDGE IF NOT EXISTS like(likeness double)"
 
-	resp, err = session.Execute("DROP SPACE client_test;")
-	if err != nil {
-		fmt.Printf(err.Error())
-		return
+		// Excute a query
+		resp, err := session.Execute(createSchema)
+		if err != nil {
+			fmt.Printf(err.Error())
+			return
+		}
+		checkResp(createSchema, resp)
 	}
-	checkResp("drop space", resp)
+	time.Sleep(5 * time.Second)
+	{
+		insertVertexes := "INSERT VERTEX person(name, age) VALUES " +
+			"'Bob':('Bob', 10), " +
+			"'Lily':('Lily', 9), " +
+			"'Tom':('Tom', 10), " +
+			"'Jerry':('Jerry', 13), " +
+			"'John':('John', 11);"
+
+		// Create a new space
+		resp, err := session.Execute(insertVertexes)
+		if err != nil {
+			fmt.Printf(err.Error())
+			return
+		}
+		checkResp(insertVertexes, resp)
+	}
+
+	{
+		insertEdges := "INSERT EDGE like(likeness) VALUES " +
+			"'Bob'->'Lily':(80.0), " +
+			"'Bob'->'Tom':(70.0), " +
+			"'Lily'->'Jerry':(84.0), " +
+			"'Tom'->'Jerry':(68.3), " +
+			"'Bob'->'John':(97.2);"
+
+		resp, err := session.Execute(insertEdges)
+		if err != nil {
+			fmt.Printf(err.Error())
+			return
+		}
+		checkResp(insertEdges, resp)
+	}
+
+	{
+		query := "GO FROM \"Bob\" OVER like YIELD $^.person.name, $^.person.age, like.likeness"
+		resp, err := session.Execute(query)
+		if err != nil {
+			fmt.Printf(err.Error())
+			return
+		}
+		checkResp(query, resp)
+		printResult(resp)
+	}
 	// Release session and return connection back to connection pool
+
 	session.Release()
 	// Close all connections in the pool
 	pool.Close()
 
 	fmt.Println("Example finished")
+}
+
+func printResult(resp *graph.ExecutionResponse) {
+	data := resp.GetData()
+	colNames := data.GetColumnNames()
+	for _, col := range colNames {
+		fmt.Printf("%15s |", col)
+	}
 }
