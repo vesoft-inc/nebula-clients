@@ -17,7 +17,8 @@ from unittest import TestCase
 
 from nebula2.net import (
     Connection,
-    ConnectionPool
+    ConnectionPool,
+    AsyncConnection
 )
 
 from nebula2.graph import ttypes
@@ -177,7 +178,7 @@ class TestSession(TestCase):
         try:
             import time
             session = self.pool.get_session('root', 'nebula')
-            for i in range(0, 30):
+            for i in range(0, 1):
                 session.execute('SHOW SPACES')
                 time.sleep(2)
             new_session = self.pool.get_session('root', 'nebula')
@@ -185,3 +186,66 @@ class TestSession(TestCase):
         except Exception:
             assert False
 
+
+class TestAsyncConnection(TestCase):
+    def test_create(self):
+        import asyncio
+        conn = AsyncConnection()
+        try:
+            conn.open('127.0.0.1', 3699, 1000)
+            session_id = conn.authenticate('root', 'nebula')
+            assert session_id != 0
+
+            self.async_result = None
+
+            def callback(resp):
+                self.async_result = resp
+
+            resp = conn.execute(session_id, "SHOW HOSTS;")
+            assert resp.error_code == ttypes.ErrorCode.SUCCEEDED
+            assert resp.data is not None
+            assert len(resp.data.rows) == 3
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(asyncio.wait([conn.async_execute(session_id, "SHOW HOSTS;", callback)]))
+            assert self.async_result.error_code == ttypes.ErrorCode.SUCCEEDED
+            assert len(self.async_result.data.rows) == 3
+
+            conn.async_execute(session_id, "SHOW HOSTS;", callback)
+        except Exception as ex:
+            assert False, ex
+        finally:
+            conn.close()
+
+    def test_release(self):
+        try:
+            conn = AsyncConnection()
+            conn.open('127.0.0.1', 3699, 1000)
+            session_id = conn.authenticate('root', 'nebula')
+            assert session_id != 0
+            resp = conn.execute(session_id, 'SHOW SPACES')
+            assert resp.error_code == ttypes.ErrorCode.SUCCEEDED, resp.error_msg
+            conn.signout(session_id)
+            resp = conn.execute(session_id, 'SHOW SPACES')
+            assert resp.error_code != ttypes.ErrorCode.SUCCEEDED
+        except Exception as ex:
+            assert False, ex
+
+    def test_ping(self):
+        try:
+            conn = AsyncConnection()
+            conn.open('127.0.0.1', 3699, 1000)
+            assert conn.ping()
+        except Exception as ex:
+            assert False, ex
+
+    def test_close(self):
+        conn = AsyncConnection()
+        conn.open('127.0.0.1', 3699, 1000)
+        session_id = conn.authenticate('root', 'nebula')
+        assert session_id != 0
+        conn.close()
+        try:
+            conn.authenticate('root', 'nebula')
+        except Exception as ex:
+            assert True
