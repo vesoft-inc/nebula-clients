@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
@@ -97,7 +98,7 @@ func main() {
 	}
 
 	{
-		query := "GO FROM \"Bob\" OVER like YIELD $^.person.name, $^.person.age, like.likeness"
+		query := "GO FROM 'Bob' OVER like YIELD $^.person.name, $^.person.age, like.likeness"
 		resp, err := session.Execute(query)
 		if err != nil {
 			fmt.Printf(err.Error())
@@ -107,7 +108,6 @@ func main() {
 		printResult(resp)
 	}
 	// Release session and return connection back to connection pool
-
 	session.Release()
 	// Close all connections in the pool
 	pool.Close()
@@ -120,5 +120,42 @@ func printResult(resp *graph.ExecutionResponse) {
 	colNames := data.GetColumnNames()
 	for _, col := range colNames {
 		fmt.Printf("%15s |", col)
+	}
+	fmt.Println()
+	rows := data.GetRows()
+	for _, row := range rows {
+		values := row.GetValues()
+		for _, value := range values {
+			if value.IsSetNVal() {
+				fmt.Printf("%15s |", "__NULL__")
+			} else if value.IsSetBVal() {
+				fmt.Printf("%15t |", strconv.FormatBool(value.GetBVal()))
+			} else if value.IsSetIVal() {
+				fmt.Printf("%15d |", value.GetIVal())
+			} else if value.IsSetFVal() {
+				fmt.Printf("%15.1f |", value.GetFVal())
+			} else if value.IsSetSVal() {
+				fmt.Printf("%15s |", value.GetSVal())
+			} else if value.IsSetDVal() {
+				fmt.Printf("%15s |", value.GetDVal())
+			} else if value.IsSetTVal() {
+				fmt.Printf("%15s |", value.GetTVal())
+			} else if value.IsSetDtVal() {
+				fmt.Printf("%15s |", value.GetDtVal())
+			} else if value.IsSetVVal() {
+				fmt.Printf("%15s |", value.GetVVal())
+			} else if value.IsSetEVal() {
+				fmt.Printf("%15s |", value.GetEVal())
+			} else if value.IsSetPVal() {
+				fmt.Printf("%15s |", value.GetPVal())
+			} else if value.IsSetLVal() {
+				fmt.Printf("%15s |", value.GetLVal())
+			} else if value.IsSetMVal() {
+				fmt.Printf("%15s |", value.GetMVal())
+			} else if value.IsSetUVal() {
+				fmt.Printf("%15s |", value.GetUVal())
+			}
+		}
+		fmt.Println()
 	}
 }

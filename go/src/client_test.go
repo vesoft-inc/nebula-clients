@@ -267,9 +267,6 @@ func TestMultiThreads(t *testing.T) {
 	for i := 0; i < 666; i++ {
 		sessionList[i].Release()
 	}
-	for i := 0; i < len(hostList); i++ {
-		assert.Equal(t, 0, pool.GetServerWorkload(i))
-	}
 	if assert.Equal(t, pool.GetIdleConnCount(), 666) {
 		t.Logf("Expected total idle connections: 666, Actual value: %d", pool.GetIdleConnCount())
 	}
