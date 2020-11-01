@@ -7,8 +7,8 @@
 package nebulaNet
 
 import (
+	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/facebook/fbthrift/thrift/lib/go/thrift"
 	graph "github.com/vesoft-inc/nebula-clients/go/nebula/graph"
@@ -19,36 +19,35 @@ import (
 type Connection struct {
 	SeverAddress data.HostAddress
 	graph        *graph.GraphServiceClient
-	isValid      bool
+	IsValid      bool
 }
 
 func NewConnection(severAddress data.HostAddress) *Connection {
-	newObj := Connection{}
-	newObj.SeverAddress = severAddress
-	newObj.graph = nil
-	return &newObj
+	return &Connection{
+		SeverAddress: severAddress,
+		graph:        nil,
+	}
 }
 
 func (cn *Connection) Open(hostAddress data.HostAddress, conf conf.PoolConfig) (err error) {
-	ip := hostAddress.GetHost()
-	port := hostAddress.GetPort()
-	newAdd := ip + ":" + strconv.Itoa(port)
+	ip := hostAddress.Host
+	port := hostAddress.Port
+	newAdd := fmt.Sprintf("%s:%d", ip, port)
 	timeoutOption := thrift.SocketTimeout(conf.TimeOut)
 	addressOption := thrift.SocketAddr(newAdd)
 	sock, err := thrift.NewSocket(timeoutOption, addressOption)
 	if err != nil {
-		log.Printf("Failed to create a net.Conn-backed Transport,: %s", err.Error())
-		return err
+		err = fmt.Errorf("Failed to create a net.Conn-backed Transport,: %s", err.Error())
+		return
 	}
 
 	transport := thrift.NewBufferedTransport(sock, 128<<10)
-
 	pf := thrift.NewBinaryProtocolFactoryDefault()
 	cn.graph = graph.NewGraphServiceClientFactory(transport, pf)
 
-	if err := cn.graph.Transport.Open(); err != nil {
-		log.Printf("Failed to open transport, error: %s", err.Error())
-		return err
+	if err = cn.graph.Transport.Open(); err != nil {
+		err = fmt.Errorf("Failed to open transport, error: %s", err.Error())
+		return
 	}
 	if cn.graph.Transport.IsOpen() == false {
 		log.Printf("Transport is off: \n")
@@ -60,13 +59,12 @@ func (cn *Connection) Open(hostAddress data.HostAddress, conf conf.PoolConfig) (
 func (cn *Connection) Authenticate(username, password string) (*graph.AuthResponse, error) {
 	resp, err := cn.graph.Authenticate([]byte(username), []byte(password))
 	if err != nil {
-		log.Printf("Authentication fails, %s", err.Error())
+		err = fmt.Errorf("Authentication fails, %s", err.Error())
 		if e := cn.graph.Close(); e != nil {
-			log.Printf("Fail to close transport, error: %s", e.Error())
+			err = fmt.Errorf("Fail to close transport, error: %s", e.Error())
 		}
 		return nil, err
 	}
-
 	return resp, err
 }
 
@@ -82,9 +80,8 @@ func (cn *Connection) Execute(sessionID int64, stmt string) (*graph.ExecutionRes
 // Check connection to host address
 func (cn *Connection) Ping() bool {
 	_, err := cn.Execute(1, "YIELD 1")
-	if err, ok := err.(thrift.TransportException); ok &&
-		(err.TypeID() == thrift.END_OF_FILE || err.TypeID() == thrift.UNKNOWN_TRANSPORT_EXCEPTION) {
-		cn.isValid = false
+	if err != nil {
+		cn.IsValid = false
 		return false
 	}
 	return true
@@ -105,16 +102,4 @@ func (cn *Connection) Close() {
 
 func IsError(resp *graph.ExecutionResponse) bool {
 	return resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED
-}
-
-func (cn *Connection) ValidateConnection() {
-	cn.isValid = true
-}
-
-func (cn *Connection) InvalidateConnection() {
-	cn.isValid = false
-}
-
-func (cn *Connection) GetisValid() bool {
-	return cn.isValid
 }

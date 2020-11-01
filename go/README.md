@@ -16,7 +16,7 @@ Please be careful do not to modify the files in the graph directory, these codes
 
 ```shell
 
-$ go get -u -v github.com/vesoft-inc/nebula-clients@master
+$ go get -u -v github.com/vesoft-inc/nebula-clients/go@master
 
 ```
 
@@ -34,59 +34,64 @@ If you get a message like `cannot use path@version syntax in GOPATH mode`, see t
 
 package main
 
-  
-
 import (
+	"fmt"
 
-"log"
-
-  
-
-nebulaNet "github.com/vesoft-inc/nebula-clients/go/src/net"
-conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
-data "github.com/vesoft-inc/nebula-clients/go/src/data"
-graph "github.com/vesoft-inc/nebula-clients/go/nebula/graph"
-
+	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
+	conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
+	data "github.com/vesoft-inc/nebula-clients/go/src/data"
+	nebulaNet "github.com/vesoft-inc/nebula-clients/go/src/net"
 )
 
-  
+const (
+	address  = "127.0.0.1"
+	port     = 3699
+	username = "user"
+	password = "password"
+)
 
-func  main() {
-	// Create configs for connection pool using default values
-	nebulaPoolConfig conf.PoolConfig = conf.GetDefaultConf()
-	// Build a list of host address
-	hostAdress := data.NewHostAddress(address, port)
-	hostList := []*data.HostAddress{}
-	hostList =  append(hostList, &hostAdress)
-
-	// Initialize connectin pool
-	err := pool.InitPool(hostList, &testPoolConfig)
-	if err !=  nil {
-		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+func main() {
+	hostAdress := data.HostAddress{Host: address, Port: port}
+	hostList := []data.HostAddress{
+		hostAdress,
 	}
+	pool := nebulaNet.ConnectionPool{}
 
+	// Create configs for connection pool using default values
+	testPoolConfig := conf.GetDefaultConf()
+	// Initialize connectin pool
+	err := pool.InitPool(hostList, testPoolConfig)
+	if err != nil {
+		fmt.Printf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+	}
 	// Create session
 	session, err := pool.GetSession(username, password)
-	if err !=  nil {
-		t.Fatalf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
-	username, password, err.Error())
+	if err != nil {
+		fmt.Printf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
+			username, password, err.Error())
 	}
-
-
+	// Method used to check execution response
+	checkResp := func(prefix string, err *graph.ExecutionResponse) {
+		if nebulaNet.IsError(err) {
+			fmt.Printf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
+		}
+	}
 	// Excute a query
 	resp, err := session.Execute("SHOW HOSTS;")
-	if err !=  nil {
-		t.Fatalf(err.Error())
+	if err != nil {
+		fmt.Printf(err.Error())
 		return
 	}
+	checkResp("show hosts", resp)
 
-	  
-	// Release session and return connection back to connection pool
-	session.Release()
-	// Close all connections in the pool
-	pool.Close()
+	defer func(){
+		// Release session and return connection back to connection pool
+		session.Release()
+		// Close all connections in the pool
+		pool.Close()
+	}()
+	
 }
-
   
 ```
 
@@ -124,4 +129,4 @@ go mod init
 
   
 
-And then try to get dependencies of `github.com/vesoft-inc/nebula-clients/go` in your go module by simply `go get -u -v github.com/vesoft-inc/nebula-clients@master`.
+And then try to get dependencies of `github.com/vesoft-inc/nebula-clients/go` in your go module by simply `go get -u -v github.com/vesoft-inc/nebula-clients/go@master`.

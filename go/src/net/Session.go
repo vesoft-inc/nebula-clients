@@ -7,6 +7,7 @@
 package nebulaNet
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/facebook/fbthrift/thrift/lib/go/thrift"
@@ -17,16 +18,6 @@ type Session struct {
 	sessionID  int64
 	connection *Connection
 	connPool   *ConnectionPool
-}
-
-func newSession(sessionID int64, connection *Connection,
-	connPool *ConnectionPool) Session {
-	newObj := Session{}
-	newObj.sessionID = sessionID
-	newObj.connection = connection
-	newObj.connPool = connPool
-
-	return newObj
 }
 
 // unsupported
@@ -45,7 +36,7 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 				return nil, _err
 			}
 			log.Printf("Successfully reconnect to host: %s, port: %d \n",
-				session.connection.SeverAddress.GetHost(), session.connection.SeverAddress.GetPort())
+				session.connection.SeverAddress.Host, session.connection.SeverAddress.Port)
 			// Execute with the new connetion
 			resp, err := session.connection.Execute(session.sessionID, stmt)
 			if err != nil {
@@ -72,16 +63,12 @@ func (session *Session) Ping() bool {
 
 func (session *Session) reConnect() error {
 	newConnection, err := session.connPool.GetIdleConn()
-	if err == nil {
-		goto next
+	if err != nil {
+		err = fmt.Errorf("Failed to reconnect: No idle connection, %s", err.Error())
+		return err
 	}
-	log.Printf("Failed to reconnect: No idle connection, %s", err.Error())
-	return err
-
-next:
 	// Close current connection
 	session.connection.Close()
-
 	session.connection = newConnection
 	return nil
 }
@@ -89,5 +76,5 @@ next:
 func (session *Session) Release() {
 	session.connection.SignOut(session.sessionID)
 	// Release connection to pool
-	session.connPool.ReturnObject(session.connection)
+	session.connPool.RleaseObject(session.connection)
 }

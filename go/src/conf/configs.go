@@ -35,21 +35,30 @@ func NewPoolConf(TimeOut time.Duration, IdleTime time.Duration, MaxConnPoolSize 
 		MinConnPoolSize: 0,
 	}
 	if TimeOut < 0 {
-		log.Printf("Illegal Timeout value")
+		newPoolConfig.TimeOut = 0 * time.Millisecond
+		log.Printf("Illegal Timeout value, the default value of 0 second has been applied")
+	} else {
+		newPoolConfig.TimeOut = TimeOut
 	}
-	newPoolConfig.TimeOut = TimeOut
 	if IdleTime < 0 {
-		log.Printf("Invalid IdleTime value")
+		newPoolConfig.IdleTime = 0 * time.Millisecond
+		log.Printf("Invalid IdleTime value, the default value of 0 second has been applied")
+	} else {
+		newPoolConfig.IdleTime = IdleTime
 	}
-	newPoolConfig.IdleTime = IdleTime
 	if MaxConnPoolSize < 1 {
-		log.Printf("Invalid MaxConnPoolSize value: %d", MaxConnPoolSize)
+		newPoolConfig.MaxConnPoolSize = 10
+		log.Printf("Invalid MaxConnPoolSize value, the default value of 10 has been applied")
+	} else {
+		newPoolConfig.MaxConnPoolSize = MaxConnPoolSize
 	}
-	newPoolConfig.MaxConnPoolSize = MaxConnPoolSize
 	if MinConnPoolSize < 0 {
-		log.Printf("Invalid MinConnPoolSize value: %d", MinConnPoolSize)
+		newPoolConfig.MinConnPoolSize = 0
+		log.Printf("Invalid MinConnPoolSize value, the default value of 0 has been applied")
+	} else {
+		newPoolConfig.MinConnPoolSize = MinConnPoolSize
 	}
-	newPoolConfig.MinConnPoolSize = MinConnPoolSize
+
 	return newPoolConfig
 }
 
@@ -62,36 +71,4 @@ func GetDefaultConf() PoolConfig {
 		MinConnPoolSize: 0,
 	}
 	return newPoolConfig
-}
-
-func (config *PoolConfig) GetMinConnPoolSize() int {
-	return config.MinConnPoolSize
-}
-
-func (config *PoolConfig) SetMinConnPoolSize(size int) {
-	config.MinConnPoolSize = size
-}
-
-func (config *PoolConfig) GetMaxConnPoolSize() int {
-	return config.MaxConnPoolSize
-}
-
-func (config *PoolConfig) SetMaxConnPoolSize(size int) {
-	config.MaxConnPoolSize = size
-}
-
-func (config *PoolConfig) GetTimeOut() time.Duration {
-	return config.TimeOut
-}
-
-func (config *PoolConfig) SetTimeOut(duration time.Duration) {
-	config.TimeOut = duration
-}
-
-func (config *PoolConfig) GetIdleTime() time.Duration {
-	return config.IdleTime
-}
-
-func (config *PoolConfig) SetIdleTime(duration time.Duration) {
-	config.IdleTime = duration
 }
