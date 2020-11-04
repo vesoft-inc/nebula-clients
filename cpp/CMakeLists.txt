@@ -75,6 +75,7 @@ include(SanitizerConfig)
 include(GitHooksConfig)
 include(GitInfoConfig)
 include(NebulaCustomTargets)
+include(NebulaCMakeMacros)
 include(ConfigNebulaCommon)
 
 set(ENABLE_PIC ON FORCE)
@@ -105,14 +106,29 @@ nebula_add_shared_linker_flag(-static-libstdc++)
 nebula_add_shared_linker_flag(-static-libgcc)
 nebula_add_shared_linker_flag(-rdynamic)
 nebula_add_shared_linker_flag(-Wl,--no-undefined)
-nebula_add_shared_linker_flag("-Wl,--version-script=${CMAKE_SOURCE_DIR}/exported-symbols.txt")
+#nebula_add_shared_linker_flag("-Wl,--version-script=${CMAKE_SOURCE_DIR}/exported-symbols.txt")
+
+
+nebula_add_subdirectory(src)
 
 install(
     DIRECTORY include/nebula
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
+# resuse the datatypes in common
+install(DIRECTORY ${nebula_common_source_dir}/src/common/datatypes
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/common
+        FILES_MATCHING PATTERN "*.h")
+    
+# reuse the thrift types in common
 install(
-    TARGETS nebula-graph-client
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    FILES
+        ${nebula_common_source_dir}/src/common/thrift/ThriftTypes.h
+    PERMISSIONS
+        OWNER_WRITE OWNER_READ
+        GROUP_READ
+        WORLD_READ
+    DESTINATION
+        ${CMAKE_INSTALL_INCLUDEDIR}/common/thrift
 )

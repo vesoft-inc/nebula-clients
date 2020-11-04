@@ -1,0 +1,27 @@
+# Copyright (c) 2018 vesoft inc. All rights reserved.
+#
+# This source code is licensed under Apache 2.0 License,
+# attached with Common Clause Condition 1.0, found in the LICENSES directory.
+#
+
+# CMake version check
+cmake_minimum_required(VERSION 3.5.0)
+
+# Set the project name
+project("Nebula C++ Client simple example" C CXX)
+
+set(CMAKE_CXX_STANDARD 14)  # specify the C++ standard
+
+set(NEBULA_HOME /usr/local/nebula)
+
+include_directories(${NEBULA_HOME}/include)
+link_directories(${NEBULA_HOME}/lib64)
+
+add_executable(basic_client
+    basicClient.cpp
+)
+
+target_link_libraries(basic_client
+    PRIVATE
+        nebula_graph_client
+)
