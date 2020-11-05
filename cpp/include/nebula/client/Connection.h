@@ -34,7 +34,7 @@ public:
 
     bool ping();
 
-    void signout();
+    void signout(int64_t sessionId);
 
 private:
     ClientImpl *client_{nullptr};

@@ -30,7 +30,7 @@ public:
 
     ExecutionResponse execute(int64_t sessionId, const std::string &stmt);
 
-    void signout();
+    void signout(int64_t sessionId);
 
 private:
     static ErrorCode from(graph::cpp2::ErrorCode code);
@@ -39,7 +39,6 @@ private:
 
     static ExecutionResponse from(graph::cpp2::ExecutionResponse &resp);
 
-    int64_t sessionId_{-1};
     std::unique_ptr<graph::cpp2::GraphServiceAsyncClient> client_{nullptr};
 };
 

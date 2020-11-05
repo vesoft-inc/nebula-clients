@@ -30,9 +30,6 @@ AuthResponse ClientImpl::authenticate(const std::string &user, const std::string
     } catch (const std::exception &ex) {
         return AuthResponse{ErrorCode::E_RPC_FAILURE, -1};
     }
-    if (resp.__isset.session_id) {
-        sessionId_ = *resp.get_session_id();
-    }
     return from(resp);
 }
 
@@ -51,9 +48,9 @@ ExecutionResponse ClientImpl::execute(int64_t sessionId, const std::string &stmt
     return from(resp);
 }
 
-void ClientImpl::signout() {
+void ClientImpl::signout(int64_t sessionId) {
     if (client_ != nullptr) {
-        client_->sync_signout(sessionId_);
+        client_->sync_signout(sessionId);
     }
 }
 

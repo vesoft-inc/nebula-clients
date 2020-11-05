@@ -45,8 +45,8 @@ bool Connection::ping() {
     return true;
 }
 
-void Connection::signout() {
-    client_->signout();
+void Connection::signout(int64_t sessionId) {
+    client_->signout(sessionId);
 }
 
 }   // namespace nebula
