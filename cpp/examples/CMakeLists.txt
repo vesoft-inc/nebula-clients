@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD 14)  # specify the C++ standard
 
 set(NEBULA_HOME /usr/local/nebula)
 
+# This project only depends on the nebula-client headers/library
 include_directories(${NEBULA_HOME}/include)
 link_directories(${NEBULA_HOME}/lib64)
 
