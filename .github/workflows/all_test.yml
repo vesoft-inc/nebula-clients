@@ -63,7 +63,7 @@ jobs:
         popd
         cd python/tests
         pytest -s
-        
+  
   go-client:
     runs-on: ubuntu-latest
     steps:
