@@ -38,8 +38,11 @@ void Connection::close() {
 }
 
 bool Connection::ping() {
-    // TODO(shylock)
-    return false;
+    auto resp = execute(-1/*Only check connection*/, "YIELD 1");
+    if (resp.code == ErrorCode::E_RPC_FAILURE) {
+        return false;
+    }
+    return true;
 }
 
 void Connection::signout() {
