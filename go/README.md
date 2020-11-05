@@ -40,11 +40,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vesoft-inc/nebula-clients/go/nebula/pkg/conf"
-	"github.com/vesoft-inc/nebula-clients/go/nebula/pkg/data"
-	"github.com/vesoft-inc/nebula-clients/go/nebula/pkg/logger"
+	nebula "github.com/vesoft-inc/nebula-clients/go"
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
-	nebulaNet "github.com/vesoft-inc/nebula-clients/go/nebula/pkg/net"
 )
 
 const (
@@ -55,25 +52,24 @@ const (
 )
 
 // Initialize logger
-var log = *new(logger.DefaultLogger)
+var log = nebula.DefaultLogger{}
 
 func main() {
-	// Create host object
-	hostAdress := data.HostAddress{Host: address, Port: port}
-	hostList := []data.HostAddress{
+	hostAdress := nebula.HostAddress{Host: address, Port: port}
+	hostList := []nebula.HostAddress{
 		hostAdress,
 	}
+	pool := nebula.ConnectionPool{}
+
 	// Create configs for connection pool using default values
-	testPoolConfig := conf.GetDefaultConf(log)
+	testPoolConfig := nebula.GetDefaultConf(log)
 	// Initialize connectin pool
-	pool := nebulaNet.ConnectionPool{}
 	err := pool.InitPool(hostList, testPoolConfig, log)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error()))
 	}
 	// Close all connections in the pool
 	defer pool.Close()
-
 	// Create session and send query in go routine
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -87,10 +83,9 @@ func main() {
 		}
 		// Release session and return connection back to connection pool
 		defer session.Release()
-		
 		// Method used to check execution response
 		checkResp := func(prefix string, err *graph.ExecutionResponse) {
-			if nebulaNet.IsError(err) {
+			if nebula.IsError(err) {
 				fmt.Printf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
 			}
 		}
@@ -152,7 +147,6 @@ func main() {
 				return
 			}
 			checkResp(query, resp)
-			printResult(resp)
 		}
 	}(&wg)
 

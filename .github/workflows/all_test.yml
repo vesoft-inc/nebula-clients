@@ -85,6 +85,6 @@ jobs:
           sleep 10
           popd
           popd
-          cd go/src
-          go test -v
+          cd go
+          go test -v -race
 
