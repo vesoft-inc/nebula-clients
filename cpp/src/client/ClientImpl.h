@@ -41,6 +41,7 @@ public:
     void signout(int64_t sessionId);
 
 private:
+    // TODO(shylock) replace by the user defined type like datatypes in common
     static ErrorCode from(graph::cpp2::ErrorCode code);
 
     static AuthResponse from(graph::cpp2::AuthResponse &resp);
