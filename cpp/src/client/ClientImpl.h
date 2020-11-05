@@ -26,6 +26,8 @@ public:
 
     bool open(const std::string &address, int32_t port, uint32_t timeout);
 
+    void close();
+
     AuthResponse authenticate(const std::string &user, const std::string &password);
 
     ExecutionResponse execute(int64_t sessionId, const std::string &stmt);

@@ -33,7 +33,7 @@ bool Connection::isOpen() {
 }
 
 void Connection::close() {
-    // TODO(shylock)
+    client_->close();
 }
 
 bool Connection::ping() {

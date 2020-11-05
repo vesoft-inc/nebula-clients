@@ -19,6 +19,10 @@ bool ClientImpl::open(const std::string &address, int32_t port, uint32_t timeout
     return true;
 }
 
+void ClientImpl::close() {
+    static_cast<apache::thrift::ClientChannel*>(client_->getChannel())->closeNow();
+}
+
 AuthResponse ClientImpl::authenticate(const std::string &user, const std::string &password) {
     if (client_ == nullptr) {
         return AuthResponse{ErrorCode::E_DISCONNECTED};
