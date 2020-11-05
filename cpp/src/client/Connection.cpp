@@ -43,9 +43,7 @@ bool Connection::ping() {
 }
 
 void Connection::signout() {
-    if (client_ != nullptr) {
-        client_->signout();
-    }
+    client_->signout();
 }
 
 }   // namespace nebula
