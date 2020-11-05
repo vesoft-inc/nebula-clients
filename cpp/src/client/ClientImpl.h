@@ -32,6 +32,8 @@ public:
 
     ExecutionResponse execute(int64_t sessionId, const std::string &stmt);
 
+    std::string executeJson(int64_t sessionId, const std::string &stmt);
+
     void signout(int64_t sessionId);
 
 private:

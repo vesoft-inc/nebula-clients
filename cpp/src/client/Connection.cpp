@@ -28,6 +28,10 @@ ExecutionResponse Connection::execute(int64_t sessionId, const std::string &stmt
     return client_->execute(sessionId, stmt);
 }
 
+std::string Connection::executeJson(int64_t sessionId, const std::string &stmt) {
+    return client_->executeJson(sessionId, stmt);
+}
+
 bool Connection::isOpen() {
     return ping();
 }

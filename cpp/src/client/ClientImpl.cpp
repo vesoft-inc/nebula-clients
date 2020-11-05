@@ -52,6 +52,23 @@ ExecutionResponse ClientImpl::execute(int64_t sessionId, const std::string &stmt
     return from(resp);
 }
 
+std::string ClientImpl::executeJson(int64_t sessionId, const std::string &stmt) {
+    if (client_ == nullptr) {
+        // TODO handle error
+        return "";
+    }
+
+    std::string json;
+    try {
+        client_->sync_executeJson(json, sessionId, stmt);
+    } catch (const std::exception &ex) {
+        // TODO handle error
+        return "";
+    }
+
+    return json;
+}
+
 void ClientImpl::signout(int64_t sessionId) {
     if (client_ != nullptr) {
         client_->sync_signout(sessionId);

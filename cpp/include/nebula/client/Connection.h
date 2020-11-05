@@ -28,6 +28,8 @@ public:
 
     ExecutionResponse execute(int64_t sessionId, const std::string &stmt);
 
+    std::string executeJson(int64_t sessionId, const std::string &stmt);
+
     bool isOpen();
 
     void close();
