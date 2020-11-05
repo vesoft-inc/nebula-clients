@@ -4,6 +4,9 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
+#include <thrift/lib/cpp/async/TAsyncSocket.h>
+#include <thrift/lib/cpp2/async/HeaderClientChannel.h>
+
 #include <memory>
 
 #include "./ClientImpl.h"
@@ -20,7 +23,7 @@ bool ClientImpl::open(const std::string &address, int32_t port, uint32_t timeout
 }
 
 void ClientImpl::close() {
-    static_cast<apache::thrift::ClientChannel*>(client_->getChannel())->closeNow();
+    static_cast<apache::thrift::ClientChannel *>(client_->getChannel())->closeNow();
 }
 
 AuthResponse ClientImpl::authenticate(const std::string &user, const std::string &password) {
@@ -52,6 +55,14 @@ ExecutionResponse ClientImpl::execute(int64_t sessionId, const std::string &stmt
     return from(resp);
 }
 
+void ClientImpl::asyncExecute(int64_t sessionId,
+                              const std::string &stmt,
+                              Connection::ExecuteCallback cb) {
+    client_->future_execute(sessionId, stmt).thenValue([cb = std::move(cb)](auto &&resp) {
+        cb(from(resp));
+    });
+}
+
 std::string ClientImpl::executeJson(int64_t sessionId, const std::string &stmt) {
     if (client_ == nullptr) {
         // TODO handle error
@@ -67,6 +78,12 @@ std::string ClientImpl::executeJson(int64_t sessionId, const std::string &stmt) 
     }
 
     return json;
+}
+
+void ClientImpl::asyncExecuteJson(int64_t sessionId,
+                                  const std::string &stmt,
+                                  Connection::ExecuteJsonCallback cb) {
+    client_->future_executeJson(sessionId, stmt).thenValue(std::move(cb));
 }
 
 void ClientImpl::signout(int64_t sessionId) {

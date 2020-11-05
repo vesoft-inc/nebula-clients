@@ -8,11 +8,9 @@
 
 #include <memory>
 
-#include <thrift/lib/cpp/async/TAsyncSocket.h>
-#include <thrift/lib/cpp2/async/HeaderClientChannel.h>
-
 #include "common/interface/gen-cpp2/GraphServiceAsyncClient.h"
 
+#include "nebula/client/Connection.h"
 #include "nebula/client/Response.h"
 
 namespace nebula {
@@ -32,7 +30,13 @@ public:
 
     ExecutionResponse execute(int64_t sessionId, const std::string &stmt);
 
+    void asyncExecute(int64_t sessionId, const std::string &stmt, Connection::ExecuteCallback cb);
+
     std::string executeJson(int64_t sessionId, const std::string &stmt);
+
+    void asyncExecuteJson(int64_t sessionId,
+                          const std::string &stmt,
+                          Connection::ExecuteJsonCallback cb);
 
     void signout(int64_t sessionId);
 

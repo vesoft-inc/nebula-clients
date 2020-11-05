@@ -28,8 +28,18 @@ ExecutionResponse Connection::execute(int64_t sessionId, const std::string &stmt
     return client_->execute(sessionId, stmt);
 }
 
+void Connection::asyncExecute(int64_t sessionId, const std::string &stmt, ExecuteCallback cb) {
+    client_->asyncExecute(sessionId, stmt, std::move(cb));
+}
+
 std::string Connection::executeJson(int64_t sessionId, const std::string &stmt) {
     return client_->executeJson(sessionId, stmt);
+}
+
+void Connection::asyncExecuteJson(int64_t sessionId,
+                                  const std::string &stmt,
+                                  ExecuteJsonCallback cb) {
+    client_->asyncExecuteJson(sessionId, stmt, std::move(cb));
 }
 
 bool Connection::isOpen() {
@@ -41,9 +51,8 @@ void Connection::close() {
 }
 
 bool Connection::ping() {
-    auto resp = execute(-1/*Only check connection*/, "YIELD 1");
-    if (resp.code == ErrorCode::E_RPC_FAILURE ||
-        resp.code == ErrorCode::E_DISCONNECTED) {
+    auto resp = execute(-1 /*Only check connection*/, "YIELD 1");
+    if (resp.code == ErrorCode::E_RPC_FAILURE || resp.code == ErrorCode::E_DISCONNECTED) {
         return false;
     }
     return true;

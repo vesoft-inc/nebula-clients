@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -18,6 +19,9 @@ class ClientImpl;
 
 class Connection {
 public:
+    using ExecuteCallback = std::function<void(ExecutionResponse &&)>;
+    using ExecuteJsonCallback = std::function<void(std::string &&)>;
+
     Connection();
 
     ~Connection();
@@ -28,7 +32,11 @@ public:
 
     ExecutionResponse execute(int64_t sessionId, const std::string &stmt);
 
+    void asyncExecute(int64_t sessionId, const std::string &stmt, ExecuteCallback cb);
+
     std::string executeJson(int64_t sessionId, const std::string &stmt);
+
+    void asyncExecuteJson(int64_t sessionId, const std::string &stmt, ExecuteJsonCallback cb);
 
     bool isOpen();
 

@@ -4,11 +4,11 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include <gtest/gtest.h>
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 
-#include <nebula/client/Init.h>
 #include <nebula/client/Connection.h>
+#include <nebula/client/Init.h>
 
 // Require a nebula server could access
 
@@ -21,10 +21,8 @@ protected:
         std::sort(respCopy.rows.begin(), respCopy.rows.end());
         std::sort(expectCopy.rows.begin(), expectCopy.rows.end());
         if (respCopy != expectCopy) {
-            return ::testing::AssertionFailure() << "Resp is : "
-                                                 << resp << std::endl
-                                                 << "Expect : "
-                                                 << expect;
+            return ::testing::AssertionFailure() << "Resp is : " << resp << std::endl
+                                                 << "Expect : " << expect;
         }
         return ::testing::AssertionSuccess();
     }
@@ -32,7 +30,7 @@ protected:
 
 class ConnectionTest : public ClientTest {
 protected:
-    static void runOnce(nebula::Connection &c) {
+    static void runOnce(nebula::Connection& c) {
         // ping
         EXPECT_FALSE(c.ping());
 
@@ -78,7 +76,6 @@ protected:
 };
 
 TEST_F(ConnectionTest, Basic) {
-
     nebula::Connection c;
     LOG(INFO) << "Testing once.";
     runOnce(c);
