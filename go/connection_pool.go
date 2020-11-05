@@ -15,8 +15,8 @@ import (
 )
 
 type ConnectionPool struct {
-	idleConnectionQueue   list.List
-	activeConnectionQueue list.List
+	idleconnectionQueue   list.List
+	activeconnectionQueue list.List
 	addresses             []HostAddress
 	conf                  PoolConfig
 	hostIndex             int
@@ -45,17 +45,17 @@ func (pool *ConnectionPool) InitPool(addresses []HostAddress, conf PoolConfig, l
 
 	for i := 0; i < pool.conf.MinConnPoolSize; i++ {
 		// Simple round-robin
-		newConn := NewConnection(pool.addresses[i%len(addresses)])
+		newConn := newConnection(pool.addresses[i%len(addresses)])
 
 		// Open connection to host
-		err := newConn.Open(newConn.SeverAddress, pool.conf)
+		err := newConn.open(newConn.SeverAddress, pool.conf)
 		if err != nil {
 			return fmt.Errorf("Failed to open connection, error: %s ", err.Error())
 		}
 		// Mark connection as in use
-		pool.idleConnectionQueue.PushBack(newConn)
+		pool.idleconnectionQueue.PushBack(newConn)
 	}
-	pool.log.Info("Connection pool is initialized successfully")
+	pool.log.Info("connection pool is initialized successfully")
 	return nil
 }
 
@@ -64,11 +64,11 @@ func (pool *ConnectionPool) GetSession(username, password string) (*Session, err
 		return nil, fmt.Errorf("Failed to get session: There is no config in the connection pool")
 	}
 	// Get valid and usable connection
-	var conn *Connection = nil
+	var conn *connection = nil
 	var err error = nil
 	retryTimes := 3
 	for i := 0; i < retryTimes; i++ {
-		conn, err = pool.GetIdleConn()
+		conn, err = pool.getIdleConn()
 		if err == nil {
 			break
 		}
@@ -77,13 +77,13 @@ func (pool *ConnectionPool) GetSession(username, password string) (*Session, err
 		return nil, err
 	}
 	// Authenticate
-	resp, err := conn.Authenticate(username, password)
+	resp, err := conn.authenticate(username, password)
 	if err != nil || resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED {
 		// if authentication failed, put connection back
 		pool.rwLock.Lock()
 		defer pool.rwLock.Unlock()
-		removeFromList(&pool.activeConnectionQueue, conn)
-		pool.idleConnectionQueue.PushBack(conn)
+		removeFromList(&pool.activeconnectionQueue, conn)
+		pool.idleconnectionQueue.PushBack(conn)
 		return nil, err
 	}
 
@@ -98,67 +98,67 @@ func (pool *ConnectionPool) GetSession(username, password string) (*Session, err
 	return &newSession, nil
 }
 
-func (pool *ConnectionPool) GetIdleConn() (*Connection, error) {
+func (pool *ConnectionPool) getIdleConn() (*connection, error) {
 	pool.rwLock.Lock()
 	defer pool.rwLock.Unlock()
 
 	// Take an idle valid connection if possible
-	if pool.idleConnectionQueue.Len() > 0 {
-		var newConn *Connection = nil
+	if pool.idleconnectionQueue.Len() > 0 {
+		var newConn *connection = nil
 		var newEle *list.Element = nil
-		for ele := pool.idleConnectionQueue.Front(); ele != nil; ele = ele.Next() {
+		for ele := pool.idleconnectionQueue.Front(); ele != nil; ele = ele.Next() {
 			// Check if connection is valid
-			if res := ele.Value.(*Connection).Ping(); res == true {
-				newConn = ele.Value.(*Connection)
+			if res := ele.Value.(*connection).ping(); res == true {
+				newConn = ele.Value.(*connection)
 				newEle = ele
 				break
 			}
 		}
 		if newConn == nil {
-			newConn, err := pool.createConnection()
+			newConn, err := pool.createconnection()
 			return newConn, err
 		}
 		// Remove new connection from idle and add to active if found
-		pool.idleConnectionQueue.Remove(newEle)
-		pool.activeConnectionQueue.PushBack(newConn)
+		pool.idleconnectionQueue.Remove(newEle)
+		pool.activeconnectionQueue.PushBack(newConn)
 		return newConn, nil
 	}
 
 	// Create a new connection if there is no idle connection and total connection < pool max size
-	newConn, err := pool.createConnection()
+	newConn, err := pool.createconnection()
 	return newConn, err
 	// TODO: If no idle avaliable, wait for timeout and reconnect
 }
 
 // Release connection to pool
-func (pool *ConnectionPool) Rlease(conn *Connection) {
+func (pool *ConnectionPool) Rlease(conn *connection) {
 	pool.rwLock.Lock()
 	defer pool.rwLock.Unlock()
 	// Remove connection from active queue and add into idle queue
-	removeFromList(&pool.activeConnectionQueue, conn)
-	pool.idleConnectionQueue.PushBack(conn)
+	removeFromList(&pool.activeconnectionQueue, conn)
+	pool.idleconnectionQueue.PushBack(conn)
 }
 
 // Close all connection
 func (pool *ConnectionPool) Close() {
 	pool.rwLock.Lock()
 	defer pool.rwLock.Unlock()
-	for conn := pool.idleConnectionQueue.Front(); conn != nil; conn = conn.Next() {
-		conn.Value.(*Connection).Close()
-		pool.idleConnectionQueue.Remove(conn)
+	for conn := pool.idleconnectionQueue.Front(); conn != nil; conn = conn.Next() {
+		conn.Value.(*connection).close()
+		pool.idleconnectionQueue.Remove(conn)
 	}
-	for conn := pool.activeConnectionQueue.Front(); conn != nil; conn = conn.Next() {
-		conn.Value.(*Connection).Close()
-		pool.activeConnectionQueue.Remove(conn)
+	for conn := pool.activeconnectionQueue.Front(); conn != nil; conn = conn.Next() {
+		conn.Value.(*connection).close()
+		pool.activeconnectionQueue.Remove(conn)
 	}
 }
 
-func (pool *ConnectionPool) GetActiveConnCount() int {
-	return pool.activeConnectionQueue.Len()
+func (pool *ConnectionPool) getActiveConnCount() int {
+	return pool.activeconnectionQueue.Len()
 }
 
-func (pool *ConnectionPool) GetIdleConnCount() int {
-	return pool.idleConnectionQueue.Len()
+func (pool *ConnectionPool) getIdleConnCount() int {
+	return pool.idleconnectionQueue.Len()
 }
 
 // Get a valid host (round robin)
@@ -172,33 +172,33 @@ func (pool *ConnectionPool) getHost() HostAddress {
 }
 
 // Select a new host to create a new connection
-func (pool *ConnectionPool) newConnToHost() (*Connection, error) {
+func (pool *ConnectionPool) newConnToHost() (*connection, error) {
 	// Get a valid host (round robin)
 	host := pool.getHost()
-	newConn := NewConnection(host)
+	newConn := newConnection(host)
 	// Open connection to host
-	err := newConn.Open(newConn.SeverAddress, pool.conf)
+	err := newConn.open(newConn.SeverAddress, pool.conf)
 	if err != nil {
 		return nil, err
 	}
 	// Add connection to active queue
-	pool.activeConnectionQueue.PushBack(newConn)
+	pool.activeconnectionQueue.PushBack(newConn)
 	// TODO: update workload
 	return newConn, nil
 }
 
 // Remove a connection from list
-func removeFromList(l *list.List, conn *Connection) {
+func removeFromList(l *list.List, conn *connection) {
 	for ele := l.Front(); ele != nil; ele = ele.Next() {
-		if *ele.Value.(*Connection) == *conn {
+		if *ele.Value.(*connection) == *conn {
 			l.Remove(ele)
 		}
 	}
 }
 
 // Compare total connection number with pool max size and return a connection if capable
-func (pool *ConnectionPool) createConnection() (*Connection, error) {
-	totalConn := pool.idleConnectionQueue.Len() + pool.activeConnectionQueue.Len()
+func (pool *ConnectionPool) createconnection() (*connection, error) {
+	totalConn := pool.idleconnectionQueue.Len() + pool.activeconnectionQueue.Len()
 	// If no idle avaliable and the number of total connection reaches the max pool size, return error/wait for timeout
 	if totalConn >= pool.conf.MaxConnPoolSize {
 		return nil, fmt.Errorf("Failed to get connection: No valid connection in the idle queue and connection number has reached the pool capacity")

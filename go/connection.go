@@ -13,19 +13,19 @@ import (
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 )
 
-type Connection struct {
+type connection struct {
 	SeverAddress HostAddress
 	graph        *graph.GraphServiceClient
 }
 
-func NewConnection(severAddress HostAddress) *Connection {
-	return &Connection{
+func newConnection(severAddress HostAddress) *connection {
+	return &connection{
 		SeverAddress: severAddress,
 		graph:        nil,
 	}
 }
 
-func (cn *Connection) Open(hostAddress HostAddress, conf PoolConfig) (err error) {
+func (cn *connection) open(hostAddress HostAddress, conf PoolConfig) (err error) {
 	ip := hostAddress.Host
 	port := hostAddress.Port
 	newAdd := fmt.Sprintf("%s:%d", ip, port)
@@ -50,7 +50,7 @@ func (cn *Connection) Open(hostAddress HostAddress, conf PoolConfig) (err error)
 }
 
 // Authenticate
-func (cn *Connection) Authenticate(username, password string) (*graph.AuthResponse, error) {
+func (cn *connection) authenticate(username, password string) (*graph.AuthResponse, error) {
 	resp, err := cn.graph.Authenticate([]byte(username), []byte(password))
 	if err != nil {
 		err = fmt.Errorf("Authentication fails, %s", err.Error())
@@ -62,7 +62,7 @@ func (cn *Connection) Authenticate(username, password string) (*graph.AuthRespon
 	return resp, err
 }
 
-func (cn *Connection) Execute(sessionID int64, stmt string) (*graph.ExecutionResponse, error) {
+func (cn *connection) execute(sessionID int64, stmt string) (*graph.ExecutionResponse, error) {
 	return cn.graph.Execute(sessionID, []byte(stmt))
 }
 
@@ -72,8 +72,8 @@ func (cn *Connection) Execute(sessionID int64, stmt string) (*graph.ExecutionRes
 // }
 
 // Check connection to host address
-func (cn *Connection) Ping() bool {
-	_, err := cn.Execute(1, "YIELD 1")
+func (cn *connection) ping() bool {
+	_, err := cn.execute(1, "YIELD 1")
 	if err != nil {
 		return false
 	}
@@ -81,7 +81,7 @@ func (cn *Connection) Ping() bool {
 }
 
 // Sign out and release seesin ID
-func (cn *Connection) SignOut(sessionID int64) error {
+func (cn *connection) signOut(sessionID int64) error {
 	// Release session ID to graphd
 	if err := cn.graph.Signout(sessionID); err != nil {
 		return err
@@ -90,7 +90,7 @@ func (cn *Connection) SignOut(sessionID int64) error {
 }
 
 // Close transport
-func (cn *Connection) Close() {
+func (cn *connection) close() {
 	cn.graph.Close()
 }
 

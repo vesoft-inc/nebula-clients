@@ -15,7 +15,7 @@ import (
 
 type Session struct {
 	sessionID  int64
-	connection *Connection
+	connection *connection
 	connPool   *ConnectionPool
 }
 
@@ -29,7 +29,7 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 	if session.connection == nil {
 		return nil, fmt.Errorf("Faied to execute: Session has been released")
 	}
-	resp, err := session.connection.Execute(session.sessionID, stmt)
+	resp, err := session.connection.execute(session.sessionID, stmt)
 	if err != nil {
 		// Reconnect only if the tranport is closed
 		if err, ok := err.(thrift.TransportException); ok && err.TypeID() == thrift.END_OF_FILE {
@@ -41,7 +41,7 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 			session.connPool.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d \n",
 				session.connection.SeverAddress.Host, session.connection.SeverAddress.Port))
 			// Execute with the new connetion
-			resp, err := session.connection.Execute(session.sessionID, stmt)
+			resp, err := session.connection.execute(session.sessionID, stmt)
 			if err != nil {
 				return nil, err
 			}
@@ -55,16 +55,16 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 }
 
 func (session *Session) reConnect() error {
-	newConnection, err := session.connPool.GetIdleConn()
+	newconnection, err := session.connPool.getIdleConn()
 	if err != nil {
 		err = fmt.Errorf("Failed to reconnect: No idle connection, %s", err.Error())
 		return err
 	}
 	// Close current connection
-	session.connection.Close()
+	session.connection.close()
 	// Release connection to pool
 	session.connPool.Rlease(session.connection)
-	session.connection = newConnection
+	session.connection = newconnection
 	return nil
 }
 
@@ -74,7 +74,7 @@ func (session *Session) Release() {
 		session.connPool.log.Warn("Session has been released")
 		return
 	}
-	if err := session.connection.SignOut(session.sessionID); err != nil {
+	if err := session.connection.signOut(session.sessionID); err != nil {
 		session.connPool.log.Warn(fmt.Sprintf("Sign out failed, %s", err.Error()))
 	}
 	// Release connection to pool

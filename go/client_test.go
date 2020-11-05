@@ -56,9 +56,9 @@ var testPoolConfig = GetDefaultConf(nebulaLog)
 // Using docker-compose is the easiest way and you can reference this file:
 //   https://github.com/vesoft-inc/nebula/blob/master/docker/docker-compose.yaml
 
-func logoutAndClose(conn *Connection, sessionID int64) {
-	conn.SignOut(sessionID)
-	conn.Close()
+func logoutAndClose(conn *connection, sessionID int64) {
+	conn.signOut(sessionID)
+	conn.close()
 }
 
 func TestConnection(t *testing.T) {
@@ -68,13 +68,13 @@ func TestConnection(t *testing.T) {
 
 	hostAdress := HostAddress{Host: address, Port: port}
 
-	conn := NewConnection(hostAdress)
-	err := conn.Open(hostAdress, testPoolConfig)
+	conn := newConnection(hostAdress)
+	err := conn.open(hostAdress, testPoolConfig)
 	if err != nil {
 		t.Fatalf("Fail to open connection, address: %s, port: %d, %s", address, port, err.Error())
 	}
 
-	authresp, authErr := conn.Authenticate(username, password)
+	authresp, authErr := conn.authenticate(username, password)
 	if authErr != nil {
 		t.Fatalf("Fail to authenticate, username: %s, password: %s, %s", username, password, authErr.Error())
 	}
@@ -83,7 +83,7 @@ func TestConnection(t *testing.T) {
 
 	defer logoutAndClose(conn, sessionID)
 
-	resp, err := conn.Execute(sessionID, "SHOW HOSTS;")
+	resp, err := conn.execute(sessionID, "SHOW HOSTS;")
 	if err != nil {
 		t.Fatalf(err.Error())
 		return
@@ -91,20 +91,20 @@ func TestConnection(t *testing.T) {
 
 	checkResp(t, "show hosts", resp)
 
-	resp, err = conn.Execute(sessionID, "CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
+	resp, err = conn.execute(sessionID, "CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 	checkResp(t, "create space", resp)
-	resp, err = conn.Execute(sessionID, "DROP SPACE client_test;")
+	resp, err = conn.execute(sessionID, "DROP SPACE client_test;")
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 	checkResp(t, "drop space", resp)
 
-	res := conn.Ping()
+	res := conn.ping()
 	if res != true {
 		t.Error("Connectin ping failed")
 		return
@@ -160,7 +160,7 @@ func TestPool_SingleHost(t *testing.T) {
 	defer func() {
 		// Release session and return connection back to connection pool
 		session.Release()
-		// Close all connections in the pool
+		// close all connections in the pool
 		pool.Close()
 	}()
 }
@@ -278,8 +278,8 @@ func TestMultiThreads(t *testing.T) {
 	close(sessCh)
 	<-done
 
-	if assert.Equal(t, 666, pool.GetActiveConnCount()) {
-		t.Logf("Expected total active connections: 666, Actual value: %d", pool.GetActiveConnCount())
+	if assert.Equal(t, 666, pool.getActiveConnCount()) {
+		t.Logf("Expected total active connections: 666, Actual value: %d", pool.getActiveConnCount())
 	}
 	if assert.Equal(t, 666, len(sessionList)) {
 		t.Logf("Expected total sessions: 666, Actual value: %d", len(sessionList))
@@ -290,8 +290,8 @@ func TestMultiThreads(t *testing.T) {
 	for i := 0; i < MaxConnPoolSize; i++ {
 		sessionList[i].Release()
 	}
-	if assert.Equal(t, 666, pool.GetIdleConnCount()) {
-		t.Logf("Expected total idle connections: 666, Actual value: %d", pool.GetIdleConnCount())
+	if assert.Equal(t, 666, pool.getIdleConnCount()) {
+		t.Logf("Expected total idle connections: 666, Actual value: %d", pool.getIdleConnCount())
 	}
 }
 
@@ -327,10 +327,7 @@ func TestLoadbalancer(t *testing.T) {
 	if assert.Equal(t, len(sessionList), 999) {
 		t.Logf("Expected total sessions: 999, Actual value: %d", len(sessionList))
 	}
-	// for i := 0; i < len(hostList); i++ {
-	// 	assert.Equal(t, pool.GetServerWorkload(i), 333)
-	// }
-
+	// TODO: check work load of each host
 	for i := 0; i < len(sessionList); i++ {
 		sessionList[i].Release()
 	}
