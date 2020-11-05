@@ -8,28 +8,29 @@ package nebula
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/facebook/fbthrift/thrift/lib/go/thrift"
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 )
 
 type connection struct {
-	SeverAddress HostAddress
+	severAddress HostAddress
 	graph        *graph.GraphServiceClient
 }
 
 func newConnection(severAddress HostAddress) *connection {
 	return &connection{
-		SeverAddress: severAddress,
+		severAddress: severAddress,
 		graph:        nil,
 	}
 }
 
-func (cn *connection) open(hostAddress HostAddress, conf PoolConfig) (err error) {
+func (cn *connection) open(hostAddress HostAddress, timeout time.Duration) error {
 	ip := hostAddress.Host
 	port := hostAddress.Port
 	newAdd := fmt.Sprintf("%s:%d", ip, port)
-	timeoutOption := thrift.SocketTimeout(conf.TimeOut)
+	timeoutOption := thrift.SocketTimeout(timeout)
 	addressOption := thrift.SocketAddr(newAdd)
 	sock, err := thrift.NewSocket(timeoutOption, addressOption)
 	if err != nil {
@@ -92,8 +93,4 @@ func (cn *connection) signOut(sessionID int64) error {
 // Close transport
 func (cn *connection) close() {
 	cn.graph.Close()
-}
-
-func IsError(resp *graph.ExecutionResponse) bool {
-	return resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED
 }

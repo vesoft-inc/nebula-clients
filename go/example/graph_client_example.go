@@ -28,15 +28,12 @@ var log = nebula.DefaultLogger{}
 
 func main() {
 	hostAdress := nebula.HostAddress{Host: address, Port: port}
-	hostList := []nebula.HostAddress{
-		hostAdress,
-	}
-	pool := nebula.ConnectionPool{}
-
+	hostList := []nebula.HostAddress{hostAdress}
 	// Create configs for connection pool using default values
-	testPoolConfig := nebula.GetDefaultConf(log)
+	testPoolConfig := nebula.GetDefaultConf()
+
 	// Initialize connectin pool
-	err := pool.InitPool(hostList, testPoolConfig, log)
+	pool, err := nebula.NewConnectionPool(hostList, testPoolConfig, log)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error()))
 	}

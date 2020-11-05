@@ -7,7 +7,6 @@
 package nebula
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -21,17 +20,17 @@ type Logger interface {
 type DefaultLogger struct{}
 
 func (l DefaultLogger) Info(msg string) {
-	log.Print(fmt.Sprintf("[INFO] %s", msg))
+	log.Printf("[INFO] %s", msg)
 }
 
 func (l DefaultLogger) Warn(msg string) {
-	log.Print(fmt.Sprintf("[WARNING] %s", msg))
+	log.Printf("[WARNING] %s", msg)
 }
 
 func (l DefaultLogger) Error(msg string) {
-	log.Print(fmt.Sprintf("[ERROR] %s", msg))
+	log.Printf("[ERROR] %s", msg)
 }
 
 func (l DefaultLogger) Fatal(msg string) {
-	log.Fatal(fmt.Sprintf("[FATAL] %s", msg))
+	log.Fatalf("[FATAL] %s", msg)
 }

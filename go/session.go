@@ -17,6 +17,7 @@ type Session struct {
 	sessionID  int64
 	connection *connection
 	connPool   *ConnectionPool
+	log        Logger
 }
 
 // unsupported
@@ -30,28 +31,28 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 		return nil, fmt.Errorf("Faied to execute: Session has been released")
 	}
 	resp, err := session.connection.execute(session.sessionID, stmt)
-	if err != nil {
-		// Reconnect only if the tranport is closed
-		if err, ok := err.(thrift.TransportException); ok && err.TypeID() == thrift.END_OF_FILE {
-			_err := session.reConnect()
-			if _err != nil {
-				session.connPool.log.Error(fmt.Sprintf("Failed to reconnect, %s \n", _err.Error()))
-				return nil, _err
-			}
-			session.connPool.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d \n",
-				session.connection.SeverAddress.Host, session.connection.SeverAddress.Port))
-			// Execute with the new connetion
-			resp, err := session.connection.execute(session.sessionID, stmt)
-			if err != nil {
-				return nil, err
-			}
-			return resp, nil
-		}
-		// Reconnect fail
-		session.connPool.log.Error(fmt.Sprintf("Error info: %s", err.Error()))
-		return resp, err
+	if err == nil {
+		return resp, nil
 	}
-	return resp, nil
+	// Reconnect only if the tranport is closed
+	if err, ok := err.(thrift.TransportException); ok && err.TypeID() == thrift.END_OF_FILE {
+		_err := session.reConnect()
+		if _err != nil {
+			session.connPool.log.Error(fmt.Sprintf("Failed to reconnect, %s \n", _err.Error()))
+			return nil, _err
+		}
+		session.connPool.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d \n",
+			session.connection.severAddress.Host, session.connection.severAddress.Port))
+		// Execute with the new connetion
+		resp, err := session.connection.execute(session.sessionID, stmt)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
+	}
+	// Reconnect fail
+	session.connPool.log.Error(fmt.Sprintf("Error info: %s", err.Error()))
+	return resp, err
 }
 
 func (session *Session) reConnect() error {
@@ -60,10 +61,9 @@ func (session *Session) reConnect() error {
 		err = fmt.Errorf("Failed to reconnect: No idle connection, %s", err.Error())
 		return err
 	}
-	// Close current connection
-	session.connection.close()
+
 	// Release connection to pool
-	session.connPool.Rlease(session.connection)
+	session.connPool.release(session.connection)
 	session.connection = newconnection
 	return nil
 }
@@ -78,6 +78,10 @@ func (session *Session) Release() {
 		session.connPool.log.Warn(fmt.Sprintf("Sign out failed, %s", err.Error()))
 	}
 	// Release connection to pool
-	session.connPool.Rlease(session.connection)
+	session.connPool.release(session.connection)
 	session.connection = nil
+}
+
+func IsError(resp *graph.ExecutionResponse) bool {
+	return resp.GetErrorCode() != graph.ErrorCode_SUCCEEDED
 }

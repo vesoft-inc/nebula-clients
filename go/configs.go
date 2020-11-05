@@ -23,52 +23,32 @@ type PoolConfig struct {
 	MinConnPoolSize int
 }
 
-// Create a new poolConfig object with given parameters
-func NewPoolConf(TimeOut time.Duration, IdleTime time.Duration, MaxConnPoolSize int,
-	MinConnPoolSize int, log DefaultLogger) PoolConfig {
-
-	var newPoolConfig = PoolConfig{
-		TimeOut:         0 * time.Millisecond,
-		IdleTime:        0 * time.Millisecond,
-		MaxConnPoolSize: 10,
-		MinConnPoolSize: 0,
-	}
-	if TimeOut < 0 {
-		newPoolConfig.TimeOut = 0 * time.Millisecond
+// Validate config
+func (conf PoolConfig) validateConf(log Logger) {
+	if conf.TimeOut < 0 {
+		conf.TimeOut = 0 * time.Millisecond
 		log.Warn("Illegal Timeout value, the default value of 0 second has been applied")
-	} else {
-		newPoolConfig.TimeOut = TimeOut
 	}
-	if IdleTime < 0 {
-		newPoolConfig.IdleTime = 0 * time.Millisecond
+	if conf.IdleTime < 0 {
+		conf.IdleTime = 0 * time.Millisecond
 		log.Warn("Invalid IdleTime value, the default value of 0 second has been applied")
-	} else {
-		newPoolConfig.IdleTime = IdleTime
 	}
-	if MaxConnPoolSize < 1 {
-		newPoolConfig.MaxConnPoolSize = 10
+	if conf.MaxConnPoolSize < 1 {
+		conf.MaxConnPoolSize = 10
 		log.Warn("Invalid MaxConnPoolSize value, the default value of 10 has been applied")
-	} else {
-		newPoolConfig.MaxConnPoolSize = MaxConnPoolSize
 	}
-	if MinConnPoolSize < 0 {
-		newPoolConfig.MinConnPoolSize = 0
+	if conf.MinConnPoolSize < 0 {
+		conf.MinConnPoolSize = 0
 		log.Warn("Invalid MinConnPoolSize value, the default value of 0 has been applied")
-	} else {
-		newPoolConfig.MinConnPoolSize = MinConnPoolSize
 	}
-
-	return newPoolConfig
 }
 
 // Return the default config
-func GetDefaultConf(log DefaultLogger) PoolConfig {
-	var newPoolConfig = PoolConfig{
+func GetDefaultConf() PoolConfig {
+	return PoolConfig{
 		TimeOut:         0 * time.Millisecond,
 		IdleTime:        0 * time.Millisecond,
 		MaxConnPoolSize: 10,
 		MinConnPoolSize: 0,
 	}
-	log.Info("Default configuration loadded")
-	return newPoolConfig
 }

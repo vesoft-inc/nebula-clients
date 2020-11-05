@@ -8,6 +8,7 @@ package nebula
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os/exec"
 	"sync"
@@ -47,10 +48,10 @@ var poolAddress = []HostAddress{
 // 	logLevel = "info"
 // )
 
-var nebulaLog = *new(DefaultLogger)
+var nebulaLog = DefaultLogger{}
 
 // Create default configs
-var testPoolConfig = GetDefaultConf(nebulaLog)
+var testPoolConfig = GetDefaultConf()
 
 // Before run `go test -v`, you should start a nebula server listening on 3699 port.
 // Using docker-compose is the easiest way and you can reference this file:
@@ -69,7 +70,7 @@ func TestConnection(t *testing.T) {
 	hostAdress := HostAddress{Host: address, Port: port}
 
 	conn := newConnection(hostAdress)
-	err := conn.open(hostAdress, testPoolConfig)
+	err := conn.open(hostAdress, testPoolConfig.TimeOut)
 	if err != nil {
 		t.Fatalf("Fail to open connection, address: %s, port: %d, %s", address, port, err.Error())
 	}
@@ -116,26 +117,29 @@ func TestPool_SingleHost(t *testing.T) {
 	hostAdress := HostAddress{Host: address, Port: port}
 	hostList := []HostAddress{}
 	hostList = append(hostList, hostAdress)
-	pool := ConnectionPool{}
 
-	var (
-		TimeOut         = 0 * time.Millisecond
-		IdleTime        = 0 * time.Millisecond
-		MaxConnPoolSize = 10
-		MinConnPoolSize = 1
-	)
-	testPoolConfig = NewPoolConf(TimeOut, IdleTime, MaxConnPoolSize, MinConnPoolSize, nebulaLog)
+	testPoolConfig = PoolConfig{
+		TimeOut:         0 * time.Millisecond,
+		IdleTime:        0 * time.Millisecond,
+		MaxConnPoolSize: 10,
+		MinConnPoolSize: 1,
+	}
+
 	// Initialize connectin pool
-	err := pool.InitPool(hostList, testPoolConfig, nebulaLog)
+	pool, err := NewConnectionPool(hostList, testPoolConfig, nebulaLog)
 	if err != nil {
 		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
 	}
+	// close all connections in the pool
+	defer pool.Close()
+
 	// Create session
 	session, err := pool.GetSession(username, password)
 	if err != nil {
 		t.Fatalf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
 			username, password, err.Error())
 	}
+	defer session.Release()
 	// Excute a query
 	resp, err := session.Execute("SHOW HOSTS;")
 	if err != nil {
@@ -157,47 +161,38 @@ func TestPool_SingleHost(t *testing.T) {
 		return
 	}
 	checkResp(t, "drop space", resp)
-	defer func() {
-		// Release session and return connection back to connection pool
-		session.Release()
-		// close all connections in the pool
-		pool.Close()
-	}()
 }
 
 func TestPool_MultiHosts(t *testing.T) {
 	hostList := poolAddress
-	pool := ConnectionPool{}
-
-	// Try to get session while no idle connection avaliable
-	_, err := pool.GetSession(username, password)
-	assert.Equal(t, "Failed to get connection: No valid connection in the idle queue and connection number has reached the pool capacity", err.Error())
-
 	// Minimun pool size < hosts number
-	var (
-		TimeOut         = 0 * time.Millisecond
-		IdleTime        = 0 * time.Millisecond
-		MaxConnPoolSize = 3
-		MinConnPoolSize = 1
-	)
-	multiHostsConfig := NewPoolConf(TimeOut, IdleTime, MaxConnPoolSize, MinConnPoolSize, nebulaLog)
+	multiHostsConfig := PoolConfig{
+		TimeOut:         0 * time.Millisecond,
+		IdleTime:        0 * time.Millisecond,
+		MaxConnPoolSize: 3,
+		MinConnPoolSize: 1,
+	}
 
 	// Initialize connectin pool
-	err = pool.InitPool(hostList, multiHostsConfig, nebulaLog)
+	pool, err := NewConnectionPool(hostList, multiHostsConfig, nebulaLog)
 	if err != nil {
-		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s \n", address, port, err.Error())
+		log.Fatal(fmt.Sprintf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error()))
 	}
 
 	var sessionList []*Session
 
 	// Take all idle connection and try to create a new session
-	for i := 0; i < MaxConnPoolSize; i++ {
+	for i := 0; i < multiHostsConfig.MaxConnPoolSize; i++ {
 		session, err := pool.GetSession(username, password)
 		if err != nil {
 			t.Errorf("Fail to create a new session from connection pool, %s", err.Error())
 		}
 		sessionList = append(sessionList, session)
 	}
+
+	assert.Equal(t, 0, pool.idleConnectionQueue.Len())
+	assert.Equal(t, 3, pool.activeConnectionQueue.Len())
+
 	_, err = pool.GetSession(username, password)
 	assert.Equal(t, "Failed to get connection: No valid connection in the idle queue and connection number has reached the pool capacity", err.Error())
 
@@ -205,12 +200,15 @@ func TestPool_MultiHosts(t *testing.T) {
 	sessionToRelease := sessionList[0]
 	sessionToRelease.Release()
 	sessionList = sessionList[1:]
-
+	assert.Equal(t, 1, pool.idleConnectionQueue.Len())
+	assert.Equal(t, 2, pool.activeConnectionQueue.Len())
 	// Try again to get connection
 	newSession, err := pool.GetSession(username, password)
 	if err != nil {
 		t.Errorf("Fail to create a new session, %s", err.Error())
 	}
+	assert.Equal(t, 0, pool.idleConnectionQueue.Len())
+	assert.Equal(t, 3, pool.activeConnectionQueue.Len())
 
 	resp, err := newSession.Execute("SHOW HOSTS;")
 	if err != nil {
@@ -223,30 +221,25 @@ func TestPool_MultiHosts(t *testing.T) {
 	newSession, err = pool.GetSession(username, password)
 	assert.Equal(t, "Failed to get connection: No valid connection in the idle queue and connection number has reached the pool capacity", err.Error())
 
-	defer func() {
-		for i := 0; i < len(sessionList); i++ {
-			sessionList[i].Release()
-		}
-		pool.Close()
-	}()
+	for i := 0; i < len(sessionList); i++ {
+		sessionList[i].Release()
+	}
 }
 
 func TestMultiThreads(t *testing.T) {
 	hostList := poolAddress
-	pool := ConnectionPool{}
 
-	var (
-		TimeOut         = 0 * time.Millisecond
-		IdleTime        = 0 * time.Millisecond
-		MaxConnPoolSize = 666
-		MinConnPoolSize = 1
-	)
-	testPoolConfig := NewPoolConf(TimeOut, IdleTime, MaxConnPoolSize, MinConnPoolSize, nebulaLog)
+	testPoolConfig := PoolConfig{
+		TimeOut:         0 * time.Millisecond,
+		IdleTime:        0 * time.Millisecond,
+		MaxConnPoolSize: 666,
+		MinConnPoolSize: 1,
+	}
 
 	// Initialize connectin pool
-	err := pool.InitPool(hostList, testPoolConfig, nebulaLog)
+	pool, err := NewConnectionPool(hostList, testPoolConfig, nebulaLog)
 	if err != nil {
-		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+		log.Fatal(fmt.Sprintf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error()))
 	}
 	defer pool.Close()
 
@@ -256,8 +249,8 @@ func TestMultiThreads(t *testing.T) {
 	var wg sync.WaitGroup
 	sessCh := make(chan *Session)
 	done := make(chan bool)
-	wg.Add(MaxConnPoolSize)
-	for i := 0; i < MaxConnPoolSize; i++ {
+	wg.Add(testPoolConfig.MaxConnPoolSize)
+	for i := 0; i < testPoolConfig.MaxConnPoolSize; i++ {
 		go func(sessCh chan<- *Session, wg *sync.WaitGroup) {
 			defer wg.Done()
 			session, err := pool.GetSession(username, password)
@@ -287,7 +280,7 @@ func TestMultiThreads(t *testing.T) {
 	// for i := 0; i < len(hostList); i++ {
 	// 	assert.Equal(t, 222, pool.GetServerWorkload(i))
 	// }
-	for i := 0; i < MaxConnPoolSize; i++ {
+	for i := 0; i < testPoolConfig.MaxConnPoolSize; i++ {
 		sessionList[i].Release()
 	}
 	if assert.Equal(t, 666, pool.getIdleConnCount()) {
@@ -297,18 +290,16 @@ func TestMultiThreads(t *testing.T) {
 
 func TestLoadbalancer(t *testing.T) {
 	hostList := poolAddress
-	pool := ConnectionPool{}
 
-	var (
-		TimeOut         = 0 * time.Millisecond
-		IdleTime        = 0 * time.Millisecond
-		MaxConnPoolSize = 999
-		MinConnPoolSize = 1
-	)
-	testPoolConfig := NewPoolConf(TimeOut, IdleTime, MaxConnPoolSize, MinConnPoolSize, nebulaLog)
+	testPoolConfig := PoolConfig{
+		TimeOut:         0 * time.Millisecond,
+		IdleTime:        0 * time.Millisecond,
+		MaxConnPoolSize: 999,
+		MinConnPoolSize: 1,
+	}
 
 	// Initialize connectin pool
-	err := pool.InitPool(hostList, testPoolConfig, nebulaLog)
+	pool, err := NewConnectionPool(hostList, testPoolConfig, nebulaLog)
 	if err != nil {
 		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
 	}
@@ -335,18 +326,16 @@ func TestLoadbalancer(t *testing.T) {
 
 func TestReconnect(t *testing.T) {
 	hostList := poolAddress
-	pool := ConnectionPool{}
 
-	var (
-		TimeOut         = 0 * time.Millisecond
-		IdleTime        = 0 * time.Millisecond
-		MaxConnPoolSize = 10
-		MinConnPoolSize = 6
-	)
-	timeoutConfig := NewPoolConf(TimeOut, IdleTime, MaxConnPoolSize, MinConnPoolSize, nebulaLog)
+	timeoutConfig := PoolConfig{
+		TimeOut:         0 * time.Millisecond,
+		IdleTime:        0 * time.Millisecond,
+		MaxConnPoolSize: 10,
+		MinConnPoolSize: 6,
+	}
 
 	// Initialize connectin pool
-	err := pool.InitPool(hostList, timeoutConfig, nebulaLog)
+	pool, err := NewConnectionPool(hostList, timeoutConfig, nebulaLog)
 	if err != nil {
 		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
 	}
@@ -363,7 +352,7 @@ func TestReconnect(t *testing.T) {
 	}
 
 	// Send query to server periodically
-	for i := 0; i < MaxConnPoolSize; i++ {
+	for i := 0; i < timeoutConfig.MaxConnPoolSize; i++ {
 		time.Sleep(1 * time.Second)
 		if i == 3 {
 			stopContainer(t, "nebula-docker-compose_graphd_1")
