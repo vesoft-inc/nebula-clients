@@ -36,11 +36,15 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"sync"
+	"time"
 
+	"github.com/vesoft-inc/nebula-clients/go/nebula/pkg/conf"
+	"github.com/vesoft-inc/nebula-clients/go/nebula/pkg/data"
+	"github.com/vesoft-inc/nebula-clients/go/nebula/pkg/logger"
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
-	conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
-	data "github.com/vesoft-inc/nebula-clients/go/src/data"
-	nebulaNet "github.com/vesoft-inc/nebula-clients/go/src/net"
+	nebulaNet "github.com/vesoft-inc/nebula-clients/go/nebula/pkg/net"
 )
 
 const (
@@ -50,47 +54,111 @@ const (
 	password = "password"
 )
 
+// Initialize logger
+var log = *new(logger.DefaultLogger)
+
 func main() {
+	// Create host object
 	hostAdress := data.HostAddress{Host: address, Port: port}
 	hostList := []data.HostAddress{
 		hostAdress,
 	}
-	pool := nebulaNet.ConnectionPool{}
-
 	// Create configs for connection pool using default values
-	testPoolConfig := conf.GetDefaultConf()
+	testPoolConfig := conf.GetDefaultConf(log)
 	// Initialize connectin pool
-	err := pool.InitPool(hostList, testPoolConfig)
+	pool := nebulaNet.ConnectionPool{}
+	err := pool.InitPool(hostList, testPoolConfig, log)
 	if err != nil {
-		fmt.Printf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+		log.Fatal(fmt.Sprintf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error()))
 	}
-	// Create session
-	session, err := pool.GetSession(username, password)
-	if err != nil {
-		fmt.Printf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
-			username, password, err.Error())
-	}
-	// Method used to check execution response
-	checkResp := func(prefix string, err *graph.ExecutionResponse) {
-		if nebulaNet.IsError(err) {
-			fmt.Printf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
-		}
-	}
-	// Excute a query
-	resp, err := session.Execute("SHOW HOSTS;")
-	if err != nil {
-		fmt.Printf(err.Error())
-		return
-	}
-	checkResp("show hosts", resp)
+	// Close all connections in the pool
+	defer pool.Close()
 
-	defer func(){
+	// Create session and send query in go routine
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		// Create session
+		session, err := pool.GetSession(username, password)
+		if err != nil {
+			log.Fatal(fmt.Sprintf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
+				username, password, err.Error()))
+		}
 		// Release session and return connection back to connection pool
-		session.Release()
-		// Close all connections in the pool
-		pool.Close()
-	}()
-	
+		defer session.Release()
+		
+		// Method used to check execution response
+		checkResp := func(prefix string, err *graph.ExecutionResponse) {
+			if nebulaNet.IsError(err) {
+				fmt.Printf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
+			}
+		}
+		{
+			createSchema := "CREATE SPACE IF NOT EXISTS test; " +
+				"USE test;" +
+				"CREATE TAG IF NOT EXISTS person(name string, age int);" +
+				"CREATE EDGE IF NOT EXISTS like(likeness double)"
+
+			// Excute a query
+			resp, err := session.Execute(createSchema)
+			if err != nil {
+				fmt.Printf(err.Error())
+				return
+			}
+			checkResp(createSchema, resp)
+		}
+		time.Sleep(5 * time.Second)
+		{
+			insertVertexes := "INSERT VERTEX person(name, age) VALUES " +
+				"'Bob':('Bob', 10), " +
+				"'Lily':('Lily', 9), " +
+				"'Tom':('Tom', 10), " +
+				"'Jerry':('Jerry', 13), " +
+				"'John':('John', 11);"
+
+			// Insert multiple vertexes
+			resp, err := session.Execute(insertVertexes)
+			if err != nil {
+				fmt.Printf(err.Error())
+				return
+			}
+			checkResp(insertVertexes, resp)
+		}
+
+		{
+			// Insert multiple edges
+			insertEdges := "INSERT EDGE like(likeness) VALUES " +
+				"'Bob'->'Lily':(80.0), " +
+				"'Bob'->'Tom':(70.0), " +
+				"'Lily'->'Jerry':(84.0), " +
+				"'Tom'->'Jerry':(68.3), " +
+				"'Bob'->'John':(97.2);"
+
+			resp, err := session.Execute(insertEdges)
+			if err != nil {
+				fmt.Printf(err.Error())
+				return
+			}
+			checkResp(insertEdges, resp)
+		}
+
+		{
+			query := "GO FROM 'Bob' OVER like YIELD $^.person.name, $^.person.age, like.likeness"
+			// Send query
+			resp, err := session.Execute(query)
+			if err != nil {
+				fmt.Printf(err.Error())
+				return
+			}
+			checkResp(query, resp)
+			printResult(resp)
+		}
+	}(&wg)
+
+	wg.Wait()
+
+	log.Info("Example finished")
 }
   
 ```

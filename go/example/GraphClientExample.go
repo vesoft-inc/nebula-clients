@@ -8,15 +8,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"sync"
 	"time"
 
+	nebula "github.com/vesoft-inc/nebula-clients/go"
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
-	conf "github.com/vesoft-inc/nebula-clients/go/src/conf"
-	data "github.com/vesoft-inc/nebula-clients/go/src/data"
-	nebulaNet "github.com/vesoft-inc/nebula-clients/go/src/net"
 )
 
 const (
@@ -26,21 +23,22 @@ const (
 	password = "password"
 )
 
-var rwMutex sync.RWMutex
+// Initialize logger
+var log = nebula.DefaultLogger{}
 
 func main() {
-	hostAdress := data.HostAddress{Host: address, Port: port}
-	hostList := []data.HostAddress{
+	hostAdress := nebula.HostAddress{Host: address, Port: port}
+	hostList := []nebula.HostAddress{
 		hostAdress,
 	}
-	pool := nebulaNet.ConnectionPool{}
+	pool := nebula.ConnectionPool{}
 
 	// Create configs for connection pool using default values
-	testPoolConfig := conf.GetDefaultConf()
+	testPoolConfig := nebula.GetDefaultConf(log)
 	// Initialize connectin pool
-	err := pool.InitPool(hostList, testPoolConfig)
+	err := pool.InitPool(hostList, testPoolConfig, log)
 	if err != nil {
-		log.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+		log.Fatal(fmt.Sprintf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error()))
 	}
 	// Close all connections in the pool
 	defer pool.Close()
@@ -52,12 +50,14 @@ func main() {
 		// Create session
 		session, err := pool.GetSession(username, password)
 		if err != nil {
-			log.Fatalf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
-				username, password, err.Error())
+			log.Fatal(fmt.Sprintf("Fail to create a new session from connection pool, username: %s, password: %s, %s",
+				username, password, err.Error()))
 		}
+		// Release session and return connection back to connection pool
+		defer session.Release()
 		// Method used to check execution response
 		checkResp := func(prefix string, err *graph.ExecutionResponse) {
-			if nebulaNet.IsError(err) {
+			if nebula.IsError(err) {
 				fmt.Printf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
 			}
 		}
@@ -84,7 +84,7 @@ func main() {
 				"'Jerry':('Jerry', 13), " +
 				"'John':('John', 11);"
 
-			// Create a new space
+			// Insert multiple vertexes
 			resp, err := session.Execute(insertVertexes)
 			if err != nil {
 				fmt.Printf(err.Error())
@@ -94,6 +94,7 @@ func main() {
 		}
 
 		{
+			// Insert multiple edges
 			insertEdges := "INSERT EDGE like(likeness) VALUES " +
 				"'Bob'->'Lily':(80.0), " +
 				"'Bob'->'Tom':(70.0), " +
@@ -111,6 +112,7 @@ func main() {
 
 		{
 			query := "GO FROM 'Bob' OVER like YIELD $^.person.name, $^.person.age, like.likeness"
+			// Send query
 			resp, err := session.Execute(query)
 			if err != nil {
 				fmt.Printf(err.Error())
@@ -119,19 +121,14 @@ func main() {
 			checkResp(query, resp)
 			printResult(resp)
 		}
-		// Release session and return connection back to connection pool
-		defer session.Release()
 	}(&wg)
 
 	wg.Wait()
 
-	fmt.Println("Example finished")
+	log.Info("Example finished")
 }
 
 func printResult(resp *graph.ExecutionResponse) {
-	// rwMutex.RLock()
-	// defer rwMutex.Unlock()
-
 	data := resp.GetData()
 	colNames := data.GetColumnNames()
 	for _, col := range colNames {
