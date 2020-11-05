@@ -14,11 +14,15 @@
 namespace nebula {
 
 bool ClientImpl::open(const std::string &address, int32_t port, uint32_t timeout) {
-    auto socket = apache::thrift::async::TAsyncSocket::newSocket(
-        folly::EventBaseManager::get()->getEventBase(), address, port, timeout);
+    try {
+        auto socket = apache::thrift::async::TAsyncSocket::newSocket(
+            folly::EventBaseManager::get()->getEventBase(), address, port, timeout);
 
-    client_ = std::make_unique<graph::cpp2::GraphServiceAsyncClient>(
-        apache::thrift::HeaderClientChannel::newChannel(socket));
+        client_ = std::make_unique<graph::cpp2::GraphServiceAsyncClient>(
+            apache::thrift::HeaderClientChannel::newChannel(socket));
+    } catch (const std::exception&) {
+        return false;
+    }
     return true;
 }
 
