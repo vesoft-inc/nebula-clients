@@ -1,4 +1,4 @@
-module github.com/vesoft-inc/nebula-clients/tree/master/go
+module github.com/vesoft-inc/nebula-clients/go
 
 go 1.13
 
