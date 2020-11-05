@@ -8,7 +8,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 
 # Set the project name
-project("Nebula C++ Client simple example" C CXX)
+project("Nebula C++ Client simple example for raw connection" C CXX)
 
 set(CMAKE_CXX_STANDARD 14)  # specify the C++ standard
 
@@ -18,11 +18,11 @@ set(NEBULA_HOME /usr/local/nebula)
 include_directories(${NEBULA_HOME}/include)
 link_directories(${NEBULA_HOME}/lib64)
 
-add_executable(basic_client
-    basicClient.cpp
+add_executable(raw_connection
+    RawConnection.cpp
 )
 
-target_link_libraries(basic_client
+target_link_libraries(raw_connection
     PRIVATE
         nebula_graph_client
 )
