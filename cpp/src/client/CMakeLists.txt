@@ -56,6 +56,13 @@ target_link_libraries(
     ${NEBULA_CLIENT_LIBRARIES}
 )
 
+nebula_add_library(
+    nebula_graph_client_obj OBJECT
+    ${NEBULA_CLIENT_SOURCES}
+)
+
+nebula_add_subdirectory(tests)
+
 install(
     TARGETS nebula_graph_client
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

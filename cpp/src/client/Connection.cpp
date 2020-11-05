@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 vesoft inc. All rights reserved.
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
@@ -38,7 +38,8 @@ void Connection::close() {
 
 bool Connection::ping() {
     auto resp = execute(-1/*Only check connection*/, "YIELD 1");
-    if (resp.code == ErrorCode::E_RPC_FAILURE) {
+    if (resp.code == ErrorCode::E_RPC_FAILURE ||
+        resp.code == ErrorCode::E_DISCONNECTED) {
         return false;
     }
     return true;
