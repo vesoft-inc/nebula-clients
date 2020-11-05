@@ -29,8 +29,7 @@ ExecutionResponse Connection::execute(int64_t sessionId, const std::string &stmt
 }
 
 bool Connection::isOpen() {
-    // TODO(shylock)
-    return false;
+    return ping();
 }
 
 void Connection::close() {
