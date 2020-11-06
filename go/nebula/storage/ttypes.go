@@ -8442,8 +8442,10 @@ func (p *StopAdminTaskRequest) String() string {
 
 // Attributes:
 //  - Result_
+//  - Statis
 type AdminExecResp struct {
   Result_ *ResponseCommon `thrift:"result,1,required" db:"result" json:"result"`
+  Statis *meta1.StatisItem `thrift:"statis,2" db:"statis" json:"statis,omitempty"`
 }
 
 func NewAdminExecResp() *AdminExecResp {
@@ -8457,8 +8459,19 @@ func (p *AdminExecResp) GetResult_() *ResponseCommon {
   }
 return p.Result_
 }
+var AdminExecResp_Statis_DEFAULT *meta1.StatisItem
+func (p *AdminExecResp) GetStatis() *meta1.StatisItem {
+  if !p.IsSetStatis() {
+    return AdminExecResp_Statis_DEFAULT
+  }
+return p.Statis
+}
 func (p *AdminExecResp) IsSetResult_() bool {
   return p.Result_ != nil
+}
+
+func (p *AdminExecResp) IsSetStatis() bool {
+  return p.Statis != nil
 }
 
 func (p *AdminExecResp) Read(iprot thrift.Protocol) error {
@@ -8480,6 +8493,10 @@ func (p *AdminExecResp) Read(iprot thrift.Protocol) error {
         return err
       }
       issetResult_ = true
+    case 2:
+      if err := p.ReadField2(iprot); err != nil {
+        return err
+      }
     default:
       if err := iprot.Skip(fieldTypeId); err != nil {
         return err
@@ -8506,10 +8523,19 @@ func (p *AdminExecResp)  ReadField1(iprot thrift.Protocol) error {
   return nil
 }
 
+func (p *AdminExecResp)  ReadField2(iprot thrift.Protocol) error {
+  p.Statis = meta1.NewStatisItem()
+  if err := p.Statis.Read(iprot); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.Statis), err)
+  }
+  return nil
+}
+
 func (p *AdminExecResp) Write(oprot thrift.Protocol) error {
   if err := oprot.WriteStructBegin("AdminExecResp"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if err := p.writeField1(oprot); err != nil { return err }
+  if err := p.writeField2(oprot); err != nil { return err }
   if err := oprot.WriteFieldStop(); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
   if err := oprot.WriteStructEnd(); err != nil {
@@ -8525,6 +8551,19 @@ func (p *AdminExecResp) writeField1(oprot thrift.Protocol) (err error) {
   }
   if err := oprot.WriteFieldEnd(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write field end error 1:result: ", p), err) }
+  return err
+}
+
+func (p *AdminExecResp) writeField2(oprot thrift.Protocol) (err error) {
+  if p.IsSetStatis() {
+    if err := oprot.WriteFieldBegin("statis", thrift.STRUCT, 2); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:statis: ", p), err) }
+    if err := p.Statis.Write(oprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", p.Statis), err)
+    }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 2:statis: ", p), err) }
+  }
   return err
 }
 
