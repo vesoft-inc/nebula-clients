@@ -34,6 +34,7 @@ enum class ErrorCode {
 struct AuthResponse {
     ErrorCode code{ErrorCode::E_UNKNOWN};
     int64_t sessionId{-1};
+    std::unique_ptr<std::string> error_msg{nullptr};
 };
 
 

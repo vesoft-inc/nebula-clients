@@ -34,14 +34,16 @@ void ClientImpl::close() {
 
 AuthResponse ClientImpl::authenticate(const std::string &user, const std::string &password) {
     if (client_ == nullptr) {
-        return AuthResponse{ErrorCode::E_DISCONNECTED};
+        return AuthResponse{
+            ErrorCode::E_DISCONNECTED, -1, std::make_unique<std::string>("Not open connection.")};
     }
 
     graph::cpp2::AuthResponse resp;
     try {
         client_->sync_authenticate(resp, user, password);
     } catch (const std::exception &ex) {
-        return AuthResponse{ErrorCode::E_RPC_FAILURE, -1};
+        return AuthResponse{
+            ErrorCode::E_RPC_FAILURE, -1, std::make_unique<std::string>("Unavailable Connection.")};
     }
     return from(resp);
 }
@@ -130,11 +132,11 @@ void ClientImpl::signout(int64_t sessionId) {
 }
 
 /*static*/ AuthResponse ClientImpl::from(graph::cpp2::AuthResponse &resp) {
-    if (resp.__isset.session_id) {
-        return AuthResponse{from(resp.get_error_code()), *resp.get_session_id()};
-    } else {
-        return AuthResponse{from(resp.get_error_code()), -1};
-    }
+    return AuthResponse{from(resp.get_error_code()),
+                        resp.get_session_id() != nullptr ? *resp.get_session_id() : -1,
+                        resp.get_error_msg() != nullptr
+                            ? std::make_unique<std::string>(*resp.get_error_msg())
+                            : nullptr};
 }
 
 /*static*/ ExecutionResponse ClientImpl::from(graph::cpp2::ExecutionResponse &resp) {
