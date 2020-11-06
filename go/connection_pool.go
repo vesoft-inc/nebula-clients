@@ -51,9 +51,6 @@ func (pool *ConnectionPool) initPool(addresses []HostAddress, conf PoolConfig, l
 	if len(addresses) == 0 {
 		return fmt.Errorf("Failed to initialize connection pool: illegal address input")
 	}
-	if &conf == nil {
-		return fmt.Errorf("Failed to initialize connection pool: no configuration")
-	}
 
 	for i := 0; i < pool.conf.MinConnPoolSize; i++ {
 		// Simple round-robin
