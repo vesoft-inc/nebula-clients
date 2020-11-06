@@ -48,6 +48,26 @@ private:
 
     static ExecutionResponse from(graph::cpp2::ExecutionResponse &resp);
 
+    static PlanDescription from(graph::cpp2::PlanDescription &&pd);
+
+    static PlanNodeDescription from(graph::cpp2::PlanNodeDescription &&pnd);
+
+    static Pair from(graph::cpp2::Pair &&p);
+
+    static ProfilingStats from(graph::cpp2::ProfilingStats &&pfs);
+
+    static PlanNodeBranchInfo from(graph::cpp2::PlanNodeBranchInfo &&pnbi);
+
+    template <typename To, typename From>
+    static std::vector<To> from(std::vector<From> &&v) {
+        std::vector<To> to;
+        to.reserve(v.size());
+        for (auto &it : v) {
+            to.emplace_back(from(std::move(it)));
+        }
+        return to;
+    }
+
     std::unique_ptr<graph::cpp2::GraphServiceAsyncClient> client_{nullptr};
 };
 

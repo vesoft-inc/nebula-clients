@@ -20,7 +20,7 @@ bool ClientImpl::open(const std::string &address, int32_t port, uint32_t timeout
 
         client_ = std::make_unique<graph::cpp2::GraphServiceAsyncClient>(
             apache::thrift::HeaderClientChannel::newChannel(socket));
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         return false;
     }
     return true;
@@ -138,20 +138,66 @@ void ClientImpl::signout(int64_t sessionId) {
 }
 
 /*static*/ ExecutionResponse ClientImpl::from(graph::cpp2::ExecutionResponse &resp) {
-    return ExecutionResponse{from(resp.get_error_code()),
-                             resp.get_latency_in_us(),
-                             resp.get_data() != nullptr
-                                 ? std::make_unique<DataSet>(std::move(*resp.get_data()))
-                                 : nullptr,
-                             resp.get_space_name() != nullptr
-                                 ? std::make_unique<std::string>(std::move(*resp.get_space_name()))
-                                 : nullptr,
-                             resp.get_error_msg() != nullptr
-                                 ? std::make_unique<std::string>(std::move(*resp.get_error_msg()))
-                                 : nullptr,
-                             resp.get_comment() != nullptr
-                                 ? std::make_unique<std::string>(std::move(*resp.get_comment()))
-                                 : nullptr};
+    return ExecutionResponse{
+        from(resp.get_error_code()),
+        resp.get_latency_in_us(),
+        resp.get_data() != nullptr ? std::make_unique<DataSet>(std::move(*resp.get_data()))
+                                   : nullptr,
+        resp.get_space_name() != nullptr
+            ? std::make_unique<std::string>(std::move(*resp.get_space_name()))
+            : nullptr,
+        resp.get_error_msg() != nullptr
+            ? std::make_unique<std::string>(std::move(*resp.get_error_msg()))
+            : nullptr,
+        resp.get_plan_desc() != nullptr
+            ? std::make_unique<PlanDescription>(from(std::move(*resp.get_plan_desc())))
+            : nullptr,
+        resp.get_comment() != nullptr
+            ? std::make_unique<std::string>(std::move(*resp.get_comment()))
+            : nullptr};
+}
+
+/*static*/ PlanDescription ClientImpl::from(graph::cpp2::PlanDescription &&pd) {
+    return PlanDescription{from<PlanNodeDescription>(std::move(pd).get_plan_node_descs()),
+                           std::move(pd).get_node_index_map(),
+                           std::move(pd).get_format()};
+}
+
+/*static*/ PlanNodeDescription ClientImpl::from(graph::cpp2::PlanNodeDescription &&pnd) {
+    return PlanNodeDescription{
+        std::move(pnd).get_name(),
+        std::move(pnd).get_id(),
+        std::move(pnd).get_output_var(),
+        pnd.get_description() != nullptr
+            ? std::make_unique<std::vector<Pair>>(from<Pair>(std::move(*pnd.get_description())))
+            : nullptr,
+        pnd.get_profiles() != nullptr ? std::make_unique<std::vector<ProfilingStats>>(
+                                            from<ProfilingStats>(std::move(*pnd.get_profiles())))
+                                      : nullptr,
+        pnd.get_branch_info() != nullptr
+            ? std::make_unique<PlanNodeBranchInfo>(from(std::move(*pnd.get_branch_info())))
+            : nullptr,
+        pnd.get_dependencies() != nullptr
+            ? std::make_unique<std::vector<int64_t>>(std::move(*pnd.get_dependencies()))
+            : nullptr};
+}
+
+/*static*/ Pair ClientImpl::from(graph::cpp2::Pair &&p) {
+    return Pair{std::move(p.key), std::move(p.value)};
+}
+
+/*static*/ ProfilingStats ClientImpl::from(graph::cpp2::ProfilingStats &&pfs) {
+    return ProfilingStats{pfs.get_rows(),
+                          pfs.get_exec_duration_in_us(),
+                          pfs.get_total_duration_in_us(),
+                          pfs.get_other_stats() != nullptr
+                              ? std::make_unique<std::unordered_map<std::string, std::string>>(
+                                    std::move(*pfs.get_other_stats()))
+                              : nullptr};
+}
+
+/*static*/ PlanNodeBranchInfo ClientImpl::from(graph::cpp2::PlanNodeBranchInfo &&pnbi) {
+    return PlanNodeBranchInfo{pnbi.get_is_do_branch(), pnbi.get_condition_node_id()};
 }
 
 }   // namespace nebula

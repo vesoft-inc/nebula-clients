@@ -50,6 +50,12 @@ protected:
         nebula::DataSet expected({"Name"});
         EXPECT_TRUE(verifyResultWithoutOrder(*resp.data, expected));
 
+        // explain
+        resp = c.execute(authResp.sessionId, "EXPLAIN SHOW HOSTS");
+        ASSERT_EQ(resp.code, nebula::ErrorCode::SUCCEEDED);
+        EXPECT_NE(resp.plan_desc, nullptr);
+        // TODO(shylock) check the plan
+
         // async execute
         c.asyncExecute(authResp.sessionId, "SHOW SPACES", [](auto &&cbResp) {
             ASSERT_EQ(cbResp.code, nebula::ErrorCode::SUCCEEDED);
