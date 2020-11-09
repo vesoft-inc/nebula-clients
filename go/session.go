@@ -25,11 +25,6 @@ type Session struct {
 // 	return session.graph.ExecuteJson(session.sessionID, []byte(stmt))
 // }
 
-// Return session ID
-func (session *Session) GetSessionID() int64 {
-	return session.sessionID
-}
-
 // Execute a query
 func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 	if session.connection == nil {
