@@ -31,15 +31,26 @@ type Record struct {
 }
 
 type Node struct {
-	labels    []string
-	propertys []pair
-	keys      []string
-	values    []*nebula.Value
+	labels     []string
+	properties []pair
+	keys       []string
+	values     []*nebula.Value
 }
 
 type Relationship struct {
+	startVertexID nebula.VertexID
+	endVertexID   nebula.VertexID
+	edgeType      nebula.EdgeType
+	properties    []pair
+	keys          []string
+	values        []*nebula.Value
 }
 
+type Segment struct {
+	startNode    Node
+	relationship Relationship
+	endNode      Node
+}
 type Path struct {
 }
 
@@ -48,7 +59,7 @@ type Path struct {
 	Key is column name being look up if key is a String.
 	If key is an int, key is the index of row.
 */
-func (record Record) asNode(key interface{}) (*Node, error) {
+func (record Record) AsNode(key interface{}) (*Node, error) {
 	// Get vertex by column name
 	if reflect.TypeOf(key).String() == "string" {
 		// Get index
@@ -80,10 +91,10 @@ func (record Record) getIndexbyColName(colName string) (int, error) {
 // Return a node if the value at the given index of row is a Vertex
 func (record Record) getNodeByIndex(index int) (*Node, error) {
 	var (
-		labels    []string
-		propertys []pair
-		keys      []string
-		values    []*nebula.Value
+		labels     []string
+		properties []pair
+		keys       []string
+		values     []*nebula.Value
 	)
 	// Check if the value is a vertex
 	if !isVertex(record.row.Values[index]) {
@@ -93,7 +104,7 @@ func (record Record) getNodeByIndex(index int) (*Node, error) {
 	for _, tag := range record.row.Values[index].VVal.GetTags() {
 		name := string(tag.Name)
 		for key, value := range tag.GetProps() {
-			propertys = append(propertys, pair{
+			properties = append(properties, pair{
 				propName:  key,
 				propValue: value,
 			})
@@ -107,10 +118,10 @@ func (record Record) getNodeByIndex(index int) (*Node, error) {
 	}
 
 	return &Node{
-		labels:    labels,
-		propertys: propertys,
-		keys:      keys,
-		values:    values,
+		labels:     labels,
+		properties: properties,
+		keys:       keys,
+		values:     values,
 	}, nil
 }
 
@@ -129,8 +140,14 @@ func (node Node) HasLabel(l string) bool {
 	return false
 }
 
+type propertyKV interface {
+	Propertys() []pair
+	Keys() []string
+	Values() []*nebula.Value
+}
+
 func (node Node) Propertys() []pair {
-	return node.propertys
+	return node.properties
 }
 
 func (node Node) Keys() []string {
@@ -139,6 +156,151 @@ func (node Node) Keys() []string {
 
 func (node Node) Values() []*nebula.Value {
 	return node.values
+}
+
+func (record Record) AsRelationship(key interface{}) (*Relationship, error) {
+	// Get vertex by column name
+	if reflect.TypeOf(key).String() == "string" {
+		// Get index
+		index, err := record.getIndexbyColName(key.(string))
+		if err != nil {
+			return nil, err
+		}
+		return record.getRelationshipByIndex(index)
+	}
+	// Get vertex by row index
+	if reflect.TypeOf(key).String() == "int" {
+		index := key.(int)
+		return record.getRelationshipByIndex(index)
+	}
+	return nil, fmt.Errorf("Failed to get relationship: requested coloumn name or index is invalid")
+}
+
+func (record Record) getRelationshipByIndex(index int) (*Relationship, error) {
+	var (
+		startVertexID nebula.VertexID
+		endVertexID   nebula.VertexID
+		edgeType      nebula.EdgeType
+		properties    []pair
+		keys          []string
+		values        []*nebula.Value
+	)
+	// Check if the value is an edge
+	if !isVertex(record.row.Values[index]) {
+		return nil, fmt.Errorf("Type Error: Value being checked is not an edge")
+	}
+
+	startVertexID = record.row.Values[index].EVal.GetSrc()
+	startVertexID = record.row.Values[index].EVal.GetDst()
+	edgeType = record.row.Values[index].EVal.GetType()
+	// Iterate through all properties of the vertex
+	for key, value := range record.row.Values[index].EVal.GetProps() {
+		properties = append(properties, pair{
+			propName:  key,
+			propValue: value,
+		})
+		// Get key
+		keys = append(keys, key)
+		// Get value
+		values = append(values, value)
+	}
+
+	return &Relationship{
+		startVertexID: startVertexID,
+		endVertexID:   endVertexID,
+		edgeType:      edgeType,
+		properties:    properties,
+		keys:          keys,
+		values:        values,
+	}, nil
+}
+
+func (relationship Relationship) HasType(t string) bool {
+	if string(relationship.edgeType) == t {
+		return true
+	}
+	return false
+}
+
+func (relationship Relationship) GetStartVertexID() nebula.VertexID {
+	return relationship.startVertexID
+}
+
+func (relationship Relationship) GetEndVertexID() nebula.VertexID {
+	return relationship.endVertexID
+}
+
+func (relationship Relationship) GetType() string {
+	return string(relationship.edgeType)
+}
+
+func (relationship Relationship) Propertys() []pair {
+	return relationship.properties
+}
+
+func (relationship Relationship) Keys() []string {
+	return relationship.keys
+}
+
+func (relationship Relationship) Values() []*nebula.Value {
+	return relationship.values
+}
+
+func (record Record) AsPath(key interface{}) (*Relationship, error) {
+	// Get vertex by column name
+	if reflect.TypeOf(key).String() == "string" {
+		// Get index
+		index, err := record.getIndexbyColName(key.(string))
+		if err != nil {
+			return nil, err
+		}
+		return record.getRelationshipByIndex(index)
+	}
+	// Get vertex by row index
+	if reflect.TypeOf(key).String() == "int" {
+		index := key.(int)
+		return record.getRelationshipByIndex(index)
+	}
+	return nil, fmt.Errorf("Failed to get relationship: requested coloumn name or index is invalid")
+}
+
+func (record Record) getRelationshipByIndex(index int) (*Relationship, error) {
+	var (
+		startVertexID nebula.VertexID
+		endVertexID   nebula.VertexID
+		edgeType      nebula.EdgeType
+		properties    []pair
+		keys          []string
+		values        []*nebula.Value
+	)
+	// Check if the value is an edge
+	if !isVertex(record.row.Values[index]) {
+		return nil, fmt.Errorf("Type Error: Value being checked is not an edge")
+	}
+
+	startVertexID = record.row.Values[index].EVal.GetSrc()
+	startVertexID = record.row.Values[index].EVal.GetDst()
+	edgeType = record.row.Values[index].EVal.GetType()
+	// Iterate through all properties of the vertex
+	for key, value := range record.row.Values[index].EVal.GetProps() {
+		properties = append(properties, pair{
+			propName:  key,
+			propValue: value,
+		})
+		// Get key
+		keys = append(keys, key)
+		// Get value
+		values = append(values, value)
+	}
+
+	return &Relationship{
+		startVertexID: startVertexID,
+		endVertexID:   endVertexID,
+		edgeType:      edgeType,
+		properties:    properties,
+		keys:          keys,
+		values:        values,
+	}, nil
 }
 
 func isVertex(value *nebula.Value) bool {
