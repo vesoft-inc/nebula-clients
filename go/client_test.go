@@ -41,12 +41,6 @@ var poolAddress = []HostAddress{
 	},
 }
 
-// Set up logger
-// const (
-// 	logPath  = "logrus.nebulaLog"
-// 	logLevel = "info"
-// )
-
 var nebulaLog = DefaultLogger{}
 
 // Create default configs
