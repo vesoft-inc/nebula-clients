@@ -194,7 +194,7 @@ func TestPool_MultiHosts(t *testing.T) {
 	assert.Equal(t, 3, pool.activeConnectionQueue.Len())
 
 	_, err = pool.GetSession(username, password)
-	assert.Equal(t, "Failed to get connection: No valid connection in the idle queue and connection number has reached the pool capacity", err.Error())
+	assert.EqualError(t, err, "Failed to get connection: No valid connection in the idle queue and connection number has reached the pool capacity")
 
 	// Release 1 connectin back to pool
 	sessionToRelease := sessionList[0]
@@ -219,7 +219,7 @@ func TestPool_MultiHosts(t *testing.T) {
 
 	// Try to get more session when the pool is full
 	newSession, err = pool.GetSession(username, password)
-	assert.Equal(t, "Failed to get connection: No valid connection in the idle queue and connection number has reached the pool capacity", err.Error())
+	assert.EqualError(t, err, "Failed to get connection: No valid connection in the idle queue and connection number has reached the pool capacity")
 
 	for i := 0; i < len(sessionList); i++ {
 		sessionList[i].Release()
@@ -271,21 +271,16 @@ func TestMultiThreads(t *testing.T) {
 	close(sessCh)
 	<-done
 
-	if assert.Equal(t, 666, pool.getActiveConnCount()) {
-		t.Logf("Expected total active connections: 666, Actual value: %d", pool.getActiveConnCount())
-	}
-	if assert.Equal(t, 666, len(sessionList)) {
-		t.Logf("Expected total sessions: 666, Actual value: %d", len(sessionList))
-	}
+	assert.Equal(t, 666, pool.getActiveConnCount(), "Total number of active connections should be 666")
+	assert.Equal(t, 666, len(sessionList), "Total number of sessions should be 666")
+
 	// for i := 0; i < len(hostList); i++ {
 	// 	assert.Equal(t, 222, pool.GetServerWorkload(i))
 	// }
 	for i := 0; i < testPoolConfig.MaxConnPoolSize; i++ {
 		sessionList[i].Release()
 	}
-	if assert.Equal(t, 666, pool.getIdleConnCount()) {
-		t.Logf("Expected total idle connections: 666, Actual value: %d", pool.getIdleConnCount())
-	}
+	assert.Equal(t, 666, pool.getIdleConnCount(), "Total number of idle connections should be 666")
 }
 
 func TestLoadbalancer(t *testing.T) {
@@ -315,9 +310,7 @@ func TestLoadbalancer(t *testing.T) {
 		}
 		sessionList = append(sessionList, session)
 	}
-	if assert.Equal(t, len(sessionList), 999) {
-		t.Logf("Expected total sessions: 999, Actual value: %d", len(sessionList))
-	}
+	assert.Equal(t, len(sessionList), 999, "Total number of sessions should be 666")
 	// TODO: check work load of each host
 	for i := 0; i < len(sessionList); i++ {
 		sessionList[i].Release()
@@ -376,9 +369,7 @@ func TestReconnect(t *testing.T) {
 	}
 
 	// This assertion will pass only when reconnection happens
-	if assert.Equal(t, resp.GetErrorCode(), graph.ErrorCode_E_SESSION_INVALID) {
-		t.Logf("Expected error: E_SESSION_INVALID")
-	}
+	assert.Equal(t, resp.GetErrorCode(), graph.ErrorCode_E_SESSION_INVALID, "Expected error should be E_SESSION_INVALID")
 
 	startContainer(t, "nebula-docker-compose_graphd_1")
 	startContainer(t, "nebula-docker-compose_graphd2_1")
