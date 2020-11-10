@@ -120,6 +120,11 @@ install(
 install(DIRECTORY ${nebula_common_source_dir}/src/common/datatypes
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/common
         FILES_MATCHING PATTERN "*.h")
+
+# reuse the response of graph in common
+install(DIRECTORY ${nebula_common_source_dir}/src/common/graph
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/common
+        FILES_MATCHING PATTERN "*.h")
     
 # reuse the thrift types in common
 install(

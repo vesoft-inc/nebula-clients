@@ -4,7 +4,6 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include <nebula/client/Response.h>
 #include <nebula/client/Config.h>
 #include <nebula/client/Connection.h>
 #include <nebula/client/Init.h>
@@ -17,14 +16,14 @@ int main(int argc, char* argv[]) {
         return 255;
     }
     auto authResp = c.authenticate("root", "nebula");
-    if (authResp.code != nebula::ErrorCode::SUCCEEDED) {
-        std::cout << "Exit with error code: " << static_cast<int>(authResp.code) << std::endl;
-        return static_cast<int>(authResp.code);
+    if (authResp.error_code != nebula::ErrorCode::SUCCEEDED) {
+        std::cout << "Exit with error code: " << static_cast<int>(authResp.error_code) << std::endl;
+        return static_cast<int>(authResp.error_code);
     }
-    auto resp = c.execute(authResp.sessionId, "SHOW HOSTS");
-    if (resp.code != nebula::ErrorCode::SUCCEEDED) {
-        std::cout << "Exit with error code: " << static_cast<int>(resp.code) << std::endl;
-        return static_cast<int>(resp.code);
+    auto resp = c.execute(*authResp.session_id, "SHOW HOSTS");
+    if (resp.error_code != nebula::ErrorCode::SUCCEEDED) {
+        std::cout << "Exit with error code: " << static_cast<int>(resp.error_code) << std::endl;
+        return static_cast<int>(resp.error_code);
     }
     std::cout << *resp.data;
     c.close();
