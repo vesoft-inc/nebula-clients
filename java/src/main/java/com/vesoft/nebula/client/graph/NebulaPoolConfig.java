@@ -11,19 +11,15 @@ public class NebulaPoolConfig {
     private int minConnsSize = 0;
 
     // The max connections in pool for all addresses
-    private int maxConnsSize = 100;
+    private int maxConnsSize = 10;
 
-    // Socket timeout and Socket connection timeout, unit: seconds
-    private int timeout = 1000;
+    // Socket timeout and Socket connection timeout, unit: millisecond
+    private int timeout = 0;
 
-    // The idleTime of the connection, unit: seconds
+    // The idleTime of the connection, unit: millisecond
     // The connection's idle time more than idleTime, it will be delete
-    private int idleTime = 5 * 60 * 1000;
-
-
-    // the times to retry to connect
-
-    private int retryConnectTimes = 3;
+    // 0 means never delete
+    private int idleTime = 0;
 
     public int getMinConnSize() {
         return minConnsSize;
@@ -56,13 +52,4 @@ public class NebulaPoolConfig {
     public void setIdleTime(int idleTime) {
         this.idleTime = idleTime;
     }
-
-    public int getRetryConnectTimes() {
-        return retryConnectTimes;
-    }
-
-    public void setRetryConnectTimes(int retryConnectTimes) {
-        this.retryConnectTimes = retryConnectTimes;
-    }
-
 }

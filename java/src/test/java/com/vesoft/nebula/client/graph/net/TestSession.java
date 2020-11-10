@@ -10,9 +10,7 @@ import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
-import com.vesoft.nebula.client.graph.net.NebulaPool;
-import com.vesoft.nebula.client.graph.net.Session;
-import java.util.ArrayList;
+import com.vesoft.nebula.graph.ErrorCode;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -22,36 +20,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestSession {
-    private final Logger log = LoggerFactory.getLogger(TestSession.class);
-
     @Test()
     public void testReconnect() {
+        Runtime runtime = Runtime.getRuntime();
         NebulaPool pool = new NebulaPool();
         try {
             NebulaPoolConfig nebulaPoolConfig = new NebulaPoolConfig();
-            nebulaPoolConfig.setMinConnSize(2);
-            nebulaPoolConfig.setMaxConnSize(2);
-            nebulaPoolConfig.setIdleTime(2);
-            List<HostAddress> addresses = Arrays.asList(new HostAddress("127.0.0.1", 3699),
-                    new HostAddress("127.0.0.1", 3700));
-            assert pool.init(addresses, nebulaPoolConfig);
-            Session session = pool.getSession("root", "nebula", false);
-            System.out.println("==================================");
-            // TODO: Add a task to stop the graphd("127.0.0.1:3700") after 10 second
+            nebulaPoolConfig.setMaxConnSize(6);
+            List<HostAddress> addresses = Arrays.asList(
+                    new HostAddress("127.0.0.1", 3699),
+                    new HostAddress("127.0.0.1", 3700),
+                    new HostAddress("127.0.0.1", 3701));
+            Assert.assertTrue(pool.init(addresses, nebulaPoolConfig));
+            Session session = pool.getSession("root", "nebula", true);
 
-            // TODO: Add a task to start the graphd("127.0.0.1:3700") after 20 second
-            for (int i = 0; i < 20; i++) {
+            // test ping
+            Assert.assertTrue(session.ping());
+
+            for (int i = 0; i < 10; i++) {
+                if (i == 3) {
+                    runtime.exec("docker stop nebula-docker-compose_graphd_1")
+                            .waitFor(5, TimeUnit.SECONDS);
+                    runtime.exec("docker stop nebula-docker-compose_graphd1_1")
+                            .waitFor(5, TimeUnit.SECONDS);
+                }
                 try {
                     ResultSet resp = session.execute("SHOW SPACES");
-                    if (!resp.isSucceeded()) {
-                        log.error(String.format("Execute `SHOW SPACES' failed: %s",
-                                resp.getErrorMessage()));
+                    if (i >= 3) {
+                        Assert.assertEquals(ErrorCode.E_SESSION_INVALID, resp.getErrorCode());
+                    } else {
+                        Assert.assertEquals(ErrorCode.SUCCEEDED, resp.getErrorCode());
                     }
                 } catch (IOErrorException ie) {
-                    if (ie.getType() == IOErrorException.E_CONNECT_BROKEN) {
-                        session = pool.getSession("root", "nebula", false);
-                        session.execute("USE test");
-                    }
+                    Assert.fail();
                 }
                 TimeUnit.SECONDS.sleep(2);
             }
@@ -64,9 +65,15 @@ public class TestSession {
             e.printStackTrace();
             Assert.assertFalse(e.getMessage(),false);
         } finally {
-            if (pool != null) {
-                pool.close();
+            try {
+                runtime.exec("docker start nebula-docker-compose_graphd_1")
+                        .waitFor(5, TimeUnit.SECONDS);
+                runtime.exec("docker start nebula-docker-compose_graphd1_1")
+                        .waitFor(5, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            pool.close();
         }
     }
 }

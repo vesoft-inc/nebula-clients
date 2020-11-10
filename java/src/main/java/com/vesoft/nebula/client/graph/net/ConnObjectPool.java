@@ -10,7 +10,8 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 public class ConnObjectPool extends BasePooledObjectFactory<SyncConnection> {
     private final RoundRobinLoadBalancer loadBalancer;
-    private NebulaPoolConfig config;
+    private final NebulaPoolConfig config;
+    private static final int retryTime = 3;
 
     public ConnObjectPool(List<HostAddress> addresses, NebulaPoolConfig config) {
         this.loadBalancer = new RoundRobinLoadBalancer(addresses, config.getTimeout());
@@ -19,22 +20,22 @@ public class ConnObjectPool extends BasePooledObjectFactory<SyncConnection> {
 
     @Override
     public SyncConnection create() throws IOErrorException {
-        HostAddress address = this.loadBalancer.getAddress();
+        HostAddress address = loadBalancer.getAddress();
         if (address == null) {
             throw new IOErrorException(IOErrorException.E_ALL_BROKEN,
                     "All servers are broken.");
         }
-        int retry = this.config.getRetryConnectTimes();
+        int retry = retryTime;
+        SyncConnection conn = new SyncConnection();
         while (retry-- > 0) {
             try {
-                SyncConnection conn = new SyncConnection();
-                conn.open(address, this.config.getTimeout());
+                conn.open(address, config.getTimeout());
                 return conn;
             } catch (IOErrorException e) {
                 if (retry == 0) {
                     throw e;
                 }
-                this.loadBalancer.updateServersStatus();
+                loadBalancer.updateServersStatus();
             }
         }
         return null;
@@ -54,7 +55,10 @@ public class ConnObjectPool extends BasePooledObjectFactory<SyncConnection> {
 
     @Override
     public boolean validateObject(PooledObject<SyncConnection> p) {
-        if (!this.loadBalancer.ping(p.getObject().getServerAddress())) {
+        if (p.getObject() == null) {
+            return false;
+        }
+        if (!p.getObject().ping()) {
             p.getObject().close();
             return false;
         }
@@ -62,10 +66,10 @@ public class ConnObjectPool extends BasePooledObjectFactory<SyncConnection> {
     }
 
     public boolean init() {
-        return this.loadBalancer.isServersOK();
+        return loadBalancer.isServersOK();
     }
 
     public void updateServerStatus() {
-        this.loadBalancer.updateServersStatus();
+        loadBalancer.updateServersStatus();
     }
 }

@@ -10,13 +10,13 @@ import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
-import com.vesoft.nebula.client.graph.net.NebulaPool;
-import com.vesoft.nebula.client.graph.net.Session;
 import com.vesoft.nebula.graph.ErrorCode;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestConnectionPool {
@@ -24,12 +24,13 @@ public class TestConnectionPool {
     public void testInitFailed() {
         // hostname is not existed
         try {
-            List<HostAddress> addresses = Arrays.asList(new HostAddress("hostname", 3888));
+            List<HostAddress> addresses = Collections.singletonList(
+                    new HostAddress("hostname", 3888));
             NebulaPool pool = new NebulaPool();
-            assert (false == pool.init(addresses, new NebulaPoolConfig()));
+            Assert.assertFalse(pool.init(addresses, new NebulaPoolConfig()));
         } catch (UnknownHostException e) {
             System.out.println("We expect must reach here: init pool failed.");
-            assert (true);
+            Assert.assertTrue(true);
         }
 
         // connect failed
@@ -37,12 +38,13 @@ public class TestConnectionPool {
             NebulaPoolConfig nebulaPoolConfig = new NebulaPoolConfig();
             nebulaPoolConfig.setMinConnSize(0);
             nebulaPoolConfig.setMaxConnSize(1);
-            List<HostAddress> addresses = Arrays.asList(new HostAddress("127.0.0.1", 3888));
+            List<HostAddress> addresses = Collections.singletonList(
+                    new HostAddress("127.0.0.1", 3888));
             NebulaPool pool = new NebulaPool();
-            assert (false == pool.init(addresses, nebulaPoolConfig));
+            Assert.assertFalse(pool.init(addresses, nebulaPoolConfig));
         } catch (Exception e) {
             e.printStackTrace();
-            assert (false);
+            Assert.fail();
         }
     }
 
@@ -82,12 +84,16 @@ public class TestConnectionPool {
             for (Session s : sessions) {
                 s.release();
             }
-            assert (pool.getActiveConnNum() == 0);
-            assert (pool.getIdleConnNum() == 4);
+            Assert.assertEquals(0, pool.getActiveConnNum());
+            Assert.assertEquals(4, pool.getIdleConnNum());
             Session session = pool.getSession("root", "nebula", false);
-            assert (session != null);
-            assert (pool.getActiveConnNum() == 1);
-            assert (pool.getIdleConnNum() == 3);
+            Assert.assertNotNull(session);
+            Assert.assertEquals(1, pool.getActiveConnNum());
+            Assert.assertEquals(3, pool.getIdleConnNum());
+
+            // Test multi release
+            session.release();
+            session.release();
         } catch (Exception e) {
             e.printStackTrace();
             assert (false);
@@ -99,9 +105,10 @@ public class TestConnectionPool {
         try {
             NebulaPoolConfig nebulaPoolConfig = new NebulaPoolConfig();
             nebulaPoolConfig.setMaxConnSize(1);
-            List<HostAddress> addresses = Arrays.asList(new HostAddress("127.0.0.1", 3699));
+            List<HostAddress> addresses = Collections.singletonList(
+                    new HostAddress("127.0.0.1", 3699));
             NebulaPool pool = new NebulaPool();
-            assert pool.init(addresses, nebulaPoolConfig);
+            Assert.assertTrue(pool.init(addresses, nebulaPoolConfig));
             pool.close();
             Session s = pool.getSession("root", "nebula", false);
             assert (false);

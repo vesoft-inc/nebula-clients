@@ -7,7 +7,6 @@
 package com.vesoft.nebula.client.graph.net;
 
 import com.vesoft.nebula.client.graph.data.ResultSet;
-import com.vesoft.nebula.client.graph.exception.AuthFailedException;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.graph.ExecutionResponse;
 import org.apache.commons.pool2.impl.GenericObjectPool;
@@ -15,11 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Session {
-    private long sessionID;
+    private final long sessionID;
     private SyncConnection connection;
     private final GenericObjectPool<SyncConnection> pool;
     private final Boolean retryConnect;
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public Session(SyncConnection connection,
                    long sessionID,
@@ -39,7 +38,7 @@ public class Session {
      */
     public ResultSet execute(String stmt) throws IOErrorException {
         try {
-            if (this.connection == null) {
+            if (connection == null) {
                 throw new IOErrorException(IOErrorException.E_CONNECT_BROKEN,
                         "Connection is null");
             }
@@ -47,16 +46,11 @@ public class Session {
             return new ResultSet(resp);
         } catch (IOErrorException ie) {
             if (ie.getType() == IOErrorException.E_CONNECT_BROKEN) {
-                if (this.pool.getFactory() instanceof ConnObjectPool) {
-                    ((ConnObjectPool) this.pool.getFactory()).updateServerStatus();
-                }
-                try {
-                    this.pool.invalidateObject(this.connection);
-                } catch (Exception e) {
-                    log.error("Return object failed");
+                if (pool.getFactory() instanceof ConnObjectPool) {
+                    ((ConnObjectPool) pool.getFactory()).updateServerStatus();
                 }
 
-                if (this.retryConnect) {
+                if (retryConnect) {
                     if (retryConnect()) {
                         ExecutionResponse resp = connection.execute(sessionID, stmt);
                         return new ResultSet(resp);
@@ -72,9 +66,16 @@ public class Session {
 
     private boolean retryConnect() {
         try {
+            try {
+                pool.invalidateObject(connection);
+            } catch (Exception e) {
+                log.error("Return object failed");
+            }
             SyncConnection newConn = pool.borrowObject();
-            this.connection.close();
-            this.connection = newConn;
+            if (newConn == null) {
+                log.error("Get connection object failed.");
+            }
+            connection = newConn;
             return true;
         } catch (Exception e) {
             return false;
@@ -83,18 +84,21 @@ public class Session {
 
     // Need server supported, v1.0 nebula-graph doesn't supported
     public boolean ping() {
-        if (this.connection == null) {
+        if (connection == null) {
             return false;
         }
-        return this.connection.ping();
+        return connection.ping();
     }
 
     public void release() {
-        this.connection.signout(sessionID);
-        try {
-            this.pool.returnObject(this.connection);
-        } catch (Exception e) {
+        if (connection == null) {
             return;
+        }
+        connection.signout(sessionID);
+        try {
+            pool.returnObject(connection);
+        } catch (Exception e) {
+            log.warn("Return object to pool failed.");
         }
     }
 }

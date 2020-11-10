@@ -37,7 +37,7 @@ public class RoundRobinLoadBalancer implements LoadBalancer {
         int tryCount = 0;
         int newPos;
         while (++tryCount <= addresses.size()) {
-            newPos = (pos.incrementAndGet()) % addresses.size();
+            newPos = (pos.getAndIncrement()) % addresses.size();
             HostAddress addr = addresses.get(newPos);
             if (serversStatus.get(addr) == S_OK) {
                 return addr;

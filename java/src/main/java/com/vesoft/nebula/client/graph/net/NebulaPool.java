@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
 public class NebulaPool {
     private GenericObjectPool<SyncConnection> objectPool = null;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    // the wait time to get idle connection, unit ms
+    private final int waitTime = 60 * 1000;
 
     public boolean init(List<HostAddress> addresses, NebulaPoolConfig config)
             throws UnknownHostException {
@@ -31,8 +33,10 @@ public class NebulaPool {
         ConnObjectPool objectPool = new ConnObjectPool(newAddrs, config);
         this.objectPool = new GenericObjectPool<>(objectPool);
         GenericObjectPoolConfig objConfig = new GenericObjectPoolConfig();
-        objConfig.setMaxIdle(config.getIdleTime());
+        objConfig.setMinIdle(config.getMinConnSize());
         objConfig.setMaxTotal(config.getMaxConnSize());
+        objConfig.setMinEvictableIdleTimeMillis(
+                config.getIdleTime() <= 0 ? Long.MAX_VALUE : config.getIdleTime());
         this.objectPool.setConfig(objConfig);
 
         AbandonedConfig abandonedConfig = new AbandonedConfig();
@@ -48,16 +52,24 @@ public class NebulaPool {
     public Session getSession(String userName, String password, boolean reconnect)
             throws NotValidConnectionException, IOErrorException, AuthFailedException {
         try {
-            SyncConnection connection = objectPool.borrowObject(1000);
+            // If no idle connection, try once
+            int retry = getIdleConnNum() == 0 ? 1 : getIdleConnNum();
+            SyncConnection connection = null;
+            while (retry-- > 0) {
+                connection = objectPool.borrowObject(waitTime);
+                if (connection == null || !connection.ping()) {
+                    continue;
+                }
+                break;
+            }
             if (connection == null) {
                 throw new NotValidConnectionException("Get connection object failed.");
             }
             log.info(String.format("Get connection to %s:%d",
-                    connection.getServerAddress().getHost(),
-                    connection.getServerAddress().getPort()));
+                     connection.getServerAddress().getHost(),
+                     connection.getServerAddress().getPort()));
             long sessionID = connection.authenticate(userName, password);
-            Session session = new Session(connection, sessionID, this.objectPool, reconnect);
-            return session;
+            return new Session(connection, sessionID, this.objectPool, reconnect);
         } catch (NotValidConnectionException | AuthFailedException | IOErrorException e) {
             throw e;
         } catch (IllegalStateException e) {
@@ -68,26 +80,26 @@ public class NebulaPool {
     }
 
     public int getActiveConnNum() {
-        return this.objectPool.getNumActive();
+        return objectPool.getNumActive();
     }
 
     public int getIdleConnNum() {
-        return this.objectPool.getNumIdle();
+        return objectPool.getNumIdle();
     }
 
     public int getWaitersNum() {
-        return this.objectPool.getNumWaiters();
+        return objectPool.getNumWaiters();
     }
 
     public void updateServerStatus() {
-        if (this.objectPool.getFactory() instanceof ConnObjectPool) {
-            ((ConnObjectPool)this.objectPool.getFactory()).updateServerStatus();
+        if (objectPool.getFactory() instanceof ConnObjectPool) {
+            ((ConnObjectPool)objectPool.getFactory()).updateServerStatus();
         }
     }
 
     private List<HostAddress> hostToIp(List<HostAddress> addresses)
             throws UnknownHostException {
-        List<HostAddress> newAddrs = new ArrayList<HostAddress>();
+        List<HostAddress> newAddrs = new ArrayList<>();
         for (HostAddress addr : addresses) {
             String ip = InetAddress.getByName(addr.getHost()).getHostAddress();
             newAddrs.add(new HostAddress(ip, addr.getPort()));
