@@ -35,6 +35,7 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
   private static final TField CHARSET_NAME_FIELD_DESC = new TField("charset_name", TType.STRING, (short)4);
   private static final TField COLLATE_NAME_FIELD_DESC = new TField("collate_name", TType.STRING, (short)5);
   private static final TField VID_TYPE_FIELD_DESC = new TField("vid_type", TType.STRUCT, (short)6);
+  private static final TField GROUP_NAME_FIELD_DESC = new TField("group_name", TType.STRING, (short)7);
 
   public byte[] space_name;
   public int partition_num;
@@ -42,12 +43,14 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
   public byte[] charset_name;
   public byte[] collate_name;
   public ColumnTypeDef vid_type;
+  public byte[] group_name;
   public static final int SPACE_NAME = 1;
   public static final int PARTITION_NUM = 2;
   public static final int REPLICA_FACTOR = 3;
   public static final int CHARSET_NAME = 4;
   public static final int COLLATE_NAME = 5;
   public static final int VID_TYPE = 6;
+  public static final int GROUP_NAME = 7;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -70,6 +73,8 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
         new FieldValueMetaData(TType.STRING)));
     tmpMetaDataMap.put(VID_TYPE, new FieldMetaData("vid_type", TFieldRequirementType.DEFAULT, 
         new StructMetaData(TType.STRUCT, ColumnTypeDef.class)));
+    tmpMetaDataMap.put(GROUP_NAME, new FieldMetaData("group_name", TFieldRequirementType.OPTIONAL, 
+        new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -107,6 +112,27 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
     this.vid_type = vid_type;
   }
 
+  public SpaceDesc(
+    byte[] space_name,
+    int partition_num,
+    int replica_factor,
+    byte[] charset_name,
+    byte[] collate_name,
+    ColumnTypeDef vid_type,
+    byte[] group_name)
+  {
+    this();
+    this.space_name = space_name;
+    this.partition_num = partition_num;
+    setPartition_numIsSet(true);
+    this.replica_factor = replica_factor;
+    setReplica_factorIsSet(true);
+    this.charset_name = charset_name;
+    this.collate_name = collate_name;
+    this.vid_type = vid_type;
+    this.group_name = group_name;
+  }
+
   /**
    * Performs a deep copy on <i>other</i>.
    */
@@ -126,6 +152,9 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
     }
     if (other.isSetVid_type()) {
       this.vid_type = TBaseHelper.deepCopy(other.vid_type);
+    }
+    if (other.isSetGroup_name()) {
+      this.group_name = TBaseHelper.deepCopy(other.group_name);
     }
   }
 
@@ -280,6 +309,30 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
     }
   }
 
+  public byte[]  getGroup_name() {
+    return this.group_name;
+  }
+
+  public SpaceDesc setGroup_name(byte[] group_name) {
+    this.group_name = group_name;
+    return this;
+  }
+
+  public void unsetGroup_name() {
+    this.group_name = null;
+  }
+
+  // Returns true if field group_name is set (has been assigned a value) and false otherwise
+  public boolean isSetGroup_name() {
+    return this.group_name != null;
+  }
+
+  public void setGroup_nameIsSet(boolean value) {
+    if (!value) {
+      this.group_name = null;
+    }
+  }
+
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
     case SPACE_NAME:
@@ -330,6 +383,14 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
       }
       break;
 
+    case GROUP_NAME:
+      if (value == null) {
+        unsetGroup_name();
+      } else {
+        setGroup_name((byte[])value);
+      }
+      break;
+
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -355,6 +416,9 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
     case VID_TYPE:
       return getVid_type();
 
+    case GROUP_NAME:
+      return getGroup_name();
+
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -375,6 +439,8 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
       return isSetCollate_name();
     case VID_TYPE:
       return isSetVid_type();
+    case GROUP_NAME:
+      return isSetGroup_name();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -449,6 +515,15 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
         return false;
     }
 
+    boolean this_present_group_name = true && this.isSetGroup_name();
+    boolean that_present_group_name = true && that.isSetGroup_name();
+    if (this_present_group_name || that_present_group_name) {
+      if (!(this_present_group_name && that_present_group_name))
+        return false;
+      if (!TBaseHelper.equalsSlow(this.group_name, that.group_name))
+        return false;
+    }
+
     return true;
   }
 
@@ -485,6 +560,11 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
     builder.append(present_vid_type);
     if (present_vid_type)
       builder.append(vid_type);
+
+    boolean present_group_name = true && (isSetGroup_name());
+    builder.append(present_group_name);
+    if (present_group_name)
+      builder.append(group_name);
 
     return builder.toHashCode();
   }
@@ -549,6 +629,14 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
     if (lastComparison != 0) {
       return lastComparison;
     }
+    lastComparison = Boolean.valueOf(isSetGroup_name()).compareTo(other.isSetGroup_name());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(group_name, other.group_name);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
     return 0;
   }
 
@@ -608,6 +696,13 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
+        case GROUP_NAME:
+          if (field.type == TType.STRING) {
+            this.group_name = iprot.readBinary();
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
         default:
           TProtocolUtil.skip(iprot, field.type);
           break;
@@ -650,6 +745,13 @@ public class SpaceDesc implements TBase, java.io.Serializable, Cloneable, Compar
       oprot.writeFieldBegin(VID_TYPE_FIELD_DESC);
       this.vid_type.write(oprot);
       oprot.writeFieldEnd();
+    }
+    if (this.group_name != null) {
+      if (isSetGroup_name()) {
+        oprot.writeFieldBegin(GROUP_NAME_FIELD_DESC);
+        oprot.writeBinary(this.group_name);
+        oprot.writeFieldEnd();
+      }
     }
     oprot.writeFieldStop();
     oprot.writeStructEnd();
@@ -748,6 +850,25 @@ String space = prettyPrint ? " " : "";
       sb.append(TBaseHelper.toString(this. getVid_type(), indent + 1, prettyPrint));
     }
     first = false;
+    if (isSetGroup_name())
+    {
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("group_name");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getGroup_name() == null) {
+        sb.append("null");
+      } else {
+          int __group_name_size = Math.min(this. getGroup_name().length, 128);
+          for (int i = 0; i < __group_name_size; i++) {
+            if (i != 0) sb.append(" ");
+            sb.append(Integer.toHexString(this. getGroup_name()[i]).length() > 1 ? Integer.toHexString(this. getGroup_name()[i]).substring(Integer.toHexString(this. getGroup_name()[i]).length() - 2).toUpperCase() : "0" + Integer.toHexString(this. getGroup_name()[i]).toUpperCase());
+          }
+          if (this. getGroup_name().length > 128) sb.append(" ...");
+      }
+      first = false;
+    }
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");
     return sb.toString();

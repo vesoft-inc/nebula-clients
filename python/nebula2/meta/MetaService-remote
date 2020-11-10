@@ -97,6 +97,19 @@ FUNCTIONS = {
     'dropSnapshot': Function('dropSnapshot', 'MetaService', 'ExecResp', [('DropSnapshotReq', 'req', 'DropSnapshotReq')]),
     'listSnapshots': Function('listSnapshots', 'MetaService', 'ListSnapshotsResp', [('ListSnapshotsReq', 'req', 'ListSnapshotsReq')]),
     'runAdminJob': Function('runAdminJob', 'MetaService', 'AdminJobResp', [('AdminJobReq', 'req', 'AdminJobReq')]),
+    'addZone': Function('addZone', 'MetaService', 'ExecResp', [('AddZoneReq', 'req', 'AddZoneReq')]),
+    'dropZone': Function('dropZone', 'MetaService', 'ExecResp', [('DropZoneReq', 'req', 'DropZoneReq')]),
+    'addHostIntoZone': Function('addHostIntoZone', 'MetaService', 'ExecResp', [('AddHostIntoZoneReq', 'req', 'AddHostIntoZoneReq')]),
+    'dropHostFromZone': Function('dropHostFromZone', 'MetaService', 'ExecResp', [('DropHostFromZoneReq', 'req', 'DropHostFromZoneReq')]),
+    'getZone': Function('getZone', 'MetaService', 'GetZoneResp', [('GetZoneReq', 'req', 'GetZoneReq')]),
+    'listZones': Function('listZones', 'MetaService', 'ListZonesResp', [('ListZonesReq', 'req', 'ListZonesReq')]),
+    'drainZone': Function('drainZone', 'MetaService', 'ExecResp', [('DrainZoneReq', 'req', 'DrainZoneReq')]),
+    'addGroup': Function('addGroup', 'MetaService', 'ExecResp', [('AddGroupReq', 'req', 'AddGroupReq')]),
+    'dropGroup': Function('dropGroup', 'MetaService', 'ExecResp', [('DropGroupReq', 'req', 'DropGroupReq')]),
+    'addZoneIntoGroup': Function('addZoneIntoGroup', 'MetaService', 'ExecResp', [('AddZoneIntoGroupReq', 'req', 'AddZoneIntoGroupReq')]),
+    'dropZoneFromGroup': Function('dropZoneFromGroup', 'MetaService', 'ExecResp', [('DropZoneFromGroupReq', 'req', 'DropZoneFromGroupReq')]),
+    'getGroup': Function('getGroup', 'MetaService', 'GetGroupResp', [('GetGroupReq', 'req', 'GetGroupReq')]),
+    'listGroups': Function('listGroups', 'MetaService', 'ListGroupsResp', [('ListGroupsReq', 'req', 'ListGroupsReq')]),
 }
 
 SERVICE_NAMES = ['MetaService', ]

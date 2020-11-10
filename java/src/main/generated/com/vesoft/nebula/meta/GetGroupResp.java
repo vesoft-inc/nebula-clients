@@ -31,7 +31,7 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
   private static final TStruct STRUCT_DESC = new TStruct("GetGroupResp");
   private static final TField CODE_FIELD_DESC = new TField("code", TType.I32, (short)1);
   private static final TField LEADER_FIELD_DESC = new TField("leader", TType.STRUCT, (short)2);
-  private static final TField ZONES_FIELD_DESC = new TField("zones", TType.MAP, (short)3);
+  private static final TField ZONE_NAMES_FIELD_DESC = new TField("zone_names", TType.LIST, (short)3);
 
   /**
    * 
@@ -39,10 +39,10 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
    */
   public int code;
   public com.vesoft.nebula.HostAddr leader;
-  public Map<byte[],List<HostItem>> zones;
+  public List<byte[]> zone_names;
   public static final int CODE = 1;
   public static final int LEADER = 2;
-  public static final int ZONES = 3;
+  public static final int ZONE_NAMES = 3;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -56,11 +56,9 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
         new FieldValueMetaData(TType.I32)));
     tmpMetaDataMap.put(LEADER, new FieldMetaData("leader", TFieldRequirementType.DEFAULT, 
         new StructMetaData(TType.STRUCT, com.vesoft.nebula.HostAddr.class)));
-    tmpMetaDataMap.put(ZONES, new FieldMetaData("zones", TFieldRequirementType.DEFAULT, 
-        new MapMetaData(TType.MAP, 
-            new FieldValueMetaData(TType.STRING), 
-            new ListMetaData(TType.LIST, 
-                new StructMetaData(TType.STRUCT, HostItem.class)))));
+    tmpMetaDataMap.put(ZONE_NAMES, new FieldMetaData("zone_names", TFieldRequirementType.DEFAULT, 
+        new ListMetaData(TType.LIST, 
+            new FieldValueMetaData(TType.STRING))));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -74,13 +72,13 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
   public GetGroupResp(
     int code,
     com.vesoft.nebula.HostAddr leader,
-    Map<byte[],List<HostItem>> zones)
+    List<byte[]> zone_names)
   {
     this();
     this.code = code;
     setCodeIsSet(true);
     this.leader = leader;
-    this.zones = zones;
+    this.zone_names = zone_names;
   }
 
   /**
@@ -93,8 +91,8 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
     if (other.isSetLeader()) {
       this.leader = TBaseHelper.deepCopy(other.leader);
     }
-    if (other.isSetZones()) {
-      this.zones = TBaseHelper.deepCopy(other.zones);
+    if (other.isSetZone_names()) {
+      this.zone_names = TBaseHelper.deepCopy(other.zone_names);
     }
   }
 
@@ -162,27 +160,27 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
     }
   }
 
-  public Map<byte[],List<HostItem>>  getZones() {
-    return this.zones;
+  public List<byte[]>  getZone_names() {
+    return this.zone_names;
   }
 
-  public GetGroupResp setZones(Map<byte[],List<HostItem>> zones) {
-    this.zones = zones;
+  public GetGroupResp setZone_names(List<byte[]> zone_names) {
+    this.zone_names = zone_names;
     return this;
   }
 
-  public void unsetZones() {
-    this.zones = null;
+  public void unsetZone_names() {
+    this.zone_names = null;
   }
 
-  // Returns true if field zones is set (has been assigned a value) and false otherwise
-  public boolean isSetZones() {
-    return this.zones != null;
+  // Returns true if field zone_names is set (has been assigned a value) and false otherwise
+  public boolean isSetZone_names() {
+    return this.zone_names != null;
   }
 
-  public void setZonesIsSet(boolean value) {
+  public void setZone_namesIsSet(boolean value) {
     if (!value) {
-      this.zones = null;
+      this.zone_names = null;
     }
   }
 
@@ -205,11 +203,11 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
       }
       break;
 
-    case ZONES:
+    case ZONE_NAMES:
       if (value == null) {
-        unsetZones();
+        unsetZone_names();
       } else {
-        setZones((Map<byte[],List<HostItem>>)value);
+        setZone_names((List<byte[]>)value);
       }
       break;
 
@@ -226,8 +224,8 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
     case LEADER:
       return getLeader();
 
-    case ZONES:
-      return getZones();
+    case ZONE_NAMES:
+      return getZone_names();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -241,8 +239,8 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
       return isSetCode();
     case LEADER:
       return isSetLeader();
-    case ZONES:
-      return isSetZones();
+    case ZONE_NAMES:
+      return isSetZone_names();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -281,12 +279,12 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
         return false;
     }
 
-    boolean this_present_zones = true && this.isSetZones();
-    boolean that_present_zones = true && that.isSetZones();
-    if (this_present_zones || that_present_zones) {
-      if (!(this_present_zones && that_present_zones))
+    boolean this_present_zone_names = true && this.isSetZone_names();
+    boolean that_present_zone_names = true && that.isSetZone_names();
+    if (this_present_zone_names || that_present_zone_names) {
+      if (!(this_present_zone_names && that_present_zone_names))
         return false;
-      if (!TBaseHelper.equalsSlow(this.zones, that.zones))
+      if (!TBaseHelper.equalsSlow(this.zone_names, that.zone_names))
         return false;
     }
 
@@ -307,10 +305,10 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
     if (present_leader)
       builder.append(leader);
 
-    boolean present_zones = true && (isSetZones());
-    builder.append(present_zones);
-    if (present_zones)
-      builder.append(zones);
+    boolean present_zone_names = true && (isSetZone_names());
+    builder.append(present_zone_names);
+    if (present_zone_names)
+      builder.append(zone_names);
 
     return builder.toHashCode();
   }
@@ -343,11 +341,11 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = Boolean.valueOf(isSetZones()).compareTo(other.isSetZones());
+    lastComparison = Boolean.valueOf(isSetZone_names()).compareTo(other.isSetZone_names());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(zones, other.zones);
+    lastComparison = TBaseHelper.compareTo(zone_names, other.zone_names);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -381,35 +379,20 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
-        case ZONES:
-          if (field.type == TType.MAP) {
+        case ZONE_NAMES:
+          if (field.type == TType.LIST) {
             {
-              TMap _map189 = iprot.readMapBegin();
-              this.zones = new HashMap<byte[],List<HostItem>>(Math.max(0, 2*_map189.size));
+              TList _list189 = iprot.readListBegin();
+              this.zone_names = new ArrayList<byte[]>(Math.max(0, _list189.size));
               for (int _i190 = 0; 
-                   (_map189.size < 0) ? iprot.peekMap() : (_i190 < _map189.size); 
+                   (_list189.size < 0) ? iprot.peekList() : (_i190 < _list189.size); 
                    ++_i190)
               {
-                byte[] _key191;
-                List<HostItem> _val192;
-                _key191 = iprot.readBinary();
-                {
-                  TList _list193 = iprot.readListBegin();
-                  _val192 = new ArrayList<HostItem>(Math.max(0, _list193.size));
-                  for (int _i194 = 0; 
-                       (_list193.size < 0) ? iprot.peekList() : (_i194 < _list193.size); 
-                       ++_i194)
-                  {
-                    HostItem _elem195;
-                    _elem195 = new HostItem();
-                    _elem195.read(iprot);
-                    _val192.add(_elem195);
-                  }
-                  iprot.readListEnd();
-                }
-                this.zones.put(_key191, _val192);
+                byte[] _elem191;
+                _elem191 = iprot.readBinary();
+                this.zone_names.add(_elem191);
               }
-              iprot.readMapEnd();
+              iprot.readListEnd();
             }
           } else { 
             TProtocolUtil.skip(iprot, field.type);
@@ -440,21 +423,14 @@ public class GetGroupResp implements TBase, java.io.Serializable, Cloneable, Com
       this.leader.write(oprot);
       oprot.writeFieldEnd();
     }
-    if (this.zones != null) {
-      oprot.writeFieldBegin(ZONES_FIELD_DESC);
+    if (this.zone_names != null) {
+      oprot.writeFieldBegin(ZONE_NAMES_FIELD_DESC);
       {
-        oprot.writeMapBegin(new TMap(TType.STRING, TType.LIST, this.zones.size()));
-        for (Map.Entry<byte[], List<HostItem>> _iter196 : this.zones.entrySet())        {
-          oprot.writeBinary(_iter196.getKey());
-          {
-            oprot.writeListBegin(new TList(TType.STRUCT, _iter196.getValue().size()));
-            for (HostItem _iter197 : _iter196.getValue())            {
-              _iter197.write(oprot);
-            }
-            oprot.writeListEnd();
-          }
+        oprot.writeListBegin(new TList(TType.STRING, this.zone_names.size()));
+        for (byte[] _iter192 : this.zone_names)        {
+          oprot.writeBinary(_iter192);
         }
-        oprot.writeMapEnd();
+        oprot.writeListEnd();
       }
       oprot.writeFieldEnd();
     }
@@ -510,13 +486,13 @@ String space = prettyPrint ? " " : "";
     first = false;
     if (!first) sb.append("," + newLine);
     sb.append(indentStr);
-    sb.append("zones");
+    sb.append("zone_names");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getZones() == null) {
+    if (this. getZone_names() == null) {
       sb.append("null");
     } else {
-      sb.append(TBaseHelper.toString(this. getZones(), indent + 1, prettyPrint));
+      sb.append(TBaseHelper.toString(this. getZone_names(), indent + 1, prettyPrint));
     }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

@@ -299,17 +299,17 @@ public class KVGetResponse implements TBase, java.io.Serializable, Cloneable, Co
         case KEY_VALUES:
           if (field.type == TType.MAP) {
             {
-              TMap _map209 = iprot.readMapBegin();
-              this.key_values = new HashMap<byte[],byte[]>(Math.max(0, 2*_map209.size));
-              for (int _i210 = 0; 
-                   (_map209.size < 0) ? iprot.peekMap() : (_i210 < _map209.size); 
-                   ++_i210)
+              TMap _map221 = iprot.readMapBegin();
+              this.key_values = new HashMap<byte[],byte[]>(Math.max(0, 2*_map221.size));
+              for (int _i222 = 0; 
+                   (_map221.size < 0) ? iprot.peekMap() : (_i222 < _map221.size); 
+                   ++_i222)
               {
-                byte[] _key211;
-                byte[] _val212;
-                _key211 = iprot.readBinary();
-                _val212 = iprot.readBinary();
-                this.key_values.put(_key211, _val212);
+                byte[] _key223;
+                byte[] _val224;
+                _key223 = iprot.readBinary();
+                _val224 = iprot.readBinary();
+                this.key_values.put(_key223, _val224);
               }
               iprot.readMapEnd();
             }
@@ -343,9 +343,9 @@ public class KVGetResponse implements TBase, java.io.Serializable, Cloneable, Co
       oprot.writeFieldBegin(KEY_VALUES_FIELD_DESC);
       {
         oprot.writeMapBegin(new TMap(TType.STRING, TType.STRING, this.key_values.size()));
-        for (Map.Entry<byte[], byte[]> _iter213 : this.key_values.entrySet())        {
-          oprot.writeBinary(_iter213.getKey());
-          oprot.writeBinary(_iter213.getValue());
+        for (Map.Entry<byte[], byte[]> _iter225 : this.key_values.entrySet())        {
+          oprot.writeBinary(_iter225.getKey());
+          oprot.writeBinary(_iter225.getValue());
         }
         oprot.writeMapEnd();
       }

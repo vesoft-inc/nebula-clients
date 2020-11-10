@@ -295,29 +295,29 @@ public class KVRemoveRequest implements TBase, java.io.Serializable, Cloneable, 
         case PARTS:
           if (field.type == TType.MAP) {
             {
-              TMap _map223 = iprot.readMapBegin();
-              this.parts = new HashMap<Integer,List<byte[]>>(Math.max(0, 2*_map223.size));
-              for (int _i224 = 0; 
-                   (_map223.size < 0) ? iprot.peekMap() : (_i224 < _map223.size); 
-                   ++_i224)
+              TMap _map235 = iprot.readMapBegin();
+              this.parts = new HashMap<Integer,List<byte[]>>(Math.max(0, 2*_map235.size));
+              for (int _i236 = 0; 
+                   (_map235.size < 0) ? iprot.peekMap() : (_i236 < _map235.size); 
+                   ++_i236)
               {
-                int _key225;
-                List<byte[]> _val226;
-                _key225 = iprot.readI32();
+                int _key237;
+                List<byte[]> _val238;
+                _key237 = iprot.readI32();
                 {
-                  TList _list227 = iprot.readListBegin();
-                  _val226 = new ArrayList<byte[]>(Math.max(0, _list227.size));
-                  for (int _i228 = 0; 
-                       (_list227.size < 0) ? iprot.peekList() : (_i228 < _list227.size); 
-                       ++_i228)
+                  TList _list239 = iprot.readListBegin();
+                  _val238 = new ArrayList<byte[]>(Math.max(0, _list239.size));
+                  for (int _i240 = 0; 
+                       (_list239.size < 0) ? iprot.peekList() : (_i240 < _list239.size); 
+                       ++_i240)
                   {
-                    byte[] _elem229;
-                    _elem229 = iprot.readBinary();
-                    _val226.add(_elem229);
+                    byte[] _elem241;
+                    _elem241 = iprot.readBinary();
+                    _val238.add(_elem241);
                   }
                   iprot.readListEnd();
                 }
-                this.parts.put(_key225, _val226);
+                this.parts.put(_key237, _val238);
               }
               iprot.readMapEnd();
             }
@@ -349,12 +349,12 @@ public class KVRemoveRequest implements TBase, java.io.Serializable, Cloneable, 
       oprot.writeFieldBegin(PARTS_FIELD_DESC);
       {
         oprot.writeMapBegin(new TMap(TType.I32, TType.LIST, this.parts.size()));
-        for (Map.Entry<Integer, List<byte[]>> _iter230 : this.parts.entrySet())        {
-          oprot.writeI32(_iter230.getKey());
+        for (Map.Entry<Integer, List<byte[]>> _iter242 : this.parts.entrySet())        {
+          oprot.writeI32(_iter242.getKey());
           {
-            oprot.writeListBegin(new TList(TType.STRING, _iter230.getValue().size()));
-            for (byte[] _iter231 : _iter230.getValue())            {
-              oprot.writeBinary(_iter231);
+            oprot.writeListBegin(new TList(TType.STRING, _iter242.getValue().size()));
+            for (byte[] _iter243 : _iter242.getValue())            {
+              oprot.writeBinary(_iter243);
             }
             oprot.writeListEnd();
           }

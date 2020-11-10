@@ -50,6 +50,8 @@ FUNCTIONS = {
     'deleteVertices': Function('deleteVertices', 'GraphStorageService', 'ExecResponse', [('DeleteVerticesRequest', 'req', 'DeleteVerticesRequest')]),
     'updateVertex': Function('updateVertex', 'GraphStorageService', 'UpdateResponse', [('UpdateVertexRequest', 'req', 'UpdateVertexRequest')]),
     'updateEdge': Function('updateEdge', 'GraphStorageService', 'UpdateResponse', [('UpdateEdgeRequest', 'req', 'UpdateEdgeRequest')]),
+    'scanVertex': Function('scanVertex', 'GraphStorageService', 'ScanVertexResponse', [('ScanVertexRequest', 'req', 'ScanVertexRequest')]),
+    'scanEdge': Function('scanEdge', 'GraphStorageService', 'ScanEdgeResponse', [('ScanEdgeRequest', 'req', 'ScanEdgeRequest')]),
     'getUUID': Function('getUUID', 'GraphStorageService', 'GetUUIDResp', [('GetUUIDReq', 'req', 'GetUUIDReq')]),
     'lookupIndex': Function('lookupIndex', 'GraphStorageService', 'LookupIndexResp', [('LookupIndexRequest', 'req', 'LookupIndexRequest')]),
     'lookupAndTraverse': Function('lookupAndTraverse', 'GraphStorageService', 'GetNeighborsResponse', [('LookupAndTraverseRequest', 'req', 'LookupAndTraverseRequest')]),

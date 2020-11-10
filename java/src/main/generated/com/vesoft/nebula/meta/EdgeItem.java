@@ -27,7 +27,7 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class EdgeItem implements TBase, java.io.Serializable, Cloneable {
+public class EdgeItem implements TBase, java.io.Serializable, Cloneable, Comparable<EdgeItem> {
   private static final TStruct STRUCT_DESC = new TStruct("EdgeItem");
   private static final TField EDGE_TYPE_FIELD_DESC = new TField("edge_type", TType.I32, (short)1);
   private static final TField EDGE_NAME_FIELD_DESC = new TField("edge_name", TType.STRING, (short)2);
@@ -357,6 +357,53 @@ public class EdgeItem implements TBase, java.io.Serializable, Cloneable {
       builder.append(schema);
 
     return builder.toHashCode();
+  }
+
+  @Override
+  public int compareTo(EdgeItem other) {
+    if (other == null) {
+      // See java.lang.Comparable docs
+      throw new NullPointerException();
+    }
+
+    if (other == this) {
+      return 0;
+    }
+    int lastComparison = 0;
+
+    lastComparison = Boolean.valueOf(isSetEdge_type()).compareTo(other.isSetEdge_type());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(edge_type, other.edge_type);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetEdge_name()).compareTo(other.isSetEdge_name());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(edge_name, other.edge_name);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetVersion()).compareTo(other.isSetVersion());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(version, other.version);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetSchema()).compareTo(other.isSetSchema());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(schema, other.schema);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    return 0;
   }
 
   public void read(TProtocol iprot) throws TException {
