@@ -42,40 +42,40 @@ protected:
 
         // auth
         auto authResp = c.authenticate("root", "nebula");
-        ASSERT_EQ(authResp.code, nebula::ErrorCode::SUCCEEDED);
+        ASSERT_EQ(authResp.error_code, nebula::ErrorCode::SUCCEEDED);
 
         // execute
-        auto resp = c.execute(authResp.sessionId, "SHOW SPACES");
-        ASSERT_EQ(resp.code, nebula::ErrorCode::SUCCEEDED);
+        auto resp = c.execute(*authResp.session_id, "SHOW SPACES");
+        ASSERT_EQ(resp.error_code, nebula::ErrorCode::SUCCEEDED);
         nebula::DataSet expected({"Name"});
         EXPECT_TRUE(verifyResultWithoutOrder(*resp.data, expected));
 
         // explain
-        resp = c.execute(authResp.sessionId, "EXPLAIN SHOW HOSTS");
-        ASSERT_EQ(resp.code, nebula::ErrorCode::SUCCEEDED);
+        resp = c.execute(*authResp.session_id, "EXPLAIN SHOW HOSTS");
+        ASSERT_EQ(resp.error_code, nebula::ErrorCode::SUCCEEDED);
         EXPECT_NE(resp.plan_desc, nullptr);
         // TODO(shylock) check the plan
 
         // async execute
-        c.asyncExecute(authResp.sessionId, "SHOW SPACES", [](auto &&cbResp) {
-            ASSERT_EQ(cbResp.code, nebula::ErrorCode::SUCCEEDED);
+        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [](auto &&cbResp) {
+            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::SUCCEEDED);
             nebula::DataSet expected({"Name"});
             EXPECT_TRUE(verifyResultWithoutOrder(*cbResp.data, expected));
         });
 
         // signout
-        c.signout(authResp.sessionId);
+        c.signout(*authResp.session_id);
 
         // ping
         EXPECT_TRUE(c.ping());
 
         // check signout
-        resp = c.execute(authResp.sessionId, "SHOW SPACES");
-        ASSERT_EQ(resp.code, nebula::ErrorCode::E_SESSION_INVALID);
+        resp = c.execute(*authResp.session_id, "SHOW SPACES");
+        ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_SESSION_INVALID);
 
         // async execute
-        c.asyncExecute(authResp.sessionId, "SHOW SPACES", [](auto &&cbResp) {
-            ASSERT_EQ(cbResp.code, nebula::ErrorCode::E_SESSION_INVALID);
+        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [](auto &&cbResp) {
+            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_SESSION_INVALID);
         });
 
         // close
@@ -85,12 +85,12 @@ protected:
         EXPECT_FALSE(c.ping());
 
         // execute
-        resp = c.execute(authResp.sessionId, "SHOW SPACES");
-        ASSERT_EQ(resp.code, nebula::ErrorCode::E_RPC_FAILURE);
+        resp = c.execute(*authResp.session_id, "SHOW SPACES");
+        ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_RPC_FAILURE);
 
         // async execute
-        c.asyncExecute(authResp.sessionId, "SHOW SPACES", [](auto &&cbResp) {
-            ASSERT_EQ(cbResp.code, nebula::ErrorCode::E_RPC_FAILURE);
+        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [](auto &&cbResp) {
+            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_RPC_FAILURE);
         });
 
         // isOpen

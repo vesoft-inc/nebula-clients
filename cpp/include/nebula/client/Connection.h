@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 
-#include "nebula/client/Response.h"
+#include "common/graph/Response.h"
 
 namespace nebula {
 
