@@ -58,9 +58,9 @@ public class TestSession {
             }
             session.release();
             Session session1 = pool.getSession("root", "nebula", false);
-            assert (session1 != null);
+            Assert.assertNotNull(session1);
             Session session2 = pool.getSession("root", "nebula", false);
-            assert (session2 != null);
+            Assert.assertNotNull(session2);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.assertFalse(e.getMessage(),false);

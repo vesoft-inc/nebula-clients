@@ -10,6 +10,7 @@ import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.net.SyncConnection;
 import com.vesoft.nebula.graph.ErrorCode;
 import com.vesoft.nebula.graph.ExecutionResponse;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestSyncConnection {
@@ -18,15 +19,15 @@ public class TestSyncConnection {
         try {
             // Test open
             SyncConnection connection = new SyncConnection();
-            connection.open(new HostAddress("127.0.0.1", 3699), 1000);
+            connection.open(new HostAddress("127.0.0.1", 3701), 1000);
 
             // Test authenticate
             long sessionId = connection.authenticate("root", "nebula");
-            assert (sessionId != 0);
+            Assert.assertNotEquals(0, sessionId);
 
             // Test execute
             ExecutionResponse resp = connection.execute(sessionId, "SHOW SPACES;");
-            assert (resp.error_code == ErrorCode.SUCCEEDED);
+            Assert.assertEquals(ErrorCode.SUCCEEDED, resp.error_code);
 
             // Test signout
             connection.signout(sessionId);
