@@ -29,19 +29,11 @@ import com.facebook.thrift.protocol.*;
 @SuppressWarnings({ "unused", "serial" })
 public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Comparable<ListZonesReq> {
   private static final TStruct STRUCT_DESC = new TStruct("ListZonesReq");
-  private static final TField GROUP_NAME_FIELD_DESC = new TField("group_name", TType.STRING, (short)1);
 
-  public byte[] group_name;
-  public static final int GROUP_NAME = 1;
   public static boolean DEFAULT_PRETTY_PRINT = true;
-
-  // isset id assignments
-
   public static final Map<Integer, FieldMetaData> metaDataMap;
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
-    tmpMetaDataMap.put(GROUP_NAME, new FieldMetaData("group_name", TFieldRequirementType.DEFAULT, 
-        new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
@@ -52,20 +44,10 @@ public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Com
   public ListZonesReq() {
   }
 
-  public ListZonesReq(
-    byte[] group_name)
-  {
-    this();
-    this.group_name = group_name;
-  }
-
   /**
    * Performs a deep copy on <i>other</i>.
    */
   public ListZonesReq(ListZonesReq other) {
-    if (other.isSetGroup_name()) {
-      this.group_name = TBaseHelper.deepCopy(other.group_name);
-    }
   }
 
   public ListZonesReq deepCopy() {
@@ -77,40 +59,8 @@ public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Com
     return new ListZonesReq(this);
   }
 
-  public byte[]  getGroup_name() {
-    return this.group_name;
-  }
-
-  public ListZonesReq setGroup_name(byte[] group_name) {
-    this.group_name = group_name;
-    return this;
-  }
-
-  public void unsetGroup_name() {
-    this.group_name = null;
-  }
-
-  // Returns true if field group_name is set (has been assigned a value) and false otherwise
-  public boolean isSetGroup_name() {
-    return this.group_name != null;
-  }
-
-  public void setGroup_nameIsSet(boolean value) {
-    if (!value) {
-      this.group_name = null;
-    }
-  }
-
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
-    case GROUP_NAME:
-      if (value == null) {
-        unsetGroup_name();
-      } else {
-        setGroup_name((byte[])value);
-      }
-      break;
-
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -118,9 +68,6 @@ public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Com
 
   public Object getFieldValue(int fieldID) {
     switch (fieldID) {
-    case GROUP_NAME:
-      return getGroup_name();
-
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -129,8 +76,6 @@ public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Com
   // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
   public boolean isSet(int fieldID) {
     switch (fieldID) {
-    case GROUP_NAME:
-      return isSetGroup_name();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -151,26 +96,12 @@ public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Com
     if (this == that)
       return true;
 
-    boolean this_present_group_name = true && this.isSetGroup_name();
-    boolean that_present_group_name = true && that.isSetGroup_name();
-    if (this_present_group_name || that_present_group_name) {
-      if (!(this_present_group_name && that_present_group_name))
-        return false;
-      if (!TBaseHelper.equalsSlow(this.group_name, that.group_name))
-        return false;
-    }
-
     return true;
   }
 
   @Override
   public int hashCode() {
     HashCodeBuilder builder = new HashCodeBuilder();
-
-    boolean present_group_name = true && (isSetGroup_name());
-    builder.append(present_group_name);
-    if (present_group_name)
-      builder.append(group_name);
 
     return builder.toHashCode();
   }
@@ -187,14 +118,6 @@ public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Com
     }
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetGroup_name()).compareTo(other.isSetGroup_name());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    lastComparison = TBaseHelper.compareTo(group_name, other.group_name);
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
     return 0;
   }
 
@@ -209,13 +132,6 @@ public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Com
       }
       switch (field.id)
       {
-        case GROUP_NAME:
-          if (field.type == TType.STRING) {
-            this.group_name = iprot.readBinary();
-          } else { 
-            TProtocolUtil.skip(iprot, field.type);
-          }
-          break;
         default:
           TProtocolUtil.skip(iprot, field.type);
           break;
@@ -233,11 +149,6 @@ public class ListZonesReq implements TBase, java.io.Serializable, Cloneable, Com
     validate();
 
     oprot.writeStructBegin(STRUCT_DESC);
-    if (this.group_name != null) {
-      oprot.writeFieldBegin(GROUP_NAME_FIELD_DESC);
-      oprot.writeBinary(this.group_name);
-      oprot.writeFieldEnd();
-    }
     oprot.writeFieldStop();
     oprot.writeStructEnd();
   }
@@ -263,21 +174,6 @@ String space = prettyPrint ? " " : "";
     sb.append(newLine);
     boolean first = true;
 
-    sb.append(indentStr);
-    sb.append("group_name");
-    sb.append(space);
-    sb.append(":").append(space);
-    if (this. getGroup_name() == null) {
-      sb.append("null");
-    } else {
-        int __group_name_size = Math.min(this. getGroup_name().length, 128);
-        for (int i = 0; i < __group_name_size; i++) {
-          if (i != 0) sb.append(" ");
-          sb.append(Integer.toHexString(this. getGroup_name()[i]).length() > 1 ? Integer.toHexString(this. getGroup_name()[i]).substring(Integer.toHexString(this. getGroup_name()[i]).length() - 2).toUpperCase() : "0" + Integer.toHexString(this. getGroup_name()[i]).toUpperCase());
-        }
-        if (this. getGroup_name().length > 128) sb.append(" ...");
-    }
-    first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");
     return sb.toString();

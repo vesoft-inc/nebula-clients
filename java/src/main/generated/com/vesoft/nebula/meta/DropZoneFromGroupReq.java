@@ -27,15 +27,15 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<Zone> {
-  private static final TStruct STRUCT_DESC = new TStruct("Zone");
+public class DropZoneFromGroupReq implements TBase, java.io.Serializable, Cloneable, Comparable<DropZoneFromGroupReq> {
+  private static final TStruct STRUCT_DESC = new TStruct("DropZoneFromGroupReq");
   private static final TField ZONE_NAME_FIELD_DESC = new TField("zone_name", TType.STRING, (short)1);
-  private static final TField NODES_FIELD_DESC = new TField("nodes", TType.LIST, (short)2);
+  private static final TField GROUP_NAME_FIELD_DESC = new TField("group_name", TType.STRING, (short)2);
 
   public byte[] zone_name;
-  public List<com.vesoft.nebula.HostAddr> nodes;
+  public byte[] group_name;
   public static final int ZONE_NAME = 1;
-  public static final int NODES = 2;
+  public static final int GROUP_NAME = 2;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -45,54 +45,53 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
     tmpMetaDataMap.put(ZONE_NAME, new FieldMetaData("zone_name", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.STRING)));
-    tmpMetaDataMap.put(NODES, new FieldMetaData("nodes", TFieldRequirementType.DEFAULT, 
-        new ListMetaData(TType.LIST, 
-            new StructMetaData(TType.STRUCT, com.vesoft.nebula.HostAddr.class))));
+    tmpMetaDataMap.put(GROUP_NAME, new FieldMetaData("group_name", TFieldRequirementType.DEFAULT, 
+        new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
 
   static {
-    FieldMetaData.addStructMetaDataMap(Zone.class, metaDataMap);
+    FieldMetaData.addStructMetaDataMap(DropZoneFromGroupReq.class, metaDataMap);
   }
 
-  public Zone() {
+  public DropZoneFromGroupReq() {
   }
 
-  public Zone(
+  public DropZoneFromGroupReq(
     byte[] zone_name,
-    List<com.vesoft.nebula.HostAddr> nodes)
+    byte[] group_name)
   {
     this();
     this.zone_name = zone_name;
-    this.nodes = nodes;
+    this.group_name = group_name;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public Zone(Zone other) {
+  public DropZoneFromGroupReq(DropZoneFromGroupReq other) {
     if (other.isSetZone_name()) {
       this.zone_name = TBaseHelper.deepCopy(other.zone_name);
     }
-    if (other.isSetNodes()) {
-      this.nodes = TBaseHelper.deepCopy(other.nodes);
+    if (other.isSetGroup_name()) {
+      this.group_name = TBaseHelper.deepCopy(other.group_name);
     }
   }
 
-  public Zone deepCopy() {
-    return new Zone(this);
+  public DropZoneFromGroupReq deepCopy() {
+    return new DropZoneFromGroupReq(this);
   }
 
   @Deprecated
-  public Zone clone() {
-    return new Zone(this);
+  public DropZoneFromGroupReq clone() {
+    return new DropZoneFromGroupReq(this);
   }
 
   public byte[]  getZone_name() {
     return this.zone_name;
   }
 
-  public Zone setZone_name(byte[] zone_name) {
+  public DropZoneFromGroupReq setZone_name(byte[] zone_name) {
     this.zone_name = zone_name;
     return this;
   }
@@ -112,31 +111,30 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     }
   }
 
-  public List<com.vesoft.nebula.HostAddr>  getNodes() {
-    return this.nodes;
+  public byte[]  getGroup_name() {
+    return this.group_name;
   }
 
-  public Zone setNodes(List<com.vesoft.nebula.HostAddr> nodes) {
-    this.nodes = nodes;
+  public DropZoneFromGroupReq setGroup_name(byte[] group_name) {
+    this.group_name = group_name;
     return this;
   }
 
-  public void unsetNodes() {
-    this.nodes = null;
+  public void unsetGroup_name() {
+    this.group_name = null;
   }
 
-  // Returns true if field nodes is set (has been assigned a value) and false otherwise
-  public boolean isSetNodes() {
-    return this.nodes != null;
+  // Returns true if field group_name is set (has been assigned a value) and false otherwise
+  public boolean isSetGroup_name() {
+    return this.group_name != null;
   }
 
-  public void setNodesIsSet(boolean value) {
+  public void setGroup_nameIsSet(boolean value) {
     if (!value) {
-      this.nodes = null;
+      this.group_name = null;
     }
   }
 
-  @SuppressWarnings("unchecked")
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
     case ZONE_NAME:
@@ -147,11 +145,11 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
       }
       break;
 
-    case NODES:
+    case GROUP_NAME:
       if (value == null) {
-        unsetNodes();
+        unsetGroup_name();
       } else {
-        setNodes((List<com.vesoft.nebula.HostAddr>)value);
+        setGroup_name((byte[])value);
       }
       break;
 
@@ -165,8 +163,8 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     case ZONE_NAME:
       return getZone_name();
 
-    case NODES:
-      return getNodes();
+    case GROUP_NAME:
+      return getGroup_name();
 
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
@@ -178,8 +176,8 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     switch (fieldID) {
     case ZONE_NAME:
       return isSetZone_name();
-    case NODES:
-      return isSetNodes();
+    case GROUP_NAME:
+      return isSetGroup_name();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -189,12 +187,12 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
   public boolean equals(Object that) {
     if (that == null)
       return false;
-    if (that instanceof Zone)
-      return this.equals((Zone)that);
+    if (that instanceof DropZoneFromGroupReq)
+      return this.equals((DropZoneFromGroupReq)that);
     return false;
   }
 
-  public boolean equals(Zone that) {
+  public boolean equals(DropZoneFromGroupReq that) {
     if (that == null)
       return false;
     if (this == that)
@@ -209,12 +207,12 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
         return false;
     }
 
-    boolean this_present_nodes = true && this.isSetNodes();
-    boolean that_present_nodes = true && that.isSetNodes();
-    if (this_present_nodes || that_present_nodes) {
-      if (!(this_present_nodes && that_present_nodes))
+    boolean this_present_group_name = true && this.isSetGroup_name();
+    boolean that_present_group_name = true && that.isSetGroup_name();
+    if (this_present_group_name || that_present_group_name) {
+      if (!(this_present_group_name && that_present_group_name))
         return false;
-      if (!TBaseHelper.equalsNobinary(this.nodes, that.nodes))
+      if (!TBaseHelper.equalsSlow(this.group_name, that.group_name))
         return false;
     }
 
@@ -230,16 +228,16 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     if (present_zone_name)
       builder.append(zone_name);
 
-    boolean present_nodes = true && (isSetNodes());
-    builder.append(present_nodes);
-    if (present_nodes)
-      builder.append(nodes);
+    boolean present_group_name = true && (isSetGroup_name());
+    builder.append(present_group_name);
+    if (present_group_name)
+      builder.append(group_name);
 
     return builder.toHashCode();
   }
 
   @Override
-  public int compareTo(Zone other) {
+  public int compareTo(DropZoneFromGroupReq other) {
     if (other == null) {
       // See java.lang.Comparable docs
       throw new NullPointerException();
@@ -258,11 +256,11 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = Boolean.valueOf(isSetNodes()).compareTo(other.isSetNodes());
+    lastComparison = Boolean.valueOf(isSetGroup_name()).compareTo(other.isSetGroup_name());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    lastComparison = TBaseHelper.compareTo(nodes, other.nodes);
+    lastComparison = TBaseHelper.compareTo(group_name, other.group_name);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -287,22 +285,9 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
-        case NODES:
-          if (field.type == TType.LIST) {
-            {
-              TList _list177 = iprot.readListBegin();
-              this.nodes = new ArrayList<com.vesoft.nebula.HostAddr>(Math.max(0, _list177.size));
-              for (int _i178 = 0; 
-                   (_list177.size < 0) ? iprot.peekList() : (_i178 < _list177.size); 
-                   ++_i178)
-              {
-                com.vesoft.nebula.HostAddr _elem179;
-                _elem179 = new com.vesoft.nebula.HostAddr();
-                _elem179.read(iprot);
-                this.nodes.add(_elem179);
-              }
-              iprot.readListEnd();
-            }
+        case GROUP_NAME:
+          if (field.type == TType.STRING) {
+            this.group_name = iprot.readBinary();
           } else { 
             TProtocolUtil.skip(iprot, field.type);
           }
@@ -329,15 +314,9 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
       oprot.writeBinary(this.zone_name);
       oprot.writeFieldEnd();
     }
-    if (this.nodes != null) {
-      oprot.writeFieldBegin(NODES_FIELD_DESC);
-      {
-        oprot.writeListBegin(new TList(TType.STRUCT, this.nodes.size()));
-        for (com.vesoft.nebula.HostAddr _iter180 : this.nodes)        {
-          _iter180.write(oprot);
-        }
-        oprot.writeListEnd();
-      }
+    if (this.group_name != null) {
+      oprot.writeFieldBegin(GROUP_NAME_FIELD_DESC);
+      oprot.writeBinary(this.group_name);
       oprot.writeFieldEnd();
     }
     oprot.writeFieldStop();
@@ -359,7 +338,7 @@ public class Zone implements TBase, java.io.Serializable, Cloneable, Comparable<
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
 String space = prettyPrint ? " " : "";
-    StringBuilder sb = new StringBuilder("Zone");
+    StringBuilder sb = new StringBuilder("DropZoneFromGroupReq");
     sb.append(space);
     sb.append("(");
     sb.append(newLine);
@@ -382,13 +361,18 @@ String space = prettyPrint ? " " : "";
     first = false;
     if (!first) sb.append("," + newLine);
     sb.append(indentStr);
-    sb.append("nodes");
+    sb.append("group_name");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getNodes() == null) {
+    if (this. getGroup_name() == null) {
       sb.append("null");
     } else {
-      sb.append(TBaseHelper.toString(this. getNodes(), indent + 1, prettyPrint));
+        int __group_name_size = Math.min(this. getGroup_name().length, 128);
+        for (int i = 0; i < __group_name_size; i++) {
+          if (i != 0) sb.append(" ");
+          sb.append(Integer.toHexString(this. getGroup_name()[i]).length() > 1 ? Integer.toHexString(this. getGroup_name()[i]).substring(Integer.toHexString(this. getGroup_name()[i]).length() - 2).toUpperCase() : "0" + Integer.toHexString(this. getGroup_name()[i]).toUpperCase());
+        }
+        if (this. getGroup_name().length > 128) sb.append(" ...");
     }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));

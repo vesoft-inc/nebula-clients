@@ -35,6 +35,7 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
   private static final TField ALL_PARTS_FIELD_DESC = new TField("all_parts", TType.MAP, (short)4);
   private static final TField ROLE_FIELD_DESC = new TField("role", TType.I32, (short)5);
   private static final TField GIT_INFO_SHA_FIELD_DESC = new TField("git_info_sha", TType.STRING, (short)6);
+  private static final TField ZONE_NAME_FIELD_DESC = new TField("zone_name", TType.STRING, (short)7);
 
   public com.vesoft.nebula.HostAddr hostAddr;
   /**
@@ -46,12 +47,14 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
   public Map<byte[],List<Integer>> all_parts;
   public int role;
   public byte[] git_info_sha;
+  public byte[] zone_name;
   public static final int HOSTADDR = 1;
   public static final int STATUS = 2;
   public static final int LEADER_PARTS = 3;
   public static final int ALL_PARTS = 4;
   public static final int ROLE = 5;
   public static final int GIT_INFO_SHA = 6;
+  public static final int ZONE_NAME = 7;
   public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
@@ -79,6 +82,8 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
     tmpMetaDataMap.put(ROLE, new FieldMetaData("role", TFieldRequirementType.DEFAULT, 
         new FieldValueMetaData(TType.I32)));
     tmpMetaDataMap.put(GIT_INFO_SHA, new FieldMetaData("git_info_sha", TFieldRequirementType.DEFAULT, 
+        new FieldValueMetaData(TType.STRING)));
+    tmpMetaDataMap.put(ZONE_NAME, new FieldMetaData("zone_name", TFieldRequirementType.OPTIONAL, 
         new FieldValueMetaData(TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMetaDataMap);
   }
@@ -109,6 +114,27 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
     this.git_info_sha = git_info_sha;
   }
 
+  public HostItem(
+    com.vesoft.nebula.HostAddr hostAddr,
+    int status,
+    Map<byte[],List<Integer>> leader_parts,
+    Map<byte[],List<Integer>> all_parts,
+    int role,
+    byte[] git_info_sha,
+    byte[] zone_name)
+  {
+    this();
+    this.hostAddr = hostAddr;
+    this.status = status;
+    setStatusIsSet(true);
+    this.leader_parts = leader_parts;
+    this.all_parts = all_parts;
+    this.role = role;
+    setRoleIsSet(true);
+    this.git_info_sha = git_info_sha;
+    this.zone_name = zone_name;
+  }
+
   /**
    * Performs a deep copy on <i>other</i>.
    */
@@ -128,6 +154,9 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
     this.role = TBaseHelper.deepCopy(other.role);
     if (other.isSetGit_info_sha()) {
       this.git_info_sha = TBaseHelper.deepCopy(other.git_info_sha);
+    }
+    if (other.isSetZone_name()) {
+      this.zone_name = TBaseHelper.deepCopy(other.zone_name);
     }
   }
 
@@ -290,6 +319,30 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
     }
   }
 
+  public byte[]  getZone_name() {
+    return this.zone_name;
+  }
+
+  public HostItem setZone_name(byte[] zone_name) {
+    this.zone_name = zone_name;
+    return this;
+  }
+
+  public void unsetZone_name() {
+    this.zone_name = null;
+  }
+
+  // Returns true if field zone_name is set (has been assigned a value) and false otherwise
+  public boolean isSetZone_name() {
+    return this.zone_name != null;
+  }
+
+  public void setZone_nameIsSet(boolean value) {
+    if (!value) {
+      this.zone_name = null;
+    }
+  }
+
   @SuppressWarnings("unchecked")
   public void setFieldValue(int fieldID, Object value) {
     switch (fieldID) {
@@ -341,6 +394,14 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
       }
       break;
 
+    case ZONE_NAME:
+      if (value == null) {
+        unsetZone_name();
+      } else {
+        setZone_name((byte[])value);
+      }
+      break;
+
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -366,6 +427,9 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
     case GIT_INFO_SHA:
       return getGit_info_sha();
 
+    case ZONE_NAME:
+      return getZone_name();
+
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -386,6 +450,8 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
       return isSetRole();
     case GIT_INFO_SHA:
       return isSetGit_info_sha();
+    case ZONE_NAME:
+      return isSetZone_name();
     default:
       throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
     }
@@ -460,6 +526,15 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
         return false;
     }
 
+    boolean this_present_zone_name = true && this.isSetZone_name();
+    boolean that_present_zone_name = true && that.isSetZone_name();
+    if (this_present_zone_name || that_present_zone_name) {
+      if (!(this_present_zone_name && that_present_zone_name))
+        return false;
+      if (!TBaseHelper.equalsSlow(this.zone_name, that.zone_name))
+        return false;
+    }
+
     return true;
   }
 
@@ -496,6 +571,11 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
     builder.append(present_git_info_sha);
     if (present_git_info_sha)
       builder.append(git_info_sha);
+
+    boolean present_zone_name = true && (isSetZone_name());
+    builder.append(present_zone_name);
+    if (present_zone_name)
+      builder.append(zone_name);
 
     return builder.toHashCode();
   }
@@ -557,6 +637,14 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
       return lastComparison;
     }
     lastComparison = TBaseHelper.compareTo(git_info_sha, other.git_info_sha);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetZone_name()).compareTo(other.isSetZone_name());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(zone_name, other.zone_name);
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -671,6 +759,13 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
             TProtocolUtil.skip(iprot, field.type);
           }
           break;
+        case ZONE_NAME:
+          if (field.type == TType.STRING) {
+            this.zone_name = iprot.readBinary();
+          } else { 
+            TProtocolUtil.skip(iprot, field.type);
+          }
+          break;
         default:
           TProtocolUtil.skip(iprot, field.type);
           break;
@@ -739,6 +834,13 @@ public class HostItem implements TBase, java.io.Serializable, Cloneable, Compara
       oprot.writeFieldBegin(GIT_INFO_SHA_FIELD_DESC);
       oprot.writeBinary(this.git_info_sha);
       oprot.writeFieldEnd();
+    }
+    if (this.zone_name != null) {
+      if (isSetZone_name()) {
+        oprot.writeFieldBegin(ZONE_NAME_FIELD_DESC);
+        oprot.writeBinary(this.zone_name);
+        oprot.writeFieldEnd();
+      }
     }
     oprot.writeFieldStop();
     oprot.writeStructEnd();
@@ -843,6 +945,25 @@ String space = prettyPrint ? " " : "";
         if (this. getGit_info_sha().length > 128) sb.append(" ...");
     }
     first = false;
+    if (isSetZone_name())
+    {
+      if (!first) sb.append("," + newLine);
+      sb.append(indentStr);
+      sb.append("zone_name");
+      sb.append(space);
+      sb.append(":").append(space);
+      if (this. getZone_name() == null) {
+        sb.append("null");
+      } else {
+          int __zone_name_size = Math.min(this. getZone_name().length, 128);
+          for (int i = 0; i < __zone_name_size; i++) {
+            if (i != 0) sb.append(" ");
+            sb.append(Integer.toHexString(this. getZone_name()[i]).length() > 1 ? Integer.toHexString(this. getZone_name()[i]).substring(Integer.toHexString(this. getZone_name()[i]).length() - 2).toUpperCase() : "0" + Integer.toHexString(this. getZone_name()[i]).toUpperCase());
+          }
+          if (this. getZone_name().length > 128) sb.append(" ...");
+      }
+      first = false;
+    }
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");
     return sb.toString();
