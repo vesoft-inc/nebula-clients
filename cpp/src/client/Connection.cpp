@@ -72,6 +72,7 @@ ExecutionResponse Connection::execute(int64_t sessionId, const std::string &stmt
 void Connection::asyncExecute(int64_t sessionId, const std::string &stmt, ExecuteCallback cb) {
     if (client_ == nullptr) {
         cb(ExecutionResponse{ErrorCode::E_DISCONNECTED});
+        return;
     }
     client_->future_execute(sessionId, stmt).thenValue([cb = std::move(cb)](auto &&resp) {
         cb(std::move(resp));
@@ -100,6 +101,7 @@ void Connection::asyncExecuteJson(int64_t sessionId,
                                   ExecuteJsonCallback cb) {
     if (client_ == nullptr) {
         cb("");
+        return;
     }
     client_->future_executeJson(sessionId, stmt).thenValue(std::move(cb));
 }

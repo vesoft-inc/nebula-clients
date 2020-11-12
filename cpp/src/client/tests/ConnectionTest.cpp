@@ -20,6 +20,17 @@ protected:
         // ping
         EXPECT_FALSE(c.ping());
 
+        // execute
+        auto resp = c.execute(-1, "SHOW SPACES");
+        ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_DISCONNECTED);
+        EXPECT_EQ(resp.data, nullptr);
+
+        // async execute
+        c.asyncExecute(-1, "SHOW SPACES", [](auto &&cbResp) {
+            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_DISCONNECTED);
+            EXPECT_EQ(cbResp.data, nullptr);
+        });
+
         // open
         ASSERT_TRUE(c.open("127.0.0.1", 3699));
 
@@ -31,7 +42,7 @@ protected:
         ASSERT_EQ(authResp.error_code, nebula::ErrorCode::SUCCEEDED);
 
         // execute
-        auto resp = c.execute(*authResp.session_id, "SHOW SPACES");
+        resp = c.execute(*authResp.session_id, "SHOW SPACES");
         ASSERT_EQ(resp.error_code, nebula::ErrorCode::SUCCEEDED);
         nebula::DataSet expected({"Name"});
         EXPECT_TRUE(verifyResultWithoutOrder(*resp.data, expected));
