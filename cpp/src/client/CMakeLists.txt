@@ -13,7 +13,6 @@ set(NEBULA_CLIENT_OBJS
 
 set(NEBULA_CLIENT_SOURCES
     Connection.cpp
-    ClientImpl.cpp
     Init.cpp
 )
 

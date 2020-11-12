@@ -15,7 +15,11 @@
 namespace nebula {
 
 // Wrap the thrift client.
-class ClientImpl;
+namespace graph {
+namespace cpp2 {
+class GraphServiceAsyncClient;
+}
+}
 
 class Connection {
 public:
@@ -56,7 +60,7 @@ public:
     void signout(int64_t sessionId);
 
 private:
-    ClientImpl *client_{nullptr};
+    graph::cpp2::GraphServiceAsyncClient *client_{nullptr};
 };
 
 }   // namespace nebula
