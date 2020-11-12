@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"fmt"
 	"sync"
+	"time"
 
 	graph "github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 )
@@ -50,9 +51,6 @@ func (pool *ConnectionPool) initPool(addresses []HostAddress, conf PoolConfig, l
 	// Check input
 	if len(addresses) == 0 {
 		return fmt.Errorf("Failed to initialize connection pool: illegal address input")
-	}
-	if &conf == nil {
-		return fmt.Errorf("Failed to initialize connection pool: no configuration")
 	}
 
 	for i := 0; i < pool.conf.MinConnPoolSize; i++ {
@@ -155,6 +153,18 @@ func (pool *ConnectionPool) release(conn *connection) {
 	pool.idleConnectionQueue.PushBack(conn)
 }
 
+// Check avaliability of host
+func (pool *ConnectionPool) Ping(host HostAddress, timeout time.Duration) error {
+	newConn := newConnection(host)
+	// Open connection to host
+	err := newConn.open(newConn.severAddress, timeout)
+	if err != nil {
+		return err
+	}
+	defer newConn.close()
+	return nil
+}
+
 // Close all connection
 func (pool *ConnectionPool) Close() {
 	pool.rwLock.Lock()
@@ -170,7 +180,6 @@ func (pool *ConnectionPool) Close() {
 		pool.activeConnectionQueue.Front().Value.(*connection).close()
 		pool.activeConnectionQueue.Remove(pool.activeConnectionQueue.Front())
 	}
-
 }
 
 func (pool *ConnectionPool) getActiveConnCount() int {
