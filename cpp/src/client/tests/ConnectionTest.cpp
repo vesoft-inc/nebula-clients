@@ -22,12 +22,15 @@ protected:
 
         // execute
         auto resp = c.execute(-1, "SHOW SPACES");
-        ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_DISCONNECTED);
+        DLOG(ERROR) << "DEBUG POINT: " << static_cast<int>(resp.error_code);
+        ASSERT_TRUE(resp.error_code == nebula::ErrorCode::E_DISCONNECTED ||
+                    resp.error_code == nebula::ErrorCode::E_RPC_FAILURE);
         EXPECT_EQ(resp.data, nullptr);
 
         // async execute
         c.asyncExecute(-1, "SHOW SPACES", [](auto &&cbResp) {
-            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_DISCONNECTED);
+            ASSERT_TRUE(cbResp.error_code == nebula::ErrorCode::E_DISCONNECTED ||
+                        cbResp.error_code == nebula::ErrorCode::E_RPC_FAILURE);
             EXPECT_EQ(cbResp.data, nullptr);
         });
 
