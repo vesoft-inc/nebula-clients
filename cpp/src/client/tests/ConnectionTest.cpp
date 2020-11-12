@@ -4,6 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
+#include <folly/executors/IOThreadPoolExecutor.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
@@ -16,13 +17,12 @@
 
 class ConnectionTest : public ClientTest {
 protected:
-    static void runOnce(nebula::Connection& c) {
+    static void runOnce(nebula::Connection &c) {
         // ping
         EXPECT_FALSE(c.ping());
 
         // execute
         auto resp = c.execute(-1, "SHOW SPACES");
-        DLOG(ERROR) << "DEBUG POINT: " << static_cast<int>(resp.error_code);
         ASSERT_TRUE(resp.error_code == nebula::ErrorCode::E_DISCONNECTED ||
                     resp.error_code == nebula::ErrorCode::E_RPC_FAILURE);
         EXPECT_EQ(resp.data, nullptr);
@@ -100,13 +100,16 @@ protected:
 
 TEST_F(ConnectionTest, Basic) {
     nebula::Connection c;
+    auto executor = std::make_unique<folly::IOThreadPoolExecutor>(
+        10, std::make_shared<folly::NamedThreadFactory>("connection-test-executor"));
+    c.setExecutor(executor.get());
     LOG(INFO) << "Testing once.";
     runOnce(c);
     LOG(INFO) << "Testing reopen.";
     runOnce(c);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     nebula::init(&argc, &argv);
     google::SetStderrLogging(google::INFO);

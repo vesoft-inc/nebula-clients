@@ -12,6 +12,10 @@
 
 #include "common/graph/Response.h"
 
+namespace folly {
+    class Executor;
+}
+
 namespace nebula {
 
 // Wrap the thrift client.
@@ -33,6 +37,9 @@ public:
     Connection(Connection &&c) noexcept {
         client_ = c.client_;
         c.client_ = nullptr;
+
+        executor_ = c.executor_;
+        c.executor_ = nullptr;
     }
 
     Connection &operator=(Connection &&c);
@@ -59,7 +66,13 @@ public:
 
     void signout(int64_t sessionId);
 
+    void setExecutor(folly::Executor *executor) {
+        executor_ = executor;
+    }
+
 private:
+    folly::Executor                      *executor_{nullptr};
+
     graph::cpp2::GraphServiceAsyncClient *client_{nullptr};
 };
 

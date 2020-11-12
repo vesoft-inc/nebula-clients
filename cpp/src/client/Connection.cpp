@@ -22,6 +22,10 @@ Connection &Connection::operator=(Connection &&c) {
     delete client_;
     client_ = c.client_;
     c.client_ = nullptr;
+
+    executor_ = c.executor_;
+    c.executor_ = nullptr;
+
     return *this;
 }
 
@@ -74,7 +78,7 @@ void Connection::asyncExecute(int64_t sessionId, const std::string &stmt, Execut
         cb(ExecutionResponse{ErrorCode::E_DISCONNECTED});
         return;
     }
-    client_->future_execute(sessionId, stmt).thenValue([cb = std::move(cb)](auto &&resp) {
+    client_->semifuture_execute(sessionId, stmt).via(executor_).thenValue([cb = std::move(cb)](auto &&resp) {
         cb(std::move(resp));
     });
 }
@@ -103,7 +107,7 @@ void Connection::asyncExecuteJson(int64_t sessionId,
         cb("");
         return;
     }
-    client_->future_executeJson(sessionId, stmt).thenValue(std::move(cb));
+    client_->semifuture_executeJson(sessionId, stmt).via(executor_).thenValue(std::move(cb));
 }
 
 bool Connection::isOpen() {
