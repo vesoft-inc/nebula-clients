@@ -23,6 +23,15 @@ public:
     using ExecuteJsonCallback = std::function<void(std::string &&)>;
 
     Connection();
+    // disable copy
+    Connection(const Connection &) = delete;
+
+    Connection(Connection &&c) noexcept {
+        client_ = c.client_;
+        c.client_ = nullptr;
+    }
+
+    Connection &operator=(Connection &&c);
 
     ~Connection();
 

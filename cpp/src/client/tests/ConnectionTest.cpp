@@ -10,23 +10,9 @@
 #include <nebula/client/Connection.h>
 #include <nebula/client/Init.h>
 
-// Require a nebula server could access
+#include "./ClientTest.h"
 
-class ClientTest : public ::testing::Test {
-protected:
-    static ::testing::AssertionResult verifyResultWithoutOrder(const nebula::DataSet& resp,
-                                                               const nebula::DataSet& expect) {
-        nebula::DataSet respCopy = resp;
-        nebula::DataSet expectCopy = expect;
-        std::sort(respCopy.rows.begin(), respCopy.rows.end());
-        std::sort(expectCopy.rows.begin(), expectCopy.rows.end());
-        if (respCopy != expectCopy) {
-            return ::testing::AssertionFailure() << "Resp is : " << resp << std::endl
-                                                 << "Expect : " << expect;
-        }
-        return ::testing::AssertionSuccess();
-    }
-};
+// Require a nebula server could access
 
 class ConnectionTest : public ClientTest {
 protected:

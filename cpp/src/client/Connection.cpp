@@ -16,6 +16,13 @@ Connection::~Connection() {
     delete client_;
 }
 
+Connection &Connection::operator=(Connection &&c) {
+    delete client_;
+    client_ = c.client_;
+    c.client_ = nullptr;
+    return *this;
+}
+
 bool Connection::open(const std::string &address, int32_t port) {
     return client_->open(address, port, 0 /*TODO(shylock) pass from config*/);
 }
@@ -52,7 +59,8 @@ void Connection::close() {
 
 bool Connection::ping() {
     auto resp = execute(-1 /*Only check connection*/, "YIELD 1");
-    if (resp.error_code == ErrorCode::E_RPC_FAILURE || resp.error_code == ErrorCode::E_DISCONNECTED) {
+    if (resp.error_code == ErrorCode::E_RPC_FAILURE ||
+        resp.error_code == ErrorCode::E_DISCONNECTED) {
         return false;
     }
     return true;
