@@ -9,7 +9,6 @@ package nebula
 import (
 	"fmt"
 	"log"
-	"net"
 	"os/exec"
 	"sync"
 	"testing"
@@ -110,7 +109,27 @@ func TestConnection(t *testing.T) {
 		t.Error("Connectin ping failed")
 		return
 	}
+}
 
+func TestInvalidHostTimeout(t *testing.T) {
+	hostList := []HostAddress{
+		HostAddress{Host: "192.168.10.105", Port: 3699}, // Invalid host
+		HostAddress{Host: "127.0.0.1", Port: 3699},
+	}
+
+	// Initialize connectin pool
+	pool, err := NewConnectionPool(hostList, testPoolConfig, nebulaLog)
+	if err != nil {
+		t.Fatalf("Fail to initialize the connection pool, host: %s, port: %d, %s", address, port, err.Error())
+	}
+	// close all connections in the pool
+	defer pool.Close()
+	err = pool.Ping(hostList[0], 1000*time.Millisecond)
+	assert.EqualError(t, err, "Failed to open transport, error: dial tcp 192.168.10.105:3699: i/o timeout")
+	err = pool.Ping(hostList[1], 1000*time.Millisecond)
+	if err != nil {
+		t.Error("Failed to ping 127.0.0.1")
+	}
 }
 
 func TestPool_SingleHost(t *testing.T) {
@@ -381,12 +400,11 @@ func TestReconnect(t *testing.T) {
 }
 
 func TestIpLookup(t *testing.T) {
-	ips, err := net.LookupIP("google.com")
+	hostAddress := HostAddress{Host: "192.168.10.105", Port: 3699}
+	hostList := []HostAddress{hostAddress}
+	_, err := DomainToIP(hostList)
 	if err != nil {
-		t.Errorf("Could not get IPs: %v\n", err)
-	}
-	for _, ip := range ips {
-		fmt.Printf("google.com. IN A %s\n", ip.String())
+		t.Errorf(err.Error())
 	}
 }
 
