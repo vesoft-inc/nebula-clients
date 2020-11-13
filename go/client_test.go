@@ -359,7 +359,7 @@ func TestReconnect(t *testing.T) {
 
 	// Send query to server periodically
 	for i := 0; i < timeoutConfig.MaxConnPoolSize; i++ {
-		time.Sleep(1 * time.Second)
+		time.Sleep(200 * time.Millisecond)
 		if i == 3 {
 			stopContainer(t, "nebula-docker-compose_graphd_1")
 		}
