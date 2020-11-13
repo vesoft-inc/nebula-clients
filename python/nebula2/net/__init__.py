@@ -11,6 +11,7 @@ import threading
 import logging
 import time
 import socket
+import asyncio
 
 from collections import deque
 from threading import RLock
@@ -21,7 +22,8 @@ from thrift.protocol import TBinaryProtocol
 
 from nebula2.graph import (
     ttypes,
-    GraphService
+    GraphService,
+    AsyncGraphService
 )
 
 from nebula2.Exception import (
@@ -296,16 +298,13 @@ class Connection(object):
         self.start_use_time = 0
 
     def open(self, ip, port, timeout):
-        try:
-            s = TSocket.TSocket(ip, port)
-            if timeout > 0:
-                s.setTimeout(timeout)
-            transport = TTransport.TBufferedTransport(s)
-            protocol = TBinaryProtocol.TBinaryProtocol(transport)
-            transport.open()
-            self._connection = GraphService.Client(protocol)
-        except Exception:
-            raise
+        s = TSocket.TSocket(ip, port)
+        if timeout > 0:
+            s.setTimeout(timeout)
+        transport = TTransport.TBufferedTransport(s)
+        protocol = TBinaryProtocol.TBinaryProtocol(transport)
+        transport.open()
+        self._connection = GraphService.Client(protocol)
 
     def authenticate(self, user_name, password):
         try:
@@ -357,3 +356,109 @@ class Connection(object):
             return 0
         return time.time() - self.start_use_time
 
+
+class AsyncConnection(object):
+    def __init__(self):
+        self._connection = None
+        self.start_use_time = 0
+        self._loop = None
+
+    def open(self, ip, port, timeout, loop = None):
+        self._loop = loop or asyncio.get_event_loop()
+        s = TSocket.TSocket(ip, port)
+        if timeout > 0:
+            s.setTimeout(timeout)
+        transport = TTransport.TBufferedTransport(s)
+        protocol = TBinaryProtocol.TBinaryProtocol(transport)
+        transport.open()
+        self._connection = AsyncGraphService.Client(protocol)
+        self._iprot = protocol
+        self._reqid_callback = {}
+
+    def get_loop(self):
+        return self._loop
+
+    def authenticate(self, user, password):
+        """authenticate to graph server
+        Arguments:
+            - user: the user name
+            - password: the password of user
+        Returns:
+            - session_id
+        """
+        try:
+            fut = self._connection.authenticate(user, password)
+            (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+            self._connection.recv_authenticate(self._iprot, mtype, rseqid)
+            resp = fut.result()
+            if resp.error_code == ttypes.ErrorCode.SUCCEEDED:
+                return resp.session_id
+            raise AuthFailedException("Auth failed: {}".format(resp.error_msg))
+        except Exception as x:
+            raise AuthFailedException("Auth failed: {}".format(x))
+
+
+    def execute(self, session_id, statement):
+        try:
+            fut = self._connection.execute(session_id, statement)
+            (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+            self._connection.recv_execute(self._iprot, mtype, rseqid)
+            return fut.result()
+        except TTransportException as te:
+            if te.type == TTransportException.END_OF_FILE:
+                self.close()
+            raise IOErrorException(IOErrorException.E_CONNECT_BROKEN)
+
+    @asyncio.coroutine
+    def async_execute(self, session_id, statement, callback=None):
+        """execute statement to graph server
+        Arguments:
+            - statement: the statement
+        Returns:
+            SimpleResponse: the response of graph
+            SimpleResponse's attributes:
+                - error_code
+                - error_msg
+        """
+        try:
+            fut = self._connection.execute(session_id, statement)
+            if callback is None:
+                return
+            self._reqid_callback[self._connection._seqid] = callback
+            yield from (asyncio.sleep(0))
+            (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+            self._connection.recv_execute(self._iprot, mtype, rseqid)
+            resp = fut.result()
+            cb = self._reqid_callback.get(rseqid)
+            if cb is not None:
+                callback(resp)
+                self._reqid_callback.pop(rseqid)
+        except TTransportException as te:
+            if te.type == TTransportException.END_OF_FILE:
+                self.close()
+            raise IOErrorException(IOErrorException.E_CONNECT_BROKEN)
+
+    def signout(self, session_id):
+        """sign out: Users should call sign_out when catch the exception or exit
+        """
+        try:
+            self._connection.signout(session_id)
+        except TTransportException as te:
+            if te.type == TTransportException.END_OF_FILE:
+                self.close()
+            raise
+
+    def close(self):
+        self._iprot.trans.close()
+
+    def ping(self):
+        try:
+            self.execute(0, 'YIELD 1')
+            return True
+        except TTransportException as te:
+            if te.type == TTransportException.END_OF_FILE:
+                self.close()
+                return False
+        except Exception as e:
+            logging.error('Catch exception: {}'.format(e))
+            return True
