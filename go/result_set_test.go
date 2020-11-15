@@ -17,7 +17,7 @@ import (
 
 func TestNode(t *testing.T) {
 	vertex := getVertex("Tom")
-	node := newNode(*vertex)
+	node := newNode(vertex)
 
 	assert.Equal(t, "Tom", node.GetID())
 	assert.Equal(t, true, node.HasLabel("tag1"))
@@ -35,7 +35,7 @@ func TestNode(t *testing.T) {
 
 func TestRelationship(t *testing.T) {
 	edge := getEdge("Tom", "Lily")
-	relationship := newRelationship(*edge)
+	relationship := newRelationship(edge)
 
 	assert.Equal(t, "Tom", relationship.GetSrcVertexID())
 	assert.Equal(t, "Lily", relationship.GetDstVertexID())
@@ -53,6 +53,45 @@ func TestRelationship(t *testing.T) {
 }
 
 func TestPathWrapper(t *testing.T) {
+	path := getPath("Tom", 5)
+	pathWrapper := newPathWrapper(path)
+	assert.Equal(t, 5, pathWrapper.GetPathLength())
+	node := newNode(getVertex("Tom"))
+	assert.Equal(t, true, pathWrapper.ContainsNode(*node))
+	relationship := newRelationship(getEdge("Tom", "vertex0"))
+	assert.Equal(t, true, pathWrapper.ContainsRelationship(*relationship))
+
+	var nodeList []Node
+	nodeList = append(nodeList, *node)
+	for i := 0; i < 5; i++ {
+		newNode := newNode(getVertex(fmt.Sprintf("vertex%d", i)))
+		nodeList = append(nodeList, *newNode)
+	}
+
+	var relationshipList []*Relationship
+	relationshipList = append(relationshipList, newRelationship(getEdge("Tom", "vertex0")))
+	for i := 0; i < 4; i++ {
+		var edge *nebula.Edge
+		if i%2 == 0 {
+			edge = getEdge(fmt.Sprintf("vertex%d", i+1), fmt.Sprintf("vertex%d", i))
+		} else {
+			edge = getEdge(fmt.Sprintf("vertex%d", i), fmt.Sprintf("vertex%d", i+1))
+		}
+		relationshipList = append(relationshipList, newRelationship(edge))
+	}
+	l1 := pathWrapper.GetNodes()
+	for i := 0; i < len(nodeList); i++ {
+		assert.Equal(t, nodeList[i].GetID(), l1[i].GetID())
+	}
+
+	l2 := pathWrapper.GetRelations()
+	for i := 0; i < len(relationshipList); i++ {
+		assert.Equal(t, true, IsEqualRelationship(*relationshipList[i], l2[i]))
+	}
+
+}
+
+func TestDataset(t *testing.T) {
 
 }
 
@@ -97,71 +136,68 @@ func getEdge(srcID string, dstID string) *nebula.Edge {
 	}
 }
 
-// func getPath(startID string, stepNum int) *nebula.Path {
-// 	var steps []*nebula.Step
-// 	for i := 0; i < stepNum; i++ {
-// 		var props map[string]*nebula.Value
-// 		for j := 0; j < 5; j++ {
-// 			var value = nebula.NewValue()
-// 			newNum := new(int64)
-// 			*newNum = int64(j)
-// 			value.IVal = newNum
-// 			props[fmt.Sprintf("prop%d", j)] = value
-// 		}
-// 		var edgeType nebula.EdgeType
-// 		edgeType = 1
-// 		if i%2 != 0 {
-// 			edgeType = -1
-// 		}
-// 		dstID := getVertex(fmt.Sprintf("vertex%d", i))
-// 		steps = append(steps, &nebula.Step{
-// 			Dst:     dstID,
-// 			Type:    edgeType,
-// 			Name:    []byte("classmate"),
-// 			Ranking: 100,
-// 			Props:   props,
-// 		})
-// 	}
-// 	start := getVertex(startID)
-// 	return &nebula.Path{
-// 		Src:   start,
-// 		Steps: steps,
-// 	}
-// }
+func getPath(startID string, stepNum int) *nebula.Path {
+	var steps []*nebula.Step
+	for i := 0; i < stepNum; i++ {
+		props := make(map[string]*nebula.Value)
+		for j := 0; j < 5; j++ {
+			value := setIVal(j)
+			props[fmt.Sprintf("prop%d", j)] = value
+		}
+		var edgeType nebula.EdgeType
+		edgeType = 1
+		if i%2 != 0 {
+			edgeType = -1
+		}
+		dstID := getVertex(fmt.Sprintf("vertex%d", i))
+		steps = append(steps, &nebula.Step{
+			Dst:     dstID,
+			Type:    edgeType,
+			Name:    []byte("classmate"),
+			Ranking: 100,
+			Props:   props,
+		})
+	}
+	start := getVertex(startID)
+	return &nebula.Path{
+		Src:   start,
+		Steps: steps,
+	}
+}
 
-// func getDateset() nebula.DataSet {
-// 	colNames := [][]byte{
-// 		[]byte("col0_int"),
-// 		[]byte("col1_string"),
-// 		[]byte("col2_vertex"),
-// 		[]byte("col3_edge"),
-// 		[]byte("col4_path"),
-// 	}
-// 	var v1 = nebula.NewValue()
-// 	newNum := new(int64)
-// 	*newNum = int64(1)
-// 	v1.IVal = newNum
-// 	var v2 = nebula.NewValue()
-// 	v2.SVal = []byte("value1")
-// 	var v3 = nebula.NewValue()
-// 	v3.VVal = getVertex("Tom")
-// 	var v4 = nebula.NewValue()
-// 	v4.EVal = getEdge("Tom", "Lily")
-// 	var v5 = nebula.NewValue()
-// 	v5.PVal = getPath("Tom", 3)
+func getDateset() nebula.DataSet {
+	colNames := [][]byte{
+		[]byte("col0_int"),
+		[]byte("col1_string"),
+		[]byte("col2_vertex"),
+		[]byte("col3_edge"),
+		[]byte("col4_path"),
+	}
+	var v1 = nebula.NewValue()
+	newNum := new(int64)
+	*newNum = int64(1)
+	v1.IVal = newNum
+	var v2 = nebula.NewValue()
+	v2.SVal = []byte("value1")
+	var v3 = nebula.NewValue()
+	v3.VVal = getVertex("Tom")
+	var v4 = nebula.NewValue()
+	v4.EVal = getEdge("Tom", "Lily")
+	var v5 = nebula.NewValue()
+	v5.PVal = getPath("Tom", 3)
 
-// 	var valueList []*nebula.Value
-// 	valueList = []*nebula.Value{v1, v2, v3, v4, v5}
-// 	var rows []*nebula.Row
-// 	row := &nebula.Row{
-// 		valueList,
-// 	}
-// 	rows = append(rows, row)
-// 	return nebula.DataSet{
-// 		ColumnNames: colNames,
-// 		Rows:        rows,
-// 	}
-// }
+	var valueList []*nebula.Value
+	valueList = []*nebula.Value{v1, v2, v3, v4, v5}
+	var rows []*nebula.Row
+	row := &nebula.Row{
+		valueList,
+	}
+	rows = append(rows, row)
+	return nebula.DataSet{
+		ColumnNames: colNames,
+		Rows:        rows,
+	}
+}
 
 func setIVal(ival int) *nebula.Value {
 	var value = nebula.NewValue()

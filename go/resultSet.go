@@ -15,12 +15,9 @@ import (
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
 )
 
-type pair struct {
-	propName  string
-	propValue *nebula.Value
-}
-
 type ResultSet struct {
+	ErrorCode   graph.ErrorCode
+	ErrorMsg    []byte
 	columnNames []string
 	records     []Record
 }
@@ -55,7 +52,7 @@ type segment struct {
 }
 
 type PathWrapper struct {
-	vertexList       []nebula.Vertex
+	nodeList         []Node
 	relationshipList []Relationship
 	segments         []segment
 }
@@ -73,12 +70,14 @@ func newResultSet(resp graph.ExecutionResponse) ResultSet {
 		})
 	}
 	return ResultSet{
+		ErrorCode:   resp.ErrorCode,
+		ErrorMsg:    resp.ErrorMsg,
 		columnNames: colNames,
 		records:     records,
 	}
 }
 
-func newNode(vertex nebula.Vertex) *Node {
+func newNode(vertex *nebula.Vertex) *Node {
 	vid := string(vertex.Vid)
 	var (
 		keys   []string
@@ -98,11 +97,10 @@ func newNode(vertex nebula.Vertex) *Node {
 		}
 		// Get labels
 		labels = append(labels, name)
-		// Store key list
+		// Store key list and value list
 		tagPropKeys[name] = keys
-		// Store value list
 		tagPropValues[name] = values
-
+		// clear lists
 		keys = nil
 		values = nil
 	}
@@ -115,7 +113,7 @@ func newNode(vertex nebula.Vertex) *Node {
 	}
 }
 
-func newRelationship(edge nebula.Edge) *Relationship {
+func newRelationship(edge *nebula.Edge) *Relationship {
 	srcVertexID := string(edge.GetSrc())
 	dstVertexID := string(edge.GetDst())
 	edgeType := edge.GetType()
@@ -129,9 +127,8 @@ func newRelationship(edge nebula.Edge) *Relationship {
 	)
 	// Iterate through all properties of the vertex
 	for key, value := range edge.GetProps() {
-		// Get key
+		// Get key and value
 		keys = append(keys, key)
-		// Get value
 		values = append(values, value)
 	}
 
@@ -145,6 +142,69 @@ func newRelationship(edge nebula.Edge) *Relationship {
 		keys:        keys,
 		values:      values,
 	}
+}
+
+func newPathWrapper(path *nebula.Path) *PathWrapper {
+	var (
+		nodeList         []Node
+		relationshipList []Relationship
+		segList          []segment
+		edge             *nebula.Edge
+	)
+	src := newNode(path.Src)
+	nodeList = append(nodeList, *src)
+
+	for _, step := range path.Steps {
+		dst := newNode(step.Dst)
+		nodeList = append(nodeList, *dst)
+		// determine direction
+		stepType := step.Type
+		if stepType > 0 {
+			edge = &nebula.Edge{
+				Src:     []byte(src.GetID()),
+				Dst:     []byte(dst.GetID()),
+				Type:    stepType,
+				Name:    step.Name,
+				Ranking: step.Ranking,
+				Props:   step.Props,
+			}
+		} else {
+			edge = &nebula.Edge{
+				Src:     []byte(dst.GetID()), // switch with dst
+				Dst:     []byte(src.GetID()),
+				Type:    -stepType,
+				Name:    step.Name,
+				Ranking: step.Ranking,
+				Props:   step.Props,
+			}
+		}
+		relationship := newRelationship(edge)
+		relationshipList = append(relationshipList, *relationship)
+
+		segList = append(segList, segment{
+			startNode:    *src,
+			relationship: *relationship,
+			endNode:      *dst,
+		})
+		src = dst
+	}
+	return &PathWrapper{
+		nodeList:         nodeList,
+		relationshipList: relationshipList,
+		segments:         segList,
+	}
+}
+
+func (res ResultSet) GetErrorCode() graph.ErrorCode {
+	return res.ErrorCode
+}
+
+func (res ResultSet) GetErrorMsg() []byte {
+	return res.ErrorMsg
+}
+
+func (res ResultSet) GetRecords() []Record {
+	return res.records
 }
 
 /*
@@ -188,7 +248,7 @@ func (record Record) getNodeByIndex(index int) (*Node, error) {
 		return nil, fmt.Errorf("Type Error: Value being checked is not a vertex")
 	}
 	vertex := record.row.Values[index].VVal
-	return newNode(*vertex), nil
+	return newNode(vertex), nil
 }
 
 // Return a list of labels of node
@@ -273,7 +333,7 @@ func (record Record) getRelationshipByIndex(index int) (*Relationship, error) {
 	}
 
 	edge := record.row.Values[index].EVal
-	return newRelationship(*edge), nil
+	return newRelationship(edge), nil
 }
 
 func (relationship Relationship) HasType(t string) bool {
@@ -338,63 +398,28 @@ func (record Record) getPathByIndex(index int) (*PathWrapper, error) {
 	if !isPath(record.row.Values[index]) {
 		return nil, fmt.Errorf("Type Error: Value being checked is not an edge")
 	}
-	var (
-		vertexList       []nebula.Vertex
-		relationshipList []Relationship
-		segList          []segment
-		edge             nebula.Edge
-	)
-	src := record.row.Values[index].PVal.Src
-	vertexList = append(vertexList, *src)
-
-	for _, step := range record.row.Values[index].PVal.Steps {
-		dst := step.Dst
-		vertexList = append(vertexList, *dst)
-		// determine direction
-		stepType := step.Type
-		if stepType > 0 {
-			edge = nebula.Edge{
-				Src:     src.Vid,
-				Dst:     dst.Vid,
-				Type:    stepType,
-				Name:    step.Name,
-				Ranking: step.Ranking,
-				Props:   step.Props,
-			}
-		} else {
-			edge = nebula.Edge{
-				Src:     dst.Vid, // switch with dst
-				Dst:     src.Vid,
-				Type:    -stepType,
-				Name:    step.Name,
-				Ranking: step.Ranking,
-				Props:   step.Props,
-			}
-		}
-		relationship := newRelationship(edge)
-		relationshipList = append(relationshipList, *relationship)
-
-		segList = append(segList, segment{
-			startNode:    *newNode(*src),
-			relationship: *relationship,
-			endNode:      *newNode(*dst),
-		})
-		src = dst
-	}
-	return &PathWrapper{
-		vertexList:       vertexList,
-		relationshipList: relationshipList,
-		segments:         segList,
-	}, nil
+	return newPathWrapper(record.row.Values[index].PVal), nil
 }
 
 func (path *PathWrapper) GetPathLength() int {
-	return len(path.vertexList) - 1
+	return len(path.nodeList) - 1
 }
 
-func (path *PathWrapper) ContainsVertex(id nebula.VertexID) bool {
-	for _, v := range path.vertexList {
-		if string(v.Vid) == string(id) {
+func (path *PathWrapper) GetNodes() []Node {
+	return path.nodeList
+}
+
+func (path *PathWrapper) GetRelations() []Relationship {
+	return path.relationshipList
+}
+
+func (path *PathWrapper) GetSegments() []segment {
+	return path.segments
+}
+
+func (path *PathWrapper) ContainsNode(node Node) bool {
+	for _, n := range path.nodeList {
+		if n.GetID() == node.GetID() {
 			return true
 		}
 	}
@@ -403,7 +428,7 @@ func (path *PathWrapper) ContainsVertex(id nebula.VertexID) bool {
 
 func (path *PathWrapper) ContainsRelationship(relationship Relationship) bool {
 	for _, r := range path.relationshipList {
-		if isEqualRelationship(r, relationship) {
+		if IsEqualRelationship(r, relationship) {
 			return true
 		}
 	}
@@ -439,7 +464,7 @@ func isPath(value *nebula.Value) bool {
 	return false
 }
 
-func isEqualRelationship(r1 Relationship, r2 Relationship) bool {
+func IsEqualRelationship(r1 Relationship, r2 Relationship) bool {
 	if r1.srcVertexID == r2.srcVertexID && r1.dstVertexID == r2.dstVertexID && r1.edgeType == r2.edgeType &&
 		r1.edgeName == r2.edgeName && r1.ranking == r2.ranking {
 		return true
