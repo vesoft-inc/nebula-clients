@@ -16,8 +16,8 @@ import (
 )
 
 type ResultSet struct {
-	ErrorCode   graph.ErrorCode
-	ErrorMsg    []byte
+	errorCode   graph.ErrorCode
+	errorMsg    []byte
 	columnNames []string
 	records     []Record
 }
@@ -70,8 +70,8 @@ func newResultSet(resp graph.ExecutionResponse) ResultSet {
 		})
 	}
 	return ResultSet{
-		ErrorCode:   resp.ErrorCode,
-		ErrorMsg:    resp.ErrorMsg,
+		errorCode:   resp.ErrorCode,
+		errorMsg:    resp.ErrorMsg,
 		columnNames: colNames,
 		records:     records,
 	}
@@ -150,6 +150,9 @@ func newPathWrapper(path *nebula.Path) *PathWrapper {
 		relationshipList []Relationship
 		segList          []segment
 		edge             *nebula.Edge
+		segStartNode     Node
+		segEndNode       Node
+		segType          nebula.EdgeType
 	)
 	src := newNode(path.Src)
 	nodeList = append(nodeList, *src)
@@ -160,31 +163,29 @@ func newPathWrapper(path *nebula.Path) *PathWrapper {
 		// determine direction
 		stepType := step.Type
 		if stepType > 0 {
-			edge = &nebula.Edge{
-				Src:     []byte(src.GetID()),
-				Dst:     []byte(dst.GetID()),
-				Type:    stepType,
-				Name:    step.Name,
-				Ranking: step.Ranking,
-				Props:   step.Props,
-			}
+			segStartNode = *src
+			segEndNode = *dst
+			segType = stepType
 		} else {
-			edge = &nebula.Edge{
-				Src:     []byte(dst.GetID()), // switch with dst
-				Dst:     []byte(src.GetID()),
-				Type:    -stepType,
-				Name:    step.Name,
-				Ranking: step.Ranking,
-				Props:   step.Props,
-			}
+			segStartNode = *dst // switch with src
+			segEndNode = *src
+			segType = -stepType
+		}
+		edge = &nebula.Edge{
+			Src:     []byte(segStartNode.GetID()),
+			Dst:     []byte(segEndNode.GetID()),
+			Type:    segType,
+			Name:    step.Name,
+			Ranking: step.Ranking,
+			Props:   step.Props,
 		}
 		relationship := newRelationship(edge)
 		relationshipList = append(relationshipList, *relationship)
 
 		segList = append(segList, segment{
-			startNode:    *src,
+			startNode:    segStartNode,
 			relationship: *relationship,
-			endNode:      *dst,
+			endNode:      segEndNode,
 		})
 		src = dst
 	}
@@ -195,16 +196,46 @@ func newPathWrapper(path *nebula.Path) *PathWrapper {
 	}
 }
 
+func (res ResultSet) IsSucceed() bool {
+	return res.GetErrorCode() == graph.ErrorCode_SUCCEEDED
+}
+
+func (res ResultSet) GetColNames() []string {
+	return res.columnNames
+}
+
 func (res ResultSet) GetErrorCode() graph.ErrorCode {
-	return res.ErrorCode
+	return res.errorCode
 }
 
 func (res ResultSet) GetErrorMsg() []byte {
-	return res.ErrorMsg
+	return res.errorMsg
 }
 
 func (res ResultSet) GetRecords() []Record {
 	return res.records
+}
+
+// Return the value in the row using row index or colname
+func (record Record) GetValue(key interface{}) (*nebula.Value, error) {
+	// Get value by column name
+	if reflect.TypeOf(key).String() == "string" {
+		// Get index
+		index, err := record.getIndexbyColName(key.(string))
+		if err != nil {
+			return nil, err
+		}
+		return record.row.Values[index], nil
+	}
+	// Get value by row index
+	if reflect.TypeOf(key).String() == "int" {
+		index := key.(int)
+		if index < 0 || index >= len(record.row.Values) {
+			return nil, fmt.Errorf("Failed to get Value, the index is out of range")
+		}
+		return record.row.Values[index], nil
+	}
+	return nil, fmt.Errorf("Failed to get Value: requested coloumn name or index is invalid, the parameter shuold be int or string")
 }
 
 /*
@@ -227,7 +258,7 @@ func (record Record) AsNode(key interface{}) (*Node, error) {
 		index := key.(int)
 		return record.getNodeByIndex(index)
 	}
-	return nil, fmt.Errorf("Failed to get node: requested coloumn name or index is invalid")
+	return nil, fmt.Errorf("Failed to get node: requested coloumn name or index is invalid, the parameter shuold be int or string")
 }
 
 func (record Record) getIndexbyColName(colName string) (int, error) {
@@ -238,7 +269,7 @@ func (record Record) getIndexbyColName(colName string) (int, error) {
 		}
 		index++
 	}
-	return -1, fmt.Errorf("Column name does not exists")
+	return -1, fmt.Errorf("Column name does not exist")
 }
 
 // Return a node if the value at the given index of row is a Vertex
@@ -249,6 +280,60 @@ func (record Record) getNodeByIndex(index int) (*Node, error) {
 	}
 	vertex := record.row.Values[index].VVal
 	return newNode(vertex), nil
+}
+
+func (record Record) AsRelationship(key interface{}) (*Relationship, error) {
+	// Get vertex by column name
+	if reflect.TypeOf(key).String() == "string" {
+		// Get index
+		index, err := record.getIndexbyColName(key.(string))
+		if err != nil {
+			return nil, err
+		}
+		return record.getRelationshipByIndex(index)
+	}
+	// Get vertex by row index
+	if reflect.TypeOf(key).String() == "int" {
+		index := key.(int)
+		return record.getRelationshipByIndex(index)
+	}
+	return nil, fmt.Errorf("Failed to get relationship: requested coloumn name or index is invalid")
+}
+
+func (record Record) getRelationshipByIndex(index int) (*Relationship, error) {
+	// Check if the value is an edge
+	if !isVertex(record.row.Values[index]) {
+		return nil, fmt.Errorf("Type Error: Value being checked is not an edge")
+	}
+
+	edge := record.row.Values[index].EVal
+	return newRelationship(edge), nil
+}
+
+func (record Record) AsPath(key interface{}) (*PathWrapper, error) {
+	// Get vertex by column name
+	if reflect.TypeOf(key).String() == "string" {
+		// Get index
+		index, err := record.getIndexbyColName(key.(string))
+		if err != nil {
+			return nil, err
+		}
+		return record.getPathByIndex(index)
+	}
+	// Get vertex by row index
+	if reflect.TypeOf(key).String() == "int" {
+		index := key.(int)
+		return record.getPathByIndex(index)
+	}
+	return nil, fmt.Errorf("Failed to get path: requested coloumn name or index is invalid")
+}
+
+func (record Record) getPathByIndex(index int) (*PathWrapper, error) {
+	// Check if the value is a path
+	if !isPath(record.row.Values[index]) {
+		return nil, fmt.Errorf("Type Error: Value being checked is not an edge")
+	}
+	return newPathWrapper(record.row.Values[index].PVal), nil
 }
 
 // Return a list of labels of node
@@ -308,34 +393,6 @@ func (node Node) Values(tagName string) ([]*nebula.Value, error) {
 	return nil, fmt.Errorf("Invalid tag name")
 }
 
-func (record Record) AsRelationship(key interface{}) (*Relationship, error) {
-	// Get vertex by column name
-	if reflect.TypeOf(key).String() == "string" {
-		// Get index
-		index, err := record.getIndexbyColName(key.(string))
-		if err != nil {
-			return nil, err
-		}
-		return record.getRelationshipByIndex(index)
-	}
-	// Get vertex by row index
-	if reflect.TypeOf(key).String() == "int" {
-		index := key.(int)
-		return record.getRelationshipByIndex(index)
-	}
-	return nil, fmt.Errorf("Failed to get relationship: requested coloumn name or index is invalid")
-}
-
-func (record Record) getRelationshipByIndex(index int) (*Relationship, error) {
-	// Check if the value is an edge
-	if !isVertex(record.row.Values[index]) {
-		return nil, fmt.Errorf("Type Error: Value being checked is not an edge")
-	}
-
-	edge := record.row.Values[index].EVal
-	return newRelationship(edge), nil
-}
-
 func (relationship Relationship) HasType(t string) bool {
 	if relationship.edgeName == t {
 		return true
@@ -375,32 +432,6 @@ func (relationship Relationship) Values() []*nebula.Value {
 	return relationship.values
 }
 
-func (record Record) AsPath(key interface{}) (*PathWrapper, error) {
-	// Get vertex by column name
-	if reflect.TypeOf(key).String() == "string" {
-		// Get index
-		index, err := record.getIndexbyColName(key.(string))
-		if err != nil {
-			return nil, err
-		}
-		return record.getPathByIndex(index)
-	}
-	// Get vertex by row index
-	if reflect.TypeOf(key).String() == "int" {
-		index := key.(int)
-		return record.getPathByIndex(index)
-	}
-	return nil, fmt.Errorf("Failed to get path: requested coloumn name or index is invalid")
-}
-
-func (record Record) getPathByIndex(index int) (*PathWrapper, error) {
-	// Check if the value is a path
-	if !isPath(record.row.Values[index]) {
-		return nil, fmt.Errorf("Type Error: Value being checked is not an edge")
-	}
-	return newPathWrapper(record.row.Values[index].PVal), nil
-}
-
 func (path *PathWrapper) GetPathLength() int {
 	return len(path.nodeList) - 1
 }
@@ -428,7 +459,7 @@ func (path *PathWrapper) ContainsNode(node Node) bool {
 
 func (path *PathWrapper) ContainsRelationship(relationship Relationship) bool {
 	for _, r := range path.relationshipList {
-		if IsEqualRelationship(r, relationship) {
+		if AreEqualRelationship(r, relationship) {
 			return true
 		}
 	}
@@ -464,7 +495,7 @@ func isPath(value *nebula.Value) bool {
 	return false
 }
 
-func IsEqualRelationship(r1 Relationship, r2 Relationship) bool {
+func AreEqualRelationship(r1 Relationship, r2 Relationship) bool {
 	if r1.srcVertexID == r2.srcVertexID && r1.dstVertexID == r2.dstVertexID && r1.edgeType == r2.edgeType &&
 		r1.edgeName == r2.edgeName && r1.ranking == r2.ranking {
 		return true

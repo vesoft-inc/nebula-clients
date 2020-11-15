@@ -11,6 +11,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
 )
@@ -79,20 +81,67 @@ func TestPathWrapper(t *testing.T) {
 		}
 		relationshipList = append(relationshipList, newRelationship(edge))
 	}
+
 	l1 := pathWrapper.GetNodes()
 	for i := 0; i < len(nodeList); i++ {
 		assert.Equal(t, nodeList[i].GetID(), l1[i].GetID())
 	}
-
 	l2 := pathWrapper.GetRelations()
 	for i := 0; i < len(relationshipList); i++ {
-		assert.Equal(t, true, IsEqualRelationship(*relationshipList[i], l2[i]))
+		assert.Equal(t, true, AreEqualRelationship(*relationshipList[i], l2[i]))
 	}
-
+	// Check segments
+	segList := pathWrapper.GetSegments()
+	srcList := []string{"Tom", "vertex1", "vertex1", "vertex3", "vertex3"}
+	dstList := []string{"vertex0", "vertex0", "vertex2", "vertex2", "vertex4"}
+	for i := 0; i < len(segList); i++ {
+		assert.Equal(t, srcList[i], segList[i].startNode.GetID())
+		assert.Equal(t, dstList[i], segList[i].endNode.GetID())
+	}
 }
 
 func TestDataset(t *testing.T) {
+	resp := graph.ExecutionResponse{
+		graph.ErrorCode_SUCCEEDED,
+		1000,
+		getDateset(),
+		[]byte("test_space"),
+		[]byte("test"),
+		graph.NewPlanDescription(),
+		[]byte("test_comment")}
+	resultSet := newResultSet(resp)
+	assert.Equal(t, graph.ErrorCode_SUCCEEDED, resultSet.GetErrorCode())
+	assert.Equal(t, true, resultSet.IsSucceed())
 
+	expectedColNames := []string{"col0_int", "col1_string", "col2_vertex", "col3_edge", "col4_path"}
+	colNames := resultSet.GetColNames()
+	for i := 0; i < len(colNames); i++ {
+		assert.Equal(t, expectedColNames[i], colNames[i])
+	}
+
+	records := resultSet.GetRecords()
+	assert.Equal(t, 1, len(records))
+	record := records[0]
+	_, err := record.AsNode(0)
+	assert.EqualError(t, err, "Type Error: Value being checked is not a vertex")
+	_, err = record.AsNode("col2")
+	assert.EqualError(t, err, "Column name does not exist")
+	_, err = record.AsNode(2.0)
+	assert.EqualError(t, err, "Failed to get node: requested coloumn name or index is invalid, the parameter shuold be int or string")
+	node, _ := record.AsNode("col2_vertex")
+	assert.Equal(t, "Tom", node.GetID())
+
+	// TODO: add more tests
+	value, _ := record.GetValue(0)
+	assert.Equal(t, int64(1), ConvertValue(value))
+	value, _ = record.GetValue(1)
+	assert.Equal(t, "value1", ConvertValue(value))
+	value, _ = record.GetValue(2)
+	assert.Equal(t, getVertex("Tom"), ConvertValue(value))
+	value, _ = record.GetValue(3)
+	assert.Equal(t, getEdge("Tom", "Lily"), ConvertValue(value))
+	value, _ = record.GetValue(4)
+	assert.Equal(t, getPath("Tom", 3), ConvertValue(value))
 }
 
 func getVertex(vid string) *nebula.Vertex {
@@ -165,7 +214,7 @@ func getPath(startID string, stepNum int) *nebula.Path {
 	}
 }
 
-func getDateset() nebula.DataSet {
+func getDateset() *nebula.DataSet {
 	colNames := [][]byte{
 		[]byte("col0_int"),
 		[]byte("col1_string"),
@@ -193,7 +242,7 @@ func getDateset() nebula.DataSet {
 		valueList,
 	}
 	rows = append(rows, row)
-	return nebula.DataSet{
+	return &nebula.DataSet{
 		ColumnNames: colNames,
 		Rows:        rows,
 	}
