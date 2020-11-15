@@ -100,6 +100,7 @@ func TestPathWrapper(t *testing.T) {
 	}
 }
 
+// TODO: add test got GetColValues() and GetRowValues()
 func TestDataset(t *testing.T) {
 	resp := graph.ExecutionResponse{
 		graph.ErrorCode_SUCCEEDED,
@@ -131,16 +132,15 @@ func TestDataset(t *testing.T) {
 	node, _ := record.AsNode("col2_vertex")
 	assert.Equal(t, "Tom", node.GetID())
 
-	// TODO: add more tests
-	value, _ := record.GetValue(0)
+	value, _ := record.GetColValue(0)
 	assert.Equal(t, int64(1), ConvertValue(value))
-	value, _ = record.GetValue(1)
+	value, _ = record.GetColValue(1)
 	assert.Equal(t, "value1", ConvertValue(value))
-	value, _ = record.GetValue(2)
+	value, _ = record.GetColValue(2)
 	assert.Equal(t, getVertex("Tom"), ConvertValue(value))
-	value, _ = record.GetValue(3)
+	value, _ = record.GetColValue(3)
 	assert.Equal(t, getEdge("Tom", "Lily"), ConvertValue(value))
-	value, _ = record.GetValue(4)
+	value, _ = record.GetColValue(4)
 	assert.Equal(t, getPath("Tom", 3), ConvertValue(value))
 }
 

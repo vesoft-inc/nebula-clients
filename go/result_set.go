@@ -196,8 +196,20 @@ func newPathWrapper(path *nebula.Path) *PathWrapper {
 	}
 }
 
-func (res ResultSet) IsSucceed() bool {
-	return res.GetErrorCode() == graph.ErrorCode_SUCCEEDED
+func (res ResultSet) GetColValues(colName string) ([]*nebula.Value, error) {
+	var valList []*nebula.Value
+	for _, record := range res.records {
+		val, err := record.GetColValue(colName)
+		if err != nil {
+			return nil, err
+		}
+		valList = append(valList, val)
+	}
+	return valList, nil
+}
+
+func (res ResultSet) GetRowValues(index int) ([]*nebula.Value, error) {
+	return res.records[index].GetRowValue(index)
 }
 
 func (res ResultSet) GetColNames() []string {
@@ -216,8 +228,12 @@ func (res ResultSet) GetRecords() []Record {
 	return res.records
 }
 
+func (res ResultSet) IsSucceed() bool {
+	return res.GetErrorCode() == graph.ErrorCode_SUCCEEDED
+}
+
 // Return the value in the row using row index or colname
-func (record Record) GetValue(key interface{}) (*nebula.Value, error) {
+func (record Record) GetColValue(key interface{}) (*nebula.Value, error) {
 	// Get value by column name
 	if reflect.TypeOf(key).String() == "string" {
 		// Get index
@@ -230,12 +246,20 @@ func (record Record) GetValue(key interface{}) (*nebula.Value, error) {
 	// Get value by row index
 	if reflect.TypeOf(key).String() == "int" {
 		index := key.(int)
+		// TODO: make this check a function
 		if index < 0 || index >= len(record.row.Values) {
 			return nil, fmt.Errorf("Failed to get Value, the index is out of range")
 		}
 		return record.row.Values[index], nil
 	}
 	return nil, fmt.Errorf("Failed to get Value: requested coloumn name or index is invalid, the parameter shuold be int or string")
+}
+
+func (record Record) GetRowValue(index int) ([]*nebula.Value, error) {
+	if index < 0 || index >= len(record.row.Values) {
+		return nil, fmt.Errorf("Failed to get Value, the index is out of range")
+	}
+	return record.row.Values, nil
 }
 
 /*
