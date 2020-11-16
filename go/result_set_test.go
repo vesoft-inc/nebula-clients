@@ -19,7 +19,10 @@ import (
 
 func TestNode(t *testing.T) {
 	vertex := getVertex("Tom")
-	node := newNode(vertex)
+	node, err := genNode(vertex)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
 	assert.Equal(t, "Tom", node.GetID())
 	assert.Equal(t, true, node.HasLabel("tag1"))
@@ -37,8 +40,10 @@ func TestNode(t *testing.T) {
 
 func TestRelationship(t *testing.T) {
 	edge := getEdge("Tom", "Lily")
-	relationship := newRelationship(edge)
-
+	relationship, err := genRelationship(edge)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 	assert.Equal(t, "Tom", relationship.GetSrcVertexID())
 	assert.Equal(t, "Lily", relationship.GetDstVertexID())
 	assert.Equal(t, "classmate", relationship.GetEdgeName())
@@ -56,22 +61,34 @@ func TestRelationship(t *testing.T) {
 
 func TestPathWrapper(t *testing.T) {
 	path := getPath("Tom", 5)
-	pathWrapper := newPathWrapper(path)
+	pathWrapper, err := genPathWrapper(path)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 	assert.Equal(t, 5, pathWrapper.GetPathLength())
-	node := newNode(getVertex("Tom"))
+	node, err := genNode(getVertex("Tom"))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 	assert.Equal(t, true, pathWrapper.ContainsNode(*node))
-	relationship := newRelationship(getEdge("Tom", "vertex0"))
+	relationship, err := genRelationship(getEdge("Tom", "vertex0"))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 	assert.Equal(t, true, pathWrapper.ContainsRelationship(*relationship))
 
 	var nodeList []Node
 	nodeList = append(nodeList, *node)
 	for i := 0; i < 5; i++ {
-		newNode := newNode(getVertex(fmt.Sprintf("vertex%d", i)))
-		nodeList = append(nodeList, *newNode)
+		genNode, err := genNode(getVertex(fmt.Sprintf("vertex%d", i)))
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		nodeList = append(nodeList, *genNode)
 	}
 
 	var relationshipList []*Relationship
-	relationshipList = append(relationshipList, newRelationship(getEdge("Tom", "vertex0")))
+	relationshipList = append(relationshipList, relationship)
 	for i := 0; i < 4; i++ {
 		var edge *nebula.Edge
 		if i%2 == 0 {
@@ -79,7 +96,11 @@ func TestPathWrapper(t *testing.T) {
 		} else {
 			edge = getEdge(fmt.Sprintf("vertex%d", i), fmt.Sprintf("vertex%d", i+1))
 		}
-		relationshipList = append(relationshipList, newRelationship(edge))
+		newRelationship, err := genRelationship(edge)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		relationshipList = append(relationshipList, newRelationship)
 	}
 
 	l1 := pathWrapper.GetNodes()
@@ -100,8 +121,7 @@ func TestPathWrapper(t *testing.T) {
 	}
 }
 
-// TODO: add test got GetColValues() and GetRowValues()
-func TestDataset(t *testing.T) {
+func TestResultSet(t *testing.T) {
 	resp := graph.ExecutionResponse{
 		graph.ErrorCode_SUCCEEDED,
 		1000,
@@ -110,7 +130,11 @@ func TestDataset(t *testing.T) {
 		[]byte("test"),
 		graph.NewPlanDescription(),
 		[]byte("test_comment")}
-	resultSet := newResultSet(resp)
+	resultSet, err := genResultSet(resp)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
 	assert.Equal(t, graph.ErrorCode_SUCCEEDED, resultSet.GetErrorCode())
 	assert.Equal(t, true, resultSet.IsSucceed())
 
@@ -123,7 +147,7 @@ func TestDataset(t *testing.T) {
 	records := resultSet.GetRecords()
 	assert.Equal(t, 1, len(records))
 	record := records[0]
-	_, err := record.AsNode(0)
+	_, err = record.AsNode(0)
 	assert.EqualError(t, err, "Type Error: Value being checked is not a vertex")
 	_, err = record.AsNode("col2")
 	assert.EqualError(t, err, "Column name does not exist")
@@ -132,16 +156,16 @@ func TestDataset(t *testing.T) {
 	node, _ := record.AsNode("col2_vertex")
 	assert.Equal(t, "Tom", node.GetID())
 
-	value, _ := record.GetColValue(0)
-	assert.Equal(t, int64(1), ConvertValue(value))
-	value, _ = record.GetColValue(1)
-	assert.Equal(t, "value1", ConvertValue(value))
-	value, _ = record.GetColValue(2)
-	assert.Equal(t, getVertex("Tom"), ConvertValue(value))
-	value, _ = record.GetColValue(3)
-	assert.Equal(t, getEdge("Tom", "Lily"), ConvertValue(value))
-	value, _ = record.GetColValue(4)
-	assert.Equal(t, getPath("Tom", 3), ConvertValue(value))
+	// Check get row values
+	valueList, err := resultSet.GetRowValues(10)
+	assert.EqualError(t, err, "Failed to get Value, the index is out of range")
+
+	valueList, err = resultSet.GetRowValues(0)
+	assert.Equal(t, int64(1), ConvertValue(valueList[0]))
+	assert.Equal(t, "value1", ConvertValue(valueList[1]))
+	assert.Equal(t, getVertex("Tom"), ConvertValue(valueList[2]))
+	assert.Equal(t, getEdge("Tom", "Lily"), ConvertValue(valueList[3]))
+	assert.Equal(t, getPath("Tom", 3), ConvertValue(valueList[4]))
 }
 
 func getVertex(vid string) *nebula.Vertex {

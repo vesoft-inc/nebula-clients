@@ -7,10 +7,15 @@
 package nebula
 
 import (
+	"fmt"
+
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
 )
 
 func ConvertValue(value *nebula.Value) interface{} {
+	if value == nil {
+		return fmt.Errorf("Invalid input value: nil")
+	}
 	if value.IsSetNVal() {
 		return value.GetNVal()
 	} else if value.IsSetBVal() {
