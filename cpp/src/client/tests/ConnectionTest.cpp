@@ -4,8 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include <atomic>
-
+#include <folly/synchronization/Baton.h>
 #include <folly/executors/IOThreadPoolExecutor.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -59,15 +58,15 @@ protected:
         // TODO(shylock) check the plan
 
         // async execute
-        // TODO
-        // std::atomic_bool complete{false};
-        // c.asyncExecute(*authResp.session_id, "SHOW SPACES", [&complete](auto &&cbResp) {
-            // ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::SUCCEEDED) << static_cast<int>(cbResp.error_code);
-            // nebula::DataSet expected({"Name"});
-            // EXPECT_TRUE(verifyResultWithoutOrder(*cbResp.data, expected));
-            // complete.store(true);
-        // });
-        // while (!complete.load());
+        folly::Baton<> b;
+        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [&b](auto &&cbResp) {
+            std::cout << "DEBUG POINT: async callback";
+            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::SUCCEEDED) << static_cast<int>(cbResp.error_code);
+            nebula::DataSet expected({"Name"});
+            EXPECT_TRUE(verifyResultWithoutOrder(*cbResp.data, expected));
+            b.post();
+        });
+        b.wait();
 
         // signout
         c.signout(*authResp.session_id);
@@ -80,9 +79,12 @@ protected:
         ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_SESSION_INVALID);
 
         // async execute
-        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [](auto &&cbResp) {
+        folly::Baton<> b1;
+        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [&b1](auto &&cbResp) {
             ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_SESSION_INVALID);
+            b1.post();
         });
+        b1.wait();
 
         // close
         c.close();
@@ -92,12 +94,15 @@ protected:
 
         // execute
         resp = c.execute(*authResp.session_id, "SHOW SPACES");
-        ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_RPC_FAILURE);
+        ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_DISCONNECTED);
 
         // async execute
-        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [](auto &&cbResp) {
-            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_RPC_FAILURE);
+        folly::Baton<> b2;
+        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [&b2](auto &&cbResp) {
+            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_DISCONNECTED);
+            b2.post();
         });
+        b2.wait();
 
         // isOpen
         EXPECT_FALSE(c.isOpen());
@@ -106,9 +111,6 @@ protected:
 
 TEST_F(ConnectionTest, Basic) {
     nebula::Connection c;
-    auto executor = std::make_unique<folly::IOThreadPoolExecutor>(
-        10, std::make_shared<folly::NamedThreadFactory>("connection-test-executor"));
-    c.setExecutor(executor.get());
     LOG(INFO) << "Testing once.";
     runOnce(c);
     LOG(INFO) << "Testing reopen.";

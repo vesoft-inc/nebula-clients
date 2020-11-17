@@ -13,7 +13,7 @@
 #include "common/graph/Response.h"
 
 namespace folly {
-    class Executor;
+    class ScopedEventBaseThread;
 }
 
 namespace nebula {
@@ -38,8 +38,8 @@ public:
         client_ = c.client_;
         c.client_ = nullptr;
 
-        executor_ = c.executor_;
-        c.executor_ = nullptr;
+        clientLoopThread_ = c.clientLoopThread_;
+        c.clientLoopThread_ = nullptr;
     }
 
     Connection &operator=(Connection &&c);
@@ -66,14 +66,9 @@ public:
 
     void signout(int64_t sessionId);
 
-    void setExecutor(folly::Executor *executor) {
-        executor_ = executor;
-    }
-
 private:
-    folly::Executor                      *executor_{nullptr};
-
     graph::cpp2::GraphServiceAsyncClient *client_{nullptr};
+    folly::ScopedEventBaseThread         *clientLoopThread_{nullptr};
 };
 
 }   // namespace nebula
