@@ -125,10 +125,12 @@ bool Connection::isOpen() {
 }
 
 void Connection::close() {
-    clientLoopThread_->getEventBase()->runInEventBaseThreadAndWait([this]() {
-        delete client_;
-    });
-    client_ = nullptr;
+    if (client_ != nullptr) {
+        clientLoopThread_->getEventBase()->runInEventBaseThreadAndWait([this]() {
+            delete client_;
+        });
+        client_ = nullptr;
+    }
 }
 
 bool Connection::ping() {
