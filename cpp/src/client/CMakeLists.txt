@@ -14,6 +14,8 @@ set(NEBULA_CLIENT_OBJS
 set(NEBULA_CLIENT_SOURCES
     Connection.cpp
     Init.cpp
+    ConnectionPool.cpp
+    Session.cpp
 )
 
 set(NEBULA_CLIENT_LIBRARIES
