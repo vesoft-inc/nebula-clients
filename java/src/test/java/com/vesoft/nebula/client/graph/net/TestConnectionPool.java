@@ -13,7 +13,6 @@ import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
 import com.vesoft.nebula.graph.ErrorCode;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Assert;

@@ -1,0 +1,114 @@
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
+package test.java.com.vesoft.nebula.encoder;
+
+import com.vesoft.nebula.Date;
+import com.vesoft.nebula.DateTime;
+import com.vesoft.nebula.NullType;
+import com.vesoft.nebula.Time;
+import com.vesoft.nebula.Value;
+import com.vesoft.nebula.encoder.MetaCacheImplTest;
+import com.vesoft.nebula.encoder.NebulaCodecImpl;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.commons.codec.binary.Hex;
+import org.junit.Assert;
+import org.junit.Test;
+
+public class TestEncoder {
+    final String expectResult = "090cc001081000200000004000000000000000db0f494069"
+        + "57148b0abf05405d0000000c0000004e6562756c61204772617068bb334e5e000000"
+        + "00e40702140a1e2d00000000e40702140a1e2d00000000000000000000000000000000"
+        + "48656c6c6f20776f726c6421";
+
+    private List<String> getCols() {
+        return Arrays.asList("Col01","Col02", "Col03", "Col04", "Col05", "Col06",
+            "Col07","Col08", "Col09", "Col10", "Col11", "Col12", "Col13", "Col14");
+    }
+
+    private List<Object> getValues() {
+        final double e = 2.71828182845904523536028747135266249775724709369995;
+        final float pi = (float)3.14159265358979;
+        final Value strVal = new Value();
+        strVal.setSVal("Hello world!".getBytes());
+        final Value fixVal = new Value();
+        fixVal.setSVal("Nebula Graph".getBytes());
+        final Value timestampVal = new Value();
+        timestampVal.setIVal(1582183355);
+        final Value intVal = new Value();
+        intVal.setIVal(64);
+        final Value timeVal = new Value();
+        timeVal.setTVal(new Time((byte)10, (byte)30, (byte)45, (int)0));
+        final Value datetimeValue = new Value();
+        datetimeValue.setDtVal(new DateTime((short)2020, (byte)2, (byte)20,
+            (byte)10, (byte)30, (byte)45, (int)0));
+        final Value dateValue = new Value();
+        dateValue.setDVal(new Date((short)2020, (byte)2, (byte)20));
+        final Value nullVal = new Value();
+        nullVal.setNVal(NullType.__NULL__);
+        return Arrays.asList(true, 8, 16, 32, intVal, pi, e, strVal, fixVal,
+            timestampVal, dateValue, timeVal, datetimeValue, nullVal);
+    }
+
+    @Test()
+    public void testEncodeVertex() {
+        MetaCacheImplTest cacheImplTest = new MetaCacheImplTest();
+        NebulaCodecImpl codec = new NebulaCodecImpl(cacheImplTest);
+        // encode failed, loss filed value
+        List<String> colNames = Arrays.asList("Col01", "Col02", "Col03", "Col04", "Col05");
+        List<Object> colVals = Arrays.asList(true, 8, 16, 32, (long)100);
+        try {
+            codec.encode("tag_no_default", colNames, colVals);
+            Assert.fail();
+        } catch (Exception exception) {
+            assert (true);
+        }
+
+        // encode succeeded
+        try {
+            byte[] encodeStr = codec.encode("tag_no_default", getCols(), getValues());
+            String hexStr = Hex.encodeHexString(encodeStr);
+
+            // write into file to use storage test to decode
+            File file = new File("encode_java.txt");
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            fileOutputStream.write(encodeStr);
+
+            Assert.assertArrayEquals(hexStr.getBytes(),  expectResult.getBytes());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            Assert.fail(exception.getMessage());
+        }
+    }
+
+    @Test()
+    public void testEncodeEdge() {
+        MetaCacheImplTest cacheImplTest = new MetaCacheImplTest();
+        NebulaCodecImpl codec = new NebulaCodecImpl(cacheImplTest);
+        // encode failed, loss filed value
+        List<String> colNames = Arrays.asList("Col01", "Col02", "Col03", "Col04", "Col05");
+        List<Object> colVals = Arrays.asList(true, 8, 16, 32, (long)100);
+        try {
+            codec.encode("edge_no_default", colNames, colVals);
+            Assert.fail();
+        } catch (Exception exception) {
+            assert (true);
+        }
+
+        // encode succeeded
+        try {
+            byte[] encodeStr = codec.encode("edge_no_default", getCols(), getValues());
+            String hexStr = Hex.encodeHexString(encodeStr);
+            Assert.assertArrayEquals(hexStr.getBytes(),  expectResult.getBytes());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            Assert.fail(exception.getMessage());
+        }
+    }
+}
