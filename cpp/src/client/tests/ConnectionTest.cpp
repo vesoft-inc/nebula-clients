@@ -60,7 +60,6 @@ protected:
         // async execute
         folly::Baton<> b;
         c.asyncExecute(*authResp.session_id, "SHOW SPACES", [&b](auto &&cbResp) {
-            std::cout << "DEBUG POINT: async callback";
             ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::SUCCEEDED) << static_cast<int>(cbResp.error_code);
             nebula::DataSet expected({"Name"});
             EXPECT_TRUE(verifyResultWithoutOrder(*cbResp.data, expected));
