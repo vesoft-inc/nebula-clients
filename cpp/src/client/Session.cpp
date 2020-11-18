@@ -34,10 +34,7 @@ bool Session::ping() {
 ErrorCode Session::retryConnect() {
     pool_->giveBack(std::move(conn_));
     conn_ = pool_->getConnection();
-    if (!conn_.isOpen()) {
-        return ErrorCode::E_DISCONNECTED;
-    }
-    return ErrorCode::SUCCEEDED;
+    return conn_.authenticate(username_, password_).errorCode;
 }
 
 void Session::release() {

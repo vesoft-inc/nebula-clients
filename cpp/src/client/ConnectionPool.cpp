@@ -49,7 +49,7 @@ Session ConnectionPool::getSession(const std::string &username,
     if (resp.errorCode != ErrorCode::SUCCEEDED || resp.sessionId == nullptr) {
         return Session();
     }
-    return Session(*resp.sessionId, std::move(conn), this);
+    return Session(*resp.sessionId, std::move(conn), this, username, password);
 }
 
 Connection ConnectionPool::getConnection() {

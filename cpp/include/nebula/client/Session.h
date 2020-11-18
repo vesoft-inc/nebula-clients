@@ -19,10 +19,22 @@ public:
     using ExecuteJsonCallback = std::function<void(std::string &&)>;
 
     Session() = default;
-    Session(int64_t sessionId, Connection &&conn, ConnectionPool *pool)
-        : sessionId_(sessionId), conn_(std::move(conn)), pool_(pool) {}
+    Session(int64_t sessionId,
+            Connection &&conn,
+            ConnectionPool *pool,
+            const std::string &username,
+            const std::string &password)
+        : sessionId_(sessionId),
+          conn_(std::move(conn)),
+          pool_(pool),
+          username_(username),
+          password_(password) {}
     Session(Session &&session)
-        : sessionId_(session.sessionId_), conn_(std::move(session.conn_)), pool_(session.pool_) {
+        : sessionId_(session.sessionId_),
+          conn_(std::move(session.conn_)),
+          pool_(session.pool_),
+          username_(std::move(session.username_)),
+          password_(std::move(session.password_)) {
         session.sessionId_ = -1;
         session.pool_ = nullptr;
     }
@@ -52,6 +64,8 @@ private:
     int64_t sessionId_{-1};
     Connection conn_;
     ConnectionPool *pool_{nullptr};
+    std::string username_;
+    std::string password_;
 };
 
 }   // namespace nebula
