@@ -17,27 +17,20 @@ ConnectionPool::~ConnectionPool() {
 }
 
 void ConnectionPool::init(const std::vector<std::string> &addresses, const Config &config) {
-    for (std::size_t i = 0, j = 0, k = 0; i < config.maxConnectionPoolSize_; ++j, ++k) {
-        if (k > config.maxConnectionPoolSize_ * 10) {
-            // Can't get so many connections, return to avoid dead loop
-            return;
-        }
-        if (j >= addresses.size()) {
-            j = 0;
-        }
+    for (const auto &addr : addresses) {
         std::vector<std::string> splits;
-        folly::split(':', addresses[j], splits, true);
+        folly::split(':', addr, splits, true);
         if (splits.size() != 2) {
             // ignore error
             continue;
         }
-        Connection conn;
-        if (conn.open(splits[0], folly::to<int32_t>(splits[1]))) {
-            ++i;
-            conns_.emplace_back(std::move(conn));
-        }
-        // ignore error
+        address_.emplace_back(std::make_pair(splits[0], folly::to<int32_t>(splits[1])));
     }
+    if (address_.empty()) {
+        // no valid address
+        return;
+    }
+    newConnection(0, config.maxConnectionPoolSize_);
 }
 
 void ConnectionPool::close() {
@@ -54,6 +47,13 @@ Session ConnectionPool::getSession(const std::string &username,
     Connection conn;
     {
         std::lock_guard<std::mutex> l(lock_);
+        // check connection
+        for (auto c = conns_.begin(); c != conns_.end(); ++c) {
+            if (!c->isOpen()) {
+                conns_.erase(c);
+                newConnection(nextCursor(), 1);
+            }
+        }
         if (conns_.empty()) {
             return Session();
         }
@@ -70,6 +70,24 @@ Session ConnectionPool::getSession(const std::string &username,
 void ConnectionPool::giveBack(Connection &&conn) {
     std::lock_guard<std::mutex> l(lock_);
     conns_.emplace_back(std::move(conn));
+}
+
+void ConnectionPool::newConnection(std::size_t cursor, std::size_t count) {
+    for (std::size_t i = 0, j = cursor, k = 0; i < count; ++j, ++k) {
+        if (k > count * address_.size()) {
+            // Can't get so many connections, return to avoid dead loop
+            return;
+        }
+        if (j >= address_.size()) {
+            j = 0;
+        }
+        Connection conn;
+        if (conn.open(address_[j].first, address_[j].second)) {
+            ++i;
+            conns_.emplace_back(std::move(conn));
+        }
+        // ignore error
+    }
 }
 
 }   // namespace nebula
