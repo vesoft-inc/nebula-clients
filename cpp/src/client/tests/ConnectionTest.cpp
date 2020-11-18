@@ -24,14 +24,14 @@ protected:
 
         // execute
         auto resp = c.execute(-1, "SHOW SPACES");
-        ASSERT_TRUE(resp.error_code == nebula::ErrorCode::E_DISCONNECTED ||
-                    resp.error_code == nebula::ErrorCode::E_RPC_FAILURE);
+        ASSERT_TRUE(resp.errorCode == nebula::ErrorCode::E_DISCONNECTED ||
+                    resp.errorCode == nebula::ErrorCode::E_RPC_FAILURE);
         EXPECT_EQ(resp.data, nullptr);
 
         // async execute
         c.asyncExecute(-1, "SHOW SPACES", [](auto &&cbResp) {
-            ASSERT_TRUE(cbResp.error_code == nebula::ErrorCode::E_DISCONNECTED ||
-                        cbResp.error_code == nebula::ErrorCode::E_RPC_FAILURE);
+            ASSERT_TRUE(cbResp.errorCode == nebula::ErrorCode::E_DISCONNECTED ||
+                        cbResp.errorCode == nebula::ErrorCode::E_RPC_FAILURE);
             EXPECT_EQ(cbResp.data, nullptr);
         });
 
@@ -43,24 +43,24 @@ protected:
 
         // auth
         auto authResp = c.authenticate("root", "nebula");
-        ASSERT_EQ(authResp.error_code, nebula::ErrorCode::SUCCEEDED);
+        ASSERT_EQ(authResp.errorCode, nebula::ErrorCode::SUCCEEDED);
 
         // execute
-        resp = c.execute(*authResp.session_id, "SHOW SPACES");
-        ASSERT_EQ(resp.error_code, nebula::ErrorCode::SUCCEEDED);
+        resp = c.execute(*authResp.sessionId, "SHOW SPACES");
+        ASSERT_EQ(resp.errorCode, nebula::ErrorCode::SUCCEEDED);
         nebula::DataSet expected({"Name"});
         EXPECT_TRUE(verifyResultWithoutOrder(*resp.data, expected));
 
         // explain
-        resp = c.execute(*authResp.session_id, "EXPLAIN SHOW HOSTS");
-        ASSERT_EQ(resp.error_code, nebula::ErrorCode::SUCCEEDED);
-        EXPECT_NE(resp.plan_desc, nullptr);
+        resp = c.execute(*authResp.sessionId, "EXPLAIN SHOW HOSTS");
+        ASSERT_EQ(resp.errorCode, nebula::ErrorCode::SUCCEEDED);
+        EXPECT_NE(resp.planDesc, nullptr);
         // TODO(shylock) check the plan
 
         // async execute
         folly::Baton<> b;
-        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [&b](auto &&cbResp) {
-            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::SUCCEEDED) << static_cast<int>(cbResp.error_code);
+        c.asyncExecute(*authResp.sessionId, "SHOW SPACES", [&b](auto &&cbResp) {
+            ASSERT_EQ(cbResp.errorCode, nebula::ErrorCode::SUCCEEDED) << static_cast<int>(cbResp.errorCode);
             nebula::DataSet expected({"Name"});
             EXPECT_TRUE(verifyResultWithoutOrder(*cbResp.data, expected));
             b.post();
@@ -68,19 +68,19 @@ protected:
         b.wait();
 
         // signout
-        c.signout(*authResp.session_id);
+        c.signout(*authResp.sessionId);
 
         // ping
         EXPECT_TRUE(c.ping());
 
         // check signout
-        resp = c.execute(*authResp.session_id, "SHOW SPACES");
-        ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_SESSION_INVALID);
+        resp = c.execute(*authResp.sessionId, "SHOW SPACES");
+        ASSERT_EQ(resp.errorCode, nebula::ErrorCode::E_SESSION_INVALID);
 
         // async execute
         folly::Baton<> b1;
-        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [&b1](auto &&cbResp) {
-            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_SESSION_INVALID);
+        c.asyncExecute(*authResp.sessionId, "SHOW SPACES", [&b1](auto &&cbResp) {
+            ASSERT_EQ(cbResp.errorCode, nebula::ErrorCode::E_SESSION_INVALID);
             b1.post();
         });
         b1.wait();
@@ -92,13 +92,13 @@ protected:
         EXPECT_FALSE(c.ping());
 
         // execute
-        resp = c.execute(*authResp.session_id, "SHOW SPACES");
-        ASSERT_EQ(resp.error_code, nebula::ErrorCode::E_DISCONNECTED);
+        resp = c.execute(*authResp.sessionId, "SHOW SPACES");
+        ASSERT_EQ(resp.errorCode, nebula::ErrorCode::E_DISCONNECTED);
 
         // async execute
         folly::Baton<> b2;
-        c.asyncExecute(*authResp.session_id, "SHOW SPACES", [&b2](auto &&cbResp) {
-            ASSERT_EQ(cbResp.error_code, nebula::ErrorCode::E_DISCONNECTED);
+        c.asyncExecute(*authResp.sessionId, "SHOW SPACES", [&b2](auto &&cbResp) {
+            ASSERT_EQ(cbResp.errorCode, nebula::ErrorCode::E_DISCONNECTED);
             b2.post();
         });
         b2.wait();
