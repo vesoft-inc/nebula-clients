@@ -52,6 +52,14 @@ protected:
         });
         b.wait();
 
+        // retry connection
+        ASSERT_EQ(session.retryConnect(), nebula::ErrorCode::SUCCEEDED);
+
+        // execute
+        result = session.execute("SHOW SPACES");
+        ASSERT_EQ(result.errorCode(), nebula::ErrorCode::SUCCEEDED);
+        EXPECT_TRUE(verifyResultWithoutOrder(*result.data(), expected));
+
         // release
         session.release();
 

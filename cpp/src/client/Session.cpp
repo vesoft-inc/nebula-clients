@@ -32,8 +32,11 @@ bool Session::ping() {
 }
 
 ErrorCode Session::retryConnect() {
-    // TODO
-    return ErrorCode::SUCCEEDED;
+    conn_.close();
+    if (conn_.open()) {
+        return ErrorCode::SUCCEEDED;
+    }
+    return ErrorCode::E_DISCONNECTED;
 }
 
 void Session::release() {
