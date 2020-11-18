@@ -31,15 +31,29 @@ Connection &Connection::operator=(Connection &&c) {
     clientLoopThread_ = c.clientLoopThread_;
     c.clientLoopThread_ = nullptr;
 
+    address_ = std::move(c.address_);
+
+    port_ = c.port_;
+    c.port_ = -1;
+
     return *this;
 }
 
 bool Connection::open(const std::string &address, int32_t port) {
+    address_ = address;
+    port_ = port;
+    return open();
+}
+
+bool Connection::open() {
+    if (address_.empty()) {
+        return false;
+    }
     bool complete{false};
-    clientLoopThread_->getEventBase()->runInEventBaseThreadAndWait([this, &complete, &address, port]() {
+    clientLoopThread_->getEventBase()->runInEventBaseThreadAndWait([this, &complete]() {
         try {
             auto socket = apache::thrift::async::TAsyncSocket::newSocket(
-                clientLoopThread_->getEventBase(), address, port, 0 /*TODO(shylock) pass from config*/);
+                clientLoopThread_->getEventBase(), address_, port_, 0 /*TODO(shylock) pass from config*/);
 
             client_ = new graph::cpp2::GraphServiceAsyncClient(
                 apache::thrift::HeaderClientChannel::newChannel(socket));
