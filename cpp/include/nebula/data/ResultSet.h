@@ -15,7 +15,7 @@ public:
     ResultSet(ExecutionResponse &&resp) : resp_(std::move(resp)) {}
 
     ErrorCode errorCode() const {
-        return resp_.error_code;
+        return resp_.errorCode;
     }
 
     const DataSet *data() const {
@@ -23,7 +23,7 @@ public:
     }
 
     const PlanDescription *planDescription() const {
-        return resp_.plan_desc.get();
+        return resp_.planDesc.get();
     }
 
 private:

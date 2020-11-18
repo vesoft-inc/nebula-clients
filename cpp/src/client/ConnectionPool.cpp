@@ -61,10 +61,10 @@ Session ConnectionPool::getSession(const std::string &username,
         conns_.pop_front();
     }
     auto resp = conn.authenticate(username, password);
-    if (resp.error_code != ErrorCode::SUCCEEDED || resp.session_id == nullptr) {
+    if (resp.errorCode != ErrorCode::SUCCEEDED || resp.sessionId == nullptr) {
         return Session();
     }
-    return Session(*resp.session_id, std::move(conn), this);
+    return Session(*resp.sessionId, std::move(conn), this);
 }
 
 void ConnectionPool::giveBack(Connection &&conn) {
