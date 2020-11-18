@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include <folly/SocketAddress.h>
 #include <folly/io/async/ScopedEventBaseThread.h>
 #include <thrift/lib/cpp/async/TAsyncSocket.h>
 #include <thrift/lib/cpp2/async/HeaderClientChannel.h>
@@ -52,8 +53,9 @@ bool Connection::open() {
     bool complete{false};
     clientLoopThread_->getEventBase()->runInEventBaseThreadAndWait([this, &complete]() {
         try {
+            auto socketAddr = folly::SocketAddress(address_, port_, true);
             auto socket = apache::thrift::async::TAsyncSocket::newSocket(
-                clientLoopThread_->getEventBase(), address_, port_, 0 /*TODO(shylock) pass from config*/);
+                clientLoopThread_->getEventBase(), socketAddr, 0 /*TODO(shylock) pass from config*/);
 
             client_ = new graph::cpp2::GraphServiceAsyncClient(
                 apache::thrift::HeaderClientChannel::newChannel(socket));
