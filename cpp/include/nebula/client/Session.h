@@ -48,10 +48,6 @@ public:
         return sessionId_ > 0;
     }
 
-    int64_t sessionId() const {
-        return sessionId_;
-    }
-
 private:
     int64_t sessionId_{-1};
     Connection conn_;
