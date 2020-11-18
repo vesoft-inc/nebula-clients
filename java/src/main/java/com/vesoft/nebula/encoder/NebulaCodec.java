@@ -9,12 +9,14 @@ package com.vesoft.nebula.encoder;
 import java.util.List;
 
 public interface NebulaCodec {
-    byte[] vertexKey(int partitionId,
+    byte[] vertexKey(int vidLen,
+                     int partitionId,
                      byte[] vertexId,
                      int tagId,
                      long tagVersion);
 
-    byte[] edgeKey(int partitionId,
+    byte[] edgeKey(int vidLen,
+                   int partitionId,
                    byte[] srcId,
                    int edgeType,
                    long edgeRank,

@@ -16,7 +16,6 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.apache.commons.codec.binary.Hex;
 
 public class RowWriterImpl implements RowWriter {
     private final SchemaProviderImpl schema;
@@ -27,11 +26,13 @@ public class RowWriterImpl implements RowWriter {
     private ByteBuffer buf;
     private final List<Boolean> isSet;
     private final List<String> strList = new ArrayList<>();
+    private ByteOrder byteOrder;
     static int[] andBits = {0x7F, 0xBF, 0xDF, 0xEF, 0xF7, 0xFB, 0xFD, 0xFE};
     static int[] orBits = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
     static int[] nullBits = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
-    public RowWriterImpl(SchemaProviderImpl schema) throws RuntimeException {
+    public RowWriterImpl(SchemaProviderImpl schema, ByteOrder byteOrder) throws RuntimeException {
+        this.byteOrder = byteOrder;
         if (schema == null) {
             throw new RuntimeException("Null schema object");
         }
@@ -76,23 +77,23 @@ public class RowWriterImpl implements RowWriter {
             headerLen = 1;
         }
 
-        buf = ByteBuffer.allocate(headerLen + numNullBytes + schema.size() + 1);
-        buf.order(ByteOrder.LITTLE_ENDIAN);
-        buf.put(header);
-        if (ver > 0) {
-            ByteBuffer longBuf = ByteBuffer.allocate(8);
-            longBuf.order(ByteOrder.LITTLE_ENDIAN);
-            longBuf.putLong(ver);
-            buf.put(longBuf.array(), 0, schemaVerSize);
-        }
         // Null flags
         int numNullables = schema.getNumNullableFields();
         if (numNullables > 0) {
             numNullBytes = ((numNullables - 1) >> 3) + 1;
         }
+        buf = ByteBuffer.allocate(headerLen + numNullBytes + schema.size());
+        buf.order(this.byteOrder);
+        buf.put(header);
+        if (ver > 0) {
+            ByteBuffer longBuf = ByteBuffer.allocate(8);
+            longBuf.order(this.byteOrder);
+            longBuf.putLong(ver);
+            buf.put(longBuf.array(), 0, schemaVerSize);
+        }
         // Reserve the space for the data, including the Null bits
         // All variant length string will be appended to the end\
-        buf.position(headerLen + numNullBytes + schema.size());
+        // buf.position(headerLen + numNullBytes + schema.size());
         isSet = new ArrayList<>(Collections.nCopies(schema.getNumFields(), false));
     }
 
@@ -761,8 +762,9 @@ public class RowWriterImpl implements RowWriter {
 
     public ByteBuffer processOutOfSpace() {
         ByteBuffer temp;
-        temp = ByteBuffer.allocate((int) (headerLen + numNullBytes + schema.size() + approxStrLen));
-        temp.order(ByteOrder.LITTLE_ENDIAN);
+        temp = ByteBuffer.allocate((int) (headerLen
+            + numNullBytes + schema.size() + approxStrLen));
+        temp.order(this.byteOrder);
 
         // Reserve enough space to avoid memory re-allocation
         // Copy the data except the strings

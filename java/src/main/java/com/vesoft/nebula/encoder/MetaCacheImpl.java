@@ -28,7 +28,7 @@ public class MetaCacheImpl implements MetaCache {
     @Override
     public SpaceItem getSpace(String spaceName) {
         if (!spaceItems.containsKey(spaceName)) {
-            throw new RuntimeException("Space: " + spaceName + " not exist in cache.");
+            return null;
         }
         return spaceItems.get(spaceName);
     }

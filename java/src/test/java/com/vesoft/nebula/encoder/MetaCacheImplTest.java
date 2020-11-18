@@ -142,9 +142,14 @@ public class MetaCacheImplTest implements MetaCache {
         tagItem2.schema = genWithDefaultVal();
         this.tagItems.put(new String(tagItem2.tag_name), tagItem2);
 
+        TagItem tagItem3 = new TagItem();
+        tagItem3.tag_name = "tag_with_empty_string".getBytes();
+        tagItem3.version = 0;
+        tagItem3.schema = genEmptyString();
+        this.tagItems.put(new String(tagItem3.tag_name), tagItem3);
+
         EdgeItem edgeItem1 = new EdgeItem();
         edgeItem1.edge_name = "edge_no_default".getBytes();
-        edgeItem1.edge_type = 12;
         edgeItem1.schema = genNoDefaultVal();
         edgeItem1.version = 12;
         this.edgeItems.put(new String(edgeItem1.edge_name), edgeItem1);
@@ -152,9 +157,14 @@ public class MetaCacheImplTest implements MetaCache {
         EdgeItem edgeItem2 = new EdgeItem();
         edgeItem2.edge_name = "edge_with_default".getBytes();
         edgeItem2.version = 7;
-        edgeItem1.edge_type = 5;
         edgeItem2.schema = genWithDefaultVal();
         this.edgeItems.put(new String(edgeItem2.edge_name), edgeItem2);
+
+        EdgeItem edgeItem3 = new EdgeItem();
+        edgeItem3.edge_name = "edge_with_empty_string".getBytes();
+        edgeItem3.version = 0;
+        edgeItem3.schema = genEmptyString();
+        this.edgeItems.put(new String(edgeItem3.edge_name), edgeItem3);
     }
 
     @Override
