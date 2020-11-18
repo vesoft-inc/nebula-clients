@@ -32,11 +32,12 @@ bool Session::ping() {
 }
 
 ErrorCode Session::retryConnect() {
-    conn_.close();
-    if (conn_.open()) {
-        return ErrorCode::SUCCEEDED;
+    pool_->giveBack(std::move(conn_));
+    conn_ = pool_->getConnection();
+    if (!conn_.isOpen()) {
+        return ErrorCode::E_DISCONNECTED;
     }
-    return ErrorCode::E_DISCONNECTED;
+    return ErrorCode::SUCCEEDED;
 }
 
 void Session::release() {

@@ -29,6 +29,8 @@ public:
                        const std::string &password,
                        bool retryConnect = true);
 
+    Connection getConnection();
+
     void giveBack(Connection &&conn);
 
     std::size_t size() const {

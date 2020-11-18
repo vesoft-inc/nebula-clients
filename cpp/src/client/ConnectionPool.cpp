@@ -44,27 +44,29 @@ Session ConnectionPool::getSession(const std::string &username,
                                    const std::string &password,
                                    bool retryConnect) {
     (void)retryConnect;
-    Connection conn;
-    {
-        std::lock_guard<std::mutex> l(lock_);
-        // check connection
-        for (auto c = conns_.begin(); c != conns_.end(); ++c) {
-            if (!c->isOpen()) {
-                conns_.erase(c);
-                newConnection(nextCursor(), 1);
-            }
-        }
-        if (conns_.empty()) {
-            return Session();
-        }
-        conn = std::move(conns_.front());
-        conns_.pop_front();
-    }
+    Connection conn = getConnection();
     auto resp = conn.authenticate(username, password);
     if (resp.errorCode != ErrorCode::SUCCEEDED || resp.sessionId == nullptr) {
         return Session();
     }
     return Session(*resp.sessionId, std::move(conn), this);
+}
+
+Connection ConnectionPool::getConnection() {
+    std::lock_guard<std::mutex> l(lock_);
+    // check connection
+    for (auto c = conns_.begin(); c != conns_.end(); ++c) {
+        if (!c->isOpen()) {
+            conns_.erase(c);
+            newConnection(nextCursor(), 1);
+        }
+    }
+    if (conns_.empty()) {
+        return Connection();
+    }
+    Connection conn = std::move(conns_.front());
+    conns_.pop_front();
+    return conn;
 }
 
 void ConnectionPool::giveBack(Connection &&conn) {

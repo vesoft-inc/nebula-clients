@@ -33,6 +33,7 @@ public:
     Connection();
     // disable copy
     Connection(const Connection &) = delete;
+    Connection &operator=(const Connection &c) = delete;
 
     Connection(Connection &&c) noexcept {
         client_ = c.client_;
