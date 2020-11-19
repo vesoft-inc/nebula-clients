@@ -34,7 +34,9 @@ bool Session::ping() {
 ErrorCode Session::retryConnect() {
     pool_->giveBack(std::move(conn_));
     conn_ = pool_->getConnection();
-    return conn_.authenticate(username_, password_).errorCode;
+    auto resp = conn_.authenticate(username_, password_);
+    sessionId_ = resp.sessionId != nullptr ? *resp.sessionId : -1;
+    return resp.errorCode;
 }
 
 void Session::release() {
