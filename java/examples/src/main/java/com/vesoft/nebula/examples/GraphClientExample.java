@@ -21,14 +21,15 @@ import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
 import com.vesoft.nebula.client.graph.net.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GraphClientExample {
     private static final Logger log = LoggerFactory.getLogger(GraphClientExample.class);
+
     private static void printResult(ResultSet resultSet) {
         List<String> colNames = resultSet.getColumnNames();
         for (String name : colNames) {
@@ -39,49 +40,49 @@ public class GraphClientExample {
             for (Value rec : record) {
                 Object value = rec.getFieldValue();
                 if (value instanceof Integer) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof Boolean) {
-                    System.out.print(String .format("%15s |", (Boolean)value));
+                    System.out.print(String.format("%15s |", (Boolean)value));
                 }
                 if (value instanceof Long) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof Double) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof byte[]) {
-                    System.out.print(String .format("%15s |", new String((byte[])value)));
+                    System.out.print(String.format("%15s |", new String((byte[])value)));
                 }
                 if (value instanceof Date) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof Time) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof DateTime) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof Vertex) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof Edge) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof Path) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof List) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof Map) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof Set) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
                 if (value instanceof DataSet) {
-                    System.out.print(String .format("%15s |", value));
+                    System.out.print(String.format("%15s |", value));
                 }
             }
             System.out.println();
@@ -99,51 +100,56 @@ public class GraphClientExample {
             pool.init(addresses, nebulaPoolConfig);
             session = pool.getSession("root", "nebula", false);
             {
-                String createSchema = "CREATE SPACE IF NOT EXISTS test; " +
-                                      "USE test;" +
-                                      "CREATE TAG IF NOT EXISTS person(name string, age int);" +
-                                      "CREATE EDGE IF NOT EXISTS like(likeness double)";
+                String createSchema = "CREATE SPACE IF NOT EXISTS test; "
+                                      + "USE test;"
+                                      + "CREATE TAG IF NOT EXISTS person(name string, age int);"
+                                      + "CREATE EDGE IF NOT EXISTS like(likeness double)";
                 ResultSet resp = session.execute(createSchema);
                 if (!resp.isSucceeded()) {
-                    log.error(String.format("Execute: `%s', failed: %s", createSchema, resp.getErrorMessage()));
+                    log.error(String.format("Execute: `%s', failed: %s",
+                        createSchema, resp.getErrorMessage()));
                     System.exit(1);
                 }
             }
 
             TimeUnit.SECONDS.sleep(5);
             {
-                String insertVertexes = "INSERT VERTEX person(name, age) VALUES " +
-                                        "\'Bob\':(\'Bob\', 10), " +
-                                        "\'Lily\':(\'Lily\', 9), " +
-                                        "\'Tom\':(\'Tom\', 10), " +
-                                        "\'Jerry\':(\'Jerry\', 13), " +
-                                        "\'John\':(\'John\', 11);";
+                String insertVertexes = "INSERT VERTEX person(name, age) VALUES "
+                    + "\'Bob\':(\'Bob\', 10), "
+                    + "\'Lily\':(\'Lily\', 9), "
+                    + "\'Tom\':(\'Tom\', 10), "
+                    + "\'Jerry\':(\'Jerry\', 13), "
+                    + "\'John\':(\'John\', 11);";
                 ResultSet resp = session.execute(insertVertexes);
                 if (!resp.isSucceeded()) {
-                    log.error(String.format("Execute: `%s', failed: %s", insertVertexes, resp.getErrorMessage()));
+                    log.error(String.format("Execute: `%s', failed: %s",
+                        insertVertexes, resp.getErrorMessage()));
                     System.exit(1);
                 }
             }
 
             {
-                String insertEdges = "INSERT EDGE like(likeness) VALUES " +
-                                     "\'Bob\'->\'Lily\':(80.0), " +
-                                     "\'Bob\'->\'Tom\':(70.0), " +
-                                     "\'Lily\'->\'Jerry\':(84.0), " +
-                                     "\'Tom\'->\'Jerry\':(68.3), " +
-                                     "\'Bob\'->\'John\':(97.2);";
+                String insertEdges = "INSERT EDGE like(likeness) VALUES "
+                    + "\'Bob\'->\'Lily\':(80.0), "
+                    + "\'Bob\'->\'Tom\':(70.0), "
+                    + "\'Lily\'->\'Jerry\':(84.0), "
+                    + "\'Tom\'->\'Jerry\':(68.3), "
+                    + "\'Bob\'->\'John\':(97.2);";
                 ResultSet resp = session.execute(insertEdges);
                 if (!resp.isSucceeded()) {
-                    log.error(String.format("Execute: `%s', failed: %s", insertEdges, resp.getErrorMessage()));
+                    log.error(String.format("Execute: `%s', failed: %s",
+                        insertEdges, resp.getErrorMessage()));
                     System.exit(1);
                 }
             }
 
             {
-                String query = "GO FROM \"Bob\" OVER like YIELD $^.person.name, $^.person.age, like.likeness";
+                String query = "GO FROM \"Bob\" OVER like "
+                    + "YIELD $^.person.name, $^.person.age, like.likeness";
                 ResultSet resp = session.execute(query);
                 if (!resp.isSucceeded()) {
-                    log.error(String.format("Execute: `%s', failed: %s", query, resp.getErrorMessage()));
+                    log.error(String.format("Execute: `%s', failed: %s",
+                        query, resp.getErrorMessage()));
                     System.exit(1);
                 }
                 printResult(resp);
