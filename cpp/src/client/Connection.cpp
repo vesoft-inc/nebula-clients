@@ -16,7 +16,8 @@
 
 namespace nebula {
 
-Connection::Connection() : client_{nullptr}, clientLoopThread_(new folly::ScopedEventBaseThread()) {}
+Connection::Connection()
+    : client_{nullptr}, clientLoopThread_(new folly::ScopedEventBaseThread()) {}
 
 Connection::~Connection() {
     close();
@@ -55,7 +56,9 @@ bool Connection::open() {
         try {
             auto socketAddr = folly::SocketAddress(address_, port_, true);
             auto socket = apache::thrift::async::TAsyncSocket::newSocket(
-                clientLoopThread_->getEventBase(), socketAddr, 0 /*TODO(shylock) pass from config*/);
+                clientLoopThread_->getEventBase(),
+                socketAddr,
+                0 /*TODO(shylock) pass from config*/);
 
             client_ = new graph::cpp2::GraphServiceAsyncClient(
                 apache::thrift::HeaderClientChannel::newChannel(socket));
@@ -69,31 +72,40 @@ bool Connection::open() {
 
 AuthResponse Connection::authenticate(const std::string &user, const std::string &password) {
     if (client_ == nullptr) {
-        return AuthResponse{
-            ErrorCode::E_DISCONNECTED, nullptr, std::make_unique<std::string>("Not open connection.")};
+        return AuthResponse{ErrorCode::E_DISCONNECTED,
+                            nullptr,
+                            std::make_unique<std::string>("Not open connection.")};
     }
 
     AuthResponse resp;
     try {
         resp = client_->future_authenticate(user, password).get();
     } catch (const std::exception &ex) {
-        resp = AuthResponse{
-            ErrorCode::E_RPC_FAILURE, nullptr, std::make_unique<std::string>("Unavailable Connection.")};
+        resp = AuthResponse{ErrorCode::E_RPC_FAILURE,
+                            nullptr,
+                            std::make_unique<std::string>("Unavailable connection.")};
     }
     return resp;
 }
 
 ExecutionResponse Connection::execute(int64_t sessionId, const std::string &stmt) {
     if (client_ == nullptr) {
-        return ExecutionResponse{ErrorCode::E_DISCONNECTED, 0};
+        return ExecutionResponse{ErrorCode::E_DISCONNECTED,
+                                 0,
+                                 nullptr,
+                                 nullptr,
+                                 std::make_unique<std::string>("Not open connection.")};
     }
 
     ExecutionResponse resp;
     try {
         resp = client_->future_execute(sessionId, stmt).get();
     } catch (const std::exception &ex) {
-        resp = ExecutionResponse{
-            ErrorCode::E_RPC_FAILURE};
+        resp = ExecutionResponse{ErrorCode::E_RPC_FAILURE,
+                                 0,
+                                 nullptr,
+                                 nullptr,
+                                 std::make_unique<std::string>("Unavailable connection.")};
     }
 
     return resp;
@@ -101,7 +113,11 @@ ExecutionResponse Connection::execute(int64_t sessionId, const std::string &stmt
 
 void Connection::asyncExecute(int64_t sessionId, const std::string &stmt, ExecuteCallback cb) {
     if (client_ == nullptr) {
-        cb(ExecutionResponse{ErrorCode::E_DISCONNECTED});
+        cb(ExecutionResponse{ErrorCode::E_DISCONNECTED,
+                             0,
+                             nullptr,
+                             nullptr,
+                             std::make_unique<std::string>("Not open connection.")});
         return;
     }
     client_->future_execute(sessionId, stmt).thenValue([cb = std::move(cb)](auto &&resp) {
@@ -130,6 +146,7 @@ void Connection::asyncExecuteJson(int64_t sessionId,
                                   const std::string &stmt,
                                   ExecuteJsonCallback cb) {
     if (client_ == nullptr) {
+        // TODO handle error
         cb("");
         return;
     }
@@ -142,17 +159,15 @@ bool Connection::isOpen() {
 
 void Connection::close() {
     if (client_ != nullptr) {
-        clientLoopThread_->getEventBase()->runInEventBaseThreadAndWait([this]() {
-            delete client_;
-        });
+        clientLoopThread_->getEventBase()->runInEventBaseThreadAndWait(
+            [this]() { delete client_; });
         client_ = nullptr;
     }
 }
 
 bool Connection::ping() {
     auto resp = execute(-1 /*Only check connection*/, "YIELD 1");
-    if (resp.errorCode == ErrorCode::E_RPC_FAILURE ||
-        resp.errorCode == ErrorCode::E_DISCONNECTED) {
+    if (resp.errorCode == ErrorCode::E_RPC_FAILURE || resp.errorCode == ErrorCode::E_DISCONNECTED) {
         return false;
     }
     return true;
