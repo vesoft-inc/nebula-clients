@@ -24,7 +24,7 @@ type PoolConfig struct {
 }
 
 // Validate config
-func (conf PoolConfig) validateConf(log Logger) {
+func (conf *PoolConfig) validateConf(log Logger) {
 	if conf.TimeOut < 0 {
 		conf.TimeOut = 0 * time.Millisecond
 		log.Warn("Illegal Timeout value, the default value of 0 second has been applied")

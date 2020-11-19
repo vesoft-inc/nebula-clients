@@ -27,7 +27,7 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class Schema implements TBase, java.io.Serializable, Cloneable {
+public class Schema implements TBase, java.io.Serializable, Cloneable, Comparable<Schema> {
   private static final TStruct STRUCT_DESC = new TStruct("Schema");
   private static final TField COLUMNS_FIELD_DESC = new TField("columns", TType.LIST, (short)1);
   private static final TField SCHEMA_PROP_FIELD_DESC = new TField("schema_prop", TType.STRUCT, (short)2);
@@ -236,6 +236,37 @@ public class Schema implements TBase, java.io.Serializable, Cloneable {
       builder.append(schema_prop);
 
     return builder.toHashCode();
+  }
+
+  @Override
+  public int compareTo(Schema other) {
+    if (other == null) {
+      // See java.lang.Comparable docs
+      throw new NullPointerException();
+    }
+
+    if (other == this) {
+      return 0;
+    }
+    int lastComparison = 0;
+
+    lastComparison = Boolean.valueOf(isSetColumns()).compareTo(other.isSetColumns());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(columns, other.columns);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetSchema_prop()).compareTo(other.isSetSchema_prop());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(schema_prop, other.schema_prop);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    return 0;
   }
 
   public void read(TProtocol iprot) throws TException {

@@ -31,16 +31,16 @@ func (cn *connection) open(hostAddress HostAddress, timeout time.Duration) error
 	port := hostAddress.Port
 	newAdd := fmt.Sprintf("%s:%d", ip, port)
 	timeoutOption := thrift.SocketTimeout(timeout)
+	bufferSize := 128 << 10
 	addressOption := thrift.SocketAddr(newAdd)
 	sock, err := thrift.NewSocket(timeoutOption, addressOption)
 	if err != nil {
 		return fmt.Errorf("Failed to create a net.Conn-backed Transport,: %s", err.Error())
 	}
 
-	transport := thrift.NewBufferedTransport(sock, 128<<10)
+	transport := thrift.NewBufferedTransport(sock, bufferSize)
 	pf := thrift.NewBinaryProtocolFactoryDefault()
 	cn.graph = graph.NewGraphServiceClientFactory(transport, pf)
-
 	if err = cn.graph.Transport.Open(); err != nil {
 		return fmt.Errorf("Failed to open transport, error: %s", err.Error())
 	}

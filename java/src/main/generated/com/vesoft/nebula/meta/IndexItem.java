@@ -27,7 +27,7 @@ import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
-public class IndexItem implements TBase, java.io.Serializable, Cloneable {
+public class IndexItem implements TBase, java.io.Serializable, Cloneable, Comparable<IndexItem> {
   private static final TStruct STRUCT_DESC = new TStruct("IndexItem");
   private static final TField INDEX_ID_FIELD_DESC = new TField("index_id", TType.I32, (short)1);
   private static final TField INDEX_NAME_FIELD_DESC = new TField("index_name", TType.STRING, (short)2);
@@ -421,6 +421,61 @@ public class IndexItem implements TBase, java.io.Serializable, Cloneable {
       builder.append(fields);
 
     return builder.toHashCode();
+  }
+
+  @Override
+  public int compareTo(IndexItem other) {
+    if (other == null) {
+      // See java.lang.Comparable docs
+      throw new NullPointerException();
+    }
+
+    if (other == this) {
+      return 0;
+    }
+    int lastComparison = 0;
+
+    lastComparison = Boolean.valueOf(isSetIndex_id()).compareTo(other.isSetIndex_id());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(index_id, other.index_id);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetIndex_name()).compareTo(other.isSetIndex_name());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(index_name, other.index_name);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetSchema_id()).compareTo(other.isSetSchema_id());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(schema_id, other.schema_id);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetSchema_name()).compareTo(other.isSetSchema_name());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(schema_name, other.schema_name);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = Boolean.valueOf(isSetFields()).compareTo(other.isSetFields());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    lastComparison = TBaseHelper.compareTo(fields, other.fields);
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    return 0;
   }
 
   public void read(TProtocol iprot) throws TException {
