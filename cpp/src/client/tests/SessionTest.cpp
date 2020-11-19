@@ -46,8 +46,8 @@ protected:
         folly::Baton<> b;
         session.asyncExecute("SHOW SPACES", [&b](auto&& cbResult) {
             ASSERT_EQ(cbResult.errorCode(), nebula::ErrorCode::SUCCEEDED);
-            nebula::DataSet expected({"Name"});
-            EXPECT_TRUE(verifyResultWithoutOrder(*cbResult.data(), expected));
+            nebula::DataSet cbExpected({"Name"});
+            EXPECT_TRUE(verifyResultWithoutOrder(*cbResult.data(), cbExpected));
             b.post();
         });
         b.wait();

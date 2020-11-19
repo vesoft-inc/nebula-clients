@@ -46,6 +46,7 @@ set(NEBULA_CLIENT_LIBRARIES
     -Wl,--no-undefined
     ${GETTIME_LIB}
     atomic
+    -static-libsan
 )
 
 nebula_add_library(
