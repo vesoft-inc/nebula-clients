@@ -8,41 +8,138 @@
 
 from nebula2.common import ttypes
 from nebula2.Exception import (
-    OutOfRangeException,
+    InvalidValueTypeException,
     InvalidKeyException
 )
 
 
-class ConvertValue(object):
-    @classmethod
-    def convert(cls, value):
-        if value.getType() == ttypes.Value.VVAL:
-            return Node(value.get_vVal())
+class ValueWrapper(object):
+    def __init__(self, value, decode_type='utf-8'):
+        self._value = value
+        self._decode_type = decode_type
 
-        if value.getType() == ttypes.Value.EVAL:
-            return Relationship(value.get_eVal())
+    def get_value(self):
+        return self._value
 
-        if value.getType() == ttypes.Value.PVAL:
-            return Path(value.get_pVal())
-        return value
+    def is_null(self):
+        return self._value.getType() == ttypes.Value.NVAL
 
-    @classmethod
-    def as_node(cls, value):
-        if value.getType() != ttypes.Value.VVAL:
-            return None
-        return Node(value.get_vVal())
+    def is_empty(self):
+        return self._value.getType() == ttypes.Value.__EMPTY__
 
-    @classmethod
-    def as_relationship(cls, value):
-        if value.getType() != ttypes.Value.EVAL:
-            return None
-        return Relationship(value.get_eVal())
+    def is_bool(self):
+        return self._value.getType() == ttypes.Value.BVAL
 
-    @classmethod
-    def as_path(cls, value):
-        if value.getType() != ttypes.Value.PVAL:
-            return None
-        return Path(value.get_pVal())
+    def is_int(self):
+        return self._value.getType() == ttypes.Value.IVAL
+
+    def is_double(self):
+        return self._value.getType() == ttypes.Value.FVAL
+
+    def is_string(self):
+        return self._value.getType() == ttypes.Value.SVAL
+
+    def is_time(self):
+        '''
+        TODO: Need to wrapper TimeWrapper
+        :return: ttypes.Time
+        '''
+        return self._value.getType() == ttypes.Value.TVAL
+
+    def is_date(self):
+        '''
+        TODO: Need to wrapper DateWrapper
+        :return: ttypes.Date
+        '''
+        return self._value.getType() == ttypes.Value.DVAL
+
+    def is_datetime(self):
+        '''
+        TODO: Need to wrapper DateTimeWrapper
+        :return: ttypes.DateTime
+        '''
+        return self._value.getType() == ttypes.Value.DTVAL
+
+    def is_vertex(self):
+        return self._value.getType() == ttypes.Value.VVAL
+
+    def is_edge(self):
+        return self._value.getType() == ttypes.Value.EVAL
+
+    def is_path(self):
+        return self._value.getType() == ttypes.Value.PVAL
+
+    def as_bool(self):
+        if self._value.getType() == ttypes.Value.BVAL:
+            return self._value.get_bVal()
+        raise InvalidValueTypeException("expect bool type, but is " + self._value.getType())
+
+    def as_int(self):
+        if self._value.getType() == ttypes.Value.IVAL:
+            return self._value.get_iVal()
+        raise InvalidValueTypeException("expect bool type, but is " + self._value.getType())
+
+    def as_double(self):
+        if self._value.getType() == ttypes.Value.FVAL:
+            return self._value.get_fVal()
+        raise InvalidValueTypeException("expect int type, but is " + self._value.getType())
+
+    def as_string(self):
+        if self._value.getType() == ttypes.Value.SVAL:
+            return self._value.get_sVal().decode(self._decode_type)
+        raise InvalidValueTypeException("expect string type, but is " + self._value.getType())
+
+    def as_time(self):
+        if self._value.getType() == ttypes.Value.TVAL:
+            return self._value.get_tVal()
+        raise InvalidValueTypeException("expect time type, but is " + self._value.getType())
+
+    def as_date(self):
+        if self._value.getType() == ttypes.Value.DVAL:
+            return self._value.get_dVal()
+        raise InvalidValueTypeException("expect date type, but is " + self._value.getType())
+
+    def as_datetime(self):
+        if self._value.getType() == ttypes.Value.DTVAL:
+            return self._value.get_dtVal()
+        raise InvalidValueTypeException("expect datetime type, but is " + self._value.getType())
+
+    def as_list(self):
+        if self._value.getType() == ttypes.Value.LVAL:
+            result = []
+            for val in self._value.get_lVal().values:
+                result.append(ValueWrapper(val))
+        raise InvalidValueTypeException("expect list type, but is " + self._value.getType())
+
+    def as_set(self):
+        if self._value.getType() == ttypes.Value.UVAL:
+            result = set()
+            for val in self._value.get_uVal().values:
+                result.add(ValueWrapper(val))
+        raise InvalidValueTypeException("expect set type, but is " + self._value.getType())
+
+    def as_map(self):
+        if self._value.getType() == ttypes.Value.MVAL:
+            result = {}
+            kvs = self._value.get_mVal().kvs
+            for key in kvs:
+                result[key] = ValueWrapper(kvs[key])
+        raise InvalidValueTypeException("expect map type, but is " + self._value.getType())
+
+    def as_node(self):
+        if self._value.getType() == ttypes.Value.VVAL:
+            return Node(self._value.get_vVal())
+        raise InvalidValueTypeException("expect vertex type, but is " + self._value.getType())
+
+    def as_relationship(self):
+        if self._value.getType() == ttypes.Value.EVAL:
+            return Relationship(self._value.get_eVal())
+        raise InvalidValueTypeException("expect edge type, but is " + self._value.getType())
+
+    def as_path(self):
+        if self._value.getType() == ttypes.Value.PVAL:
+            return Path(self._value.get_pVal())
+        raise InvalidValueTypeException("expect path type, but is " + self._value.getType())
 
 
 class GenValue(object):

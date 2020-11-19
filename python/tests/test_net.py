@@ -15,7 +15,7 @@ sys.path.insert(0, root_dir)
 
 from unittest import TestCase
 
-from nebula2.net import (
+from nebula2.gclient.net import (
     Connection,
     ConnectionPool
 )
@@ -24,8 +24,6 @@ from nebula2.graph import ttypes
 from nebula2.Config import Config
 
 from nebula2.Exception import (
-    AuthFailedException,
-    IOErrorException,
     NotValidConnectionException,
     InValidHostname
 )
@@ -117,7 +115,7 @@ class TestConnectionPool(TestCase):
         for num in range(0, self.configs.max_connection_pool_size):
             session = self.pool.get_session('root', 'nebula')
             resp = session.execute('SHOW SPACES')
-            assert resp.error_code == ttypes.ErrorCode.SUCCEEDED
+            assert resp.is_succeeded()
             sessions.append(session)
 
         # get session failed
@@ -137,7 +135,7 @@ class TestConnectionPool(TestCase):
         for num in range(0, self.configs.max_connection_pool_size - 1):
             session = self.pool.get_session('root', 'nebula')
             resp = session.execute('SHOW SPACES')
-            assert resp.error_code == ttypes.ErrorCode.SUCCEEDED
+            assert resp.is_succeeded()
             sessions.append(session)
 
         assert self.pool.in_used_connects() == 3
@@ -146,7 +144,7 @@ class TestConnectionPool(TestCase):
         session = self.pool.get_session('root', 'nebula')
         assert session is not None
         resp = session.execute('SHOW SPACES')
-        assert resp.error_code == ttypes.ErrorCode.SUCCEEDED
+        assert resp.is_succeeded()
         self.pool.close()
         try:
             session.execute('SHOW SPACES')

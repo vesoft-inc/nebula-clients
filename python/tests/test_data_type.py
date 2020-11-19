@@ -14,9 +14,11 @@ root_dir = os.path.join(current_dir, '..')
 sys.path.insert(0, root_dir)
 
 from nebula2.common import ttypes
+from nebula2.graph import ttypes as graphTtype
 from unittest import TestCase
-from nebula2.data.DataObject import (
-    ConvertValue,
+from nebula2.gclient.data.ResultSet import ResultSet
+from nebula2.gclient.data.DataObject import (
+    ValueWrapper,
     Node,
     Relationship,
     Path
@@ -68,34 +70,107 @@ class TestBaseCase(TestCase):
             path.steps.append(step)
         return path
 
+    @classmethod
+    def get_result_set(self):
+        resp = graphTtype.ExecutionResponse()
+        resp.error_code = graphTtype.ErrorCode.E_BAD_PERMISSION
+        resp.error_msg = "Permission"
+        resp.comment = "Permission"
+        resp.space_name = "test"
+        resp.latency_in_us = 100
+        data_set = ttypes.DataSet()
+        data_set.column_names = ["col1", "col2", "col3", "col4", "col5", "col6", "col7"]
+        row = ttypes.Row()
+        value1 = ttypes.Value()
+        value1.set_bVal(False)
+        row.values = []
+        row.values.append(value1)
+        value2 = ttypes.Value()
+        value2.set_iVal(100)
+        row.values.append(value2)
+        value3 = ttypes.Value()
+        value3.set_fVal(10.01)
+        row.values.append(value3)
+        value4 = ttypes.Value()
+        value4.set_sVal("hello world")
+        row.values.append(value4)
+        value5 = ttypes.Value()
+        value5.set_vVal(self.get_vertex_value("Tom"))
+        row.values.append(value5)
+        value6 = ttypes.Value()
+        value6.set_eVal(self.get_edge_value("Tom", "Lily"))
+        row.values.append(value6)
+        value7 = ttypes.Value()
+        value7.set_pVal(self.get_path_value("Tom", 3))
+        row.values.append(value7)
+        data_set.rows = []
+        data_set.rows.append(row)
+        resp.data = data_set
+        return ResultSet(resp)
 
-class TesConvertValue(TestBaseCase):
 
-    def test_convert_node(self):
+class TesValueWrapper(TestBaseCase):
+    def test_as_bool(self):
+        value = ttypes.Value()
+        value.set_bVal(False)
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_bool()
+
+        node = value_wrapper.as_bool()
+        assert isinstance(node, bool)
+
+    def test_as_int(self):
+        value = ttypes.Value()
+        value.set_iVal(100)
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_int()
+
+        node = value_wrapper.as_int()
+        assert isinstance(node, int)
+
+    def test_as_double(self):
+        value = ttypes.Value()
+        value.set_fVal(10.10)
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_double()
+
+        node = value_wrapper.as_double()
+        assert isinstance(node, float)
+
+    def test_as_string(self):
+        value = ttypes.Value()
+        value.set_sVal('Tom')
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_string()
+
+        strVal = value_wrapper.as_string()
+        assert isinstance(strVal, str)
+
+    def test_as_node(self):
         value = ttypes.Value()
         value.set_vVal(self.get_vertex_value('Tom'))
-        node = ConvertValue.convert(value)
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_vertex()
+
+        node = value_wrapper.as_node()
         assert isinstance(node, Node)
 
-        node = ConvertValue.as_node(value)
-        assert isinstance(node, Node)
-
-    def test_convert_relationship(self):
+    def test_as_relationship(self):
         value = ttypes.Value()
         value.set_eVal(self.get_edge_value('Tom', 'Lily'))
-        node = ConvertValue.convert(value)
-        assert isinstance(node, Relationship)
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_edge()
 
-        node = ConvertValue.as_relationship(value)
-        assert isinstance(node, Relationship)
+        relationship = value_wrapper.as_relationship()
+        assert isinstance(relationship, Relationship)
 
     def test_convert_path(self):
         value = ttypes.Value()
         value.set_pVal(self.get_path_value('Tom'))
-        node = ConvertValue.convert(value)
-        assert isinstance(node, Path)
+        vaue_wrapper = ValueWrapper(value)
+        assert vaue_wrapper.is_path()
 
-        node = ConvertValue.as_path(value)
+        node = vaue_wrapper.as_path()
         assert isinstance(node, Path)
 
 
@@ -200,3 +275,28 @@ class TestPath(TestBaseCase):
 
         print(Path(self.get_path_value('Tom', 2)))
         assert str(Path(self.get_path_value('Tom', 2))) == expect_str
+
+
+class TestResultset(TestBaseCase):
+    def test_all_interface(self):
+        result = self.get_result_set()
+        assert result.space_name() == "test"
+        assert result.comment() == "Permission"
+        assert result.error_msg() == "Permission"
+        assert result.error_code() == graphTtype.ErrorCode.E_BAD_PERMISSION
+        assert not result.is_succeeded()
+        assert result.keys() == ["col1", "col2", "col3", "col4", "col5", "col6", "col7"]
+        assert result.col_size() == 7
+        assert result.row_size() == 1
+        assert len(result.column_values("col6")) == 1
+        assert len(result.row_values(0)) == 7
+        assert len(result.rows()) == 1
+        print(result.get_row_types())
+        assert isinstance(result.get_row_types(), list)
+        assert result.get_row_types() == [ttypes.Value.BVAL,
+                                          ttypes.Value.IVAL,
+                                          ttypes.Value.FVAL,
+                                          ttypes.Value.SVAL,
+                                          ttypes.Value.VVAL,
+                                          ttypes.Value.EVAL,
+                                          ttypes.Value.PVAL]
