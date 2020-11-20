@@ -204,7 +204,7 @@ public class StorageClientTest extends TestCase {
 
     public void testClose() {
         pool.close();
-        assert (pool.getNumActive(HostAndPort.fromParts(ip, 45509)) == 0);
+        assert (pool.getNumActive(HostAndPort.fromParts(ip, 45500)) == 0);
 
     }
 }
