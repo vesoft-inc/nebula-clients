@@ -21,6 +21,12 @@ public class NebulaPoolConfig {
     // 0 means never delete
     private int idleTime = 0;
 
+    // the max total connection in pool for all key
+    private int maxTotal = 20;
+
+    // the max total connection in pool for each key
+    private int maxTotalPerKey = 10;
+
     public int getMinConnSize() {
         return minConnsSize;
     }
@@ -51,5 +57,21 @@ public class NebulaPoolConfig {
 
     public void setIdleTime(int idleTime) {
         this.idleTime = idleTime;
+    }
+
+    public int getMaxTotal() {
+        return maxTotal;
+    }
+
+    public void setMaxTotal(int maxTotal) {
+        this.maxTotal = maxTotal;
+    }
+
+    public int getMaxTotalPerKey() {
+        return maxTotalPerKey;
+    }
+
+    public void setMaxTotalPerKey(int maxTotalPerKey) {
+        this.maxTotalPerKey = maxTotalPerKey;
     }
 }
