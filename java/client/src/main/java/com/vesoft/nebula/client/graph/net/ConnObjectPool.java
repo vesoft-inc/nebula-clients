@@ -3,18 +3,17 @@ package com.vesoft.nebula.client.graph.net;
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
-import java.util.List;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 public class ConnObjectPool extends BasePooledObjectFactory<SyncConnection> {
-    private final RoundRobinLoadBalancer loadBalancer;
     private final NebulaPoolConfig config;
+    private LoadBalancer loadBalancer;
     private static final int retryTime = 3;
 
-    public ConnObjectPool(List<HostAddress> addresses, NebulaPoolConfig config) {
-        this.loadBalancer = new RoundRobinLoadBalancer(addresses, config.getTimeout());
+    public ConnObjectPool(LoadBalancer loadBalancer, NebulaPoolConfig config) {
+        this.loadBalancer = loadBalancer;
         this.config = config;
     }
 
@@ -35,7 +34,7 @@ public class ConnObjectPool extends BasePooledObjectFactory<SyncConnection> {
                 if (retry == 0) {
                     throw e;
                 }
-                loadBalancer.updateServersStatus();
+                this.loadBalancer.updateServersStatus();
             }
         }
         return null;

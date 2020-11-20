@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class NebulaPool {
     private GenericObjectPool<SyncConnection> objectPool = null;
+    private LoadBalancer loadBalancer;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     // the wait time to get idle connection, unit ms
     private final int waitTime = 60 * 1000;
@@ -30,7 +31,8 @@ public class NebulaPool {
     public boolean init(List<HostAddress> addresses, NebulaPoolConfig config)
             throws UnknownHostException {
         List<HostAddress> newAddrs = hostToIp(addresses);
-        ConnObjectPool objectPool = new ConnObjectPool(newAddrs, config);
+        this.loadBalancer = new RoundRobinLoadBalancer(newAddrs, config.getTimeout());
+        ConnObjectPool objectPool = new ConnObjectPool(this.loadBalancer, config);
         this.objectPool = new GenericObjectPool<>(objectPool);
         GenericObjectPoolConfig objConfig = new GenericObjectPoolConfig();
         objConfig.setMinIdle(config.getMinConnSize());
@@ -46,6 +48,7 @@ public class NebulaPool {
     }
 
     public void close() {
+        this.loadBalancer.close();
         this.objectPool.close();
     }
 
