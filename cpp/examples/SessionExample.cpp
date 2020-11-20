@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     std::cout << *result.data();
 
     std::atomic_bool complete{false};
-    session.asyncExecute("SHOW HOSTS", [&complete](auto&& cbResult) {
+    session.asyncExecute("SHOW HOSTS", [&complete](nebula::ResultSet&& cbResult) {
         if (cbResult.errorCode() != nebula::ErrorCode::SUCCEEDED) {
             std::cout << "Exit with error code: " << static_cast<int>(cbResult.errorCode())
                       << std::endl;
@@ -41,8 +41,7 @@ int main(int argc, char* argv[]) {
     });
 
     while (!complete.load()) {
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(1s);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     session.release();

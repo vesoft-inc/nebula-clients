@@ -22,6 +22,8 @@ cmake_minimum_required(VERSION 3.5.0)
 # Set the project name
 project("Nebula C++ Client" C CXX)
 
+set(CMAKE_CXX_STANDARD 11)  # specify the C++ standard
+
 option(ENABLE_MODULE_UPDATE "Automatically update module" OFF)
 
 add_definitions(-DNEBULA_HOME=${CMAKE_SOURCE_DIR})

@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.5.0)
 # Set the project name
 project("Nebula C++ Client simple example" C CXX)
 
-set(CMAKE_CXX_STANDARD 14)  # specify the C++ standard
+set(CMAKE_CXX_STANDARD 11)  # specify the C++ standard
 
 set(NEBULA_HOME /usr/local/nebula)
 
