@@ -73,19 +73,19 @@ public class VertexProcessorTest extends TestCase {
         values.add(Value.iVal(tagId));
         // prop values
         values.add(Value.sVal("Jena".getBytes()));
-        values.add(Value.bVal(true));
-        values.add(Value.nVal(1));
-        values.add(Value.iVal(2L));
-        values.add(Value.fVal(1.0));
+        //values.add(Value.bVal(true));
+        //values.add(Value.nVal(1));
+        //values.add(Value.iVal(2L));
+        //values.add(Value.fVal(1.0));
         short year = 2020;
         byte month = 11;
         byte day = 16;
-        values.add(Value.dVal(new Date(year, month, day)));
+        //values.add(Value.dVal(new Date(year, month, day)));
         byte hour = 12;
         byte minute = 30;
         byte sec = 30;
         int microsec = 5;
-        values.add(Value.dtVal(new DateTime(year, month, day, hour, minute, sec, microsec)));
+        //values.add(Value.dtVal(new DateTime(year, month, day, hour, minute, sec, microsec)));
 
         Row row = new Row(values);
         List<Row> rows = new ArrayList<>();
