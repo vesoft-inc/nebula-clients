@@ -73,9 +73,12 @@ class ResultSet(object):
         self._resp = resp
         self._pos = -1
         self._key_indexes = {}
+        self._column_names = []
         if self._resp.data is not None:
             for index, name in enumerate(self._resp.data.column_names):
-                self._key_indexes[name] = index
+                d_name = name.decode(self._decode_type)
+                self._column_names.append(d_name)
+                self._key_indexes[d_name] = index
 
     def is_succeeded(self):
         return self._resp.error_code == ttypes.ErrorCode.SUCCEEDED
@@ -84,13 +87,13 @@ class ResultSet(object):
         return self._resp.error_code
 
     def space_name(self):
-        return self._resp.space_name
+        return self._resp.space_name.decode(self._decode_type)
 
     def error_msg(self):
-        return self._resp.error_msg
+        return self._resp.error_msg.decode(self._decode_type)
 
     def comment(self):
-        return self._resp.comment
+        return self._resp.comment.decode(self._decode_type)
 
     def latency(self):
         '''
@@ -109,7 +112,7 @@ class ResultSet(object):
         get colNames
         '''
         assert self._resp.data is not None
-        return self._resp.data.column_names
+        return self._column_names
 
     def row_size(self):
         '''
@@ -123,7 +126,7 @@ class ResultSet(object):
         get one col size
         '''
         assert self._resp.data is not None
-        return len(self._resp.data.column_names)
+        return len(self._column_names)
 
     def get_row_types(self):
         '''
@@ -169,7 +172,7 @@ class ResultSet(object):
         :return: list<ValueWrapper>
         '''
         assert self._resp.data is not None
-        if key not in self._resp.data.column_names:
+        if key not in self._column_names:
             raise InvalidKeyException(key)
 
         return [(ValueWrapper(row.values[self._key_indexes[key]])) for row in self._resp.data.rows]
@@ -195,7 +198,7 @@ class ResultSet(object):
         if len(self._resp.data.rows) == 0 or self._pos >= len(self._resp.data.rows) - 1:
             raise StopIteration
         self._pos = self._pos + 1
-        return Record(self._resp.data.rows[self._pos].values, self._resp.data.column_names)
+        return Record(self._resp.data.rows[self._pos].values, self._column_names)
 
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, self._resp)

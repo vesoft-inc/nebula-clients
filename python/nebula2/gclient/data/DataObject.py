@@ -171,14 +171,15 @@ class GenValue(object):
 
 
 class Node(object):
-    def __init__(self, vertex):
+    def __init__(self, vertex, decode_type='utf-8'):
         self._value = vertex
         self._tag_indexes = dict()
+        self._decode_type = decode_type
         for index, tag in enumerate(self._value.tags, start=0):
-            self._tag_indexes[tag.name] = index
+            self._tag_indexes[tag.name.decode(self._decode_type)] = index
 
     def get_id(self):
-        return self._value.vid
+        return self._value.vid.decode(self._decode_type)
 
     def tags(self):
         return list(self._tag_indexes.keys())
@@ -189,58 +190,70 @@ class Node(object):
     def propertys(self, tag):
         if tag not in self._tag_indexes.keys():
             raise InvalidKeyException(tag)
-        return self._value.tags[self._tag_indexes[tag]].props
+
+        props = self._value.tags[self._tag_indexes[tag]].props
+        result_props = {}
+        for key in props.keys():
+            result_props[key.decode(self._decode_type)] = ValueWrapper(props[key])
+        return result_props
 
     def prop_names(self, tag):
         if tag not in self._tag_indexes.keys():
             raise InvalidKeyException(tag)
-        return list(self._value.tags[self._tag_indexes[tag]].props.keys())
+        index = self._tag_indexes[tag]
+        return [(key.decode(self._decode_type)) for key in self._value.tags[index].props.keys()]
 
     def prop_values(self, tag):
         if tag not in self._tag_indexes.keys():
             raise InvalidKeyException(tag)
-        return list(self._value.tags[self._tag_indexes[tag]].props.values())
+        index = self._tag_indexes[tag]
+        return [(ValueWrapper(value)) for value in self._value.tags[index].props.values()]
 
     def __repr__(self):
         tag_str_list = list()
         for tag in self._value.tags:
-            tag_str_list.append('{' + 'tag_name: {}'.format(tag.name) + ', props: {}'.format(tag.props) + '}')
+            tag_str_list.append('{' + 'tag_name: {}'.format(tag.name)
+                                + ', props: {}'.format(tag.props) + '}')
         return '{%s}([%s]:{%s})' % (self.__class__.__name__, self._value.vid, ','.join(tag_str_list))
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
 
-        return self.__dict__ == other.__dict__
+        return self.get_id() == other.get_id()
 
     def __ne__(self, other):
         return not (self == other)
 
 
 class Relationship(object):
-    def __init__(self, edge):
+    def __init__(self, edge, decode_type='utf-8'):
+        self._decode_type = decode_type
         self._value = edge
 
     def start_vertex_id(self):
-        return self._value.src
+        return self._value.src.decode(self._decode_type)
 
     def end_vertex_id(self):
-        return self._value.dst
+        return self._value.dst.decode(self._decode_type)
 
     def edge_name(self):
-        return self._value.name
+        return self._value.name.decode(self._decode_type)
 
     def ranking(self):
         return self._value.ranking
 
     def propertys(self):
-        return self._value.props
+        props = {}
+        for key in self._value.props.keys():
+            props[key.decode(self._decode_type)] = ValueWrapper(self._value.props[key])
+        return props
 
     def keys(self):
-        return list(self._value.props.keys())
+        return [(key.decode(self._decode_type)) for key in self._value.props.keys()]
 
     def values(self):
-        return list(self._value.props.values())
+        return [(ValueWrapper(value)) for value in self._value.props.values]
 
     def __repr__(self):
         return "{}([{}-[{}({})]->{}@{}]:{})".format(self.__class__.__name__,
@@ -254,8 +267,10 @@ class Relationship(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-
-        return self.__dict__ == other.__dict__
+        return self.start_vertex_id() == other.start_vertex_id() \
+               and self.end_vertex_id() == other.end_vertex_id() \
+               and self.edge_name() == other.edge_name() \
+               and self.ranking() == self.ranking()
 
     def __ne__(self, other):
         return not (self == other)
@@ -282,17 +297,24 @@ class Path(object):
         self._path = path
         self._nodes.append(Node(path.src))
 
+        vids = []
+        vids.append(path.src.vid)
         for step in self._path.steps:
             type = step.type
             if step.type > 0:
                 start_node = self._nodes[-1]
                 end_node = Node(step.dst)
+                src_id = vids[-1]
+                dst_id = step.dst.vid
             else:
                 type = -type
                 end_node = self._nodes[-1]
                 start_node = Node(step.dst)
-            relationship = Relationship(GenValue.gen_edge(start_node.get_id(),
-                                                          end_node.get_id(),
+                dst_id = vids[-1]
+                src_id = step.dst.vid
+            vids.append(step.dst.vid)
+            relationship = Relationship(GenValue.gen_edge(src_id,
+                                                          dst_id,
                                                           type,
                                                           step.name,
                                                           step.ranking,
