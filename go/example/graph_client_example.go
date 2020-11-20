@@ -27,8 +27,8 @@ const (
 var log = nebula.DefaultLogger{}
 
 func main() {
-	hostAdress := nebula.HostAddress{Host: address, Port: port}
-	hostList := []nebula.HostAddress{hostAdress}
+	hostAddress := nebula.HostAddress{Host: address, Port: port}
+	hostList := []nebula.HostAddress{hostAddress}
 	// Create configs for connection pool using default values
 	testPoolConfig := nebula.GetDefaultConf()
 

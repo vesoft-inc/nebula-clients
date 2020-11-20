@@ -38,10 +38,10 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 	if err, ok := err.(thrift.TransportException); ok && err.TypeID() == thrift.END_OF_FILE {
 		_err := session.reConnect()
 		if _err != nil {
-			session.connPool.log.Error(fmt.Sprintf("Failed to reconnect, %s \n", _err.Error()))
+			session.log.Error(fmt.Sprintf("Failed to reconnect, %s \n", _err.Error()))
 			return nil, _err
 		}
-		session.connPool.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d \n",
+		session.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d \n",
 			session.connection.severAddress.Host, session.connection.severAddress.Port))
 		// Execute with the new connetion
 		resp, err := session.connection.execute(session.sessionID, stmt)
@@ -51,7 +51,7 @@ func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
 		return resp, nil
 	}
 	// Reconnect fail
-	session.connPool.log.Error(fmt.Sprintf("Error info: %s", err.Error()))
+	session.log.Error(fmt.Sprintf("Error info: %s", err.Error()))
 	return resp, err
 }
 
@@ -71,11 +71,11 @@ func (session *Session) reConnect() error {
 // Logout and release connetion hold by session
 func (session *Session) Release() {
 	if session.connection == nil {
-		session.connPool.log.Warn("Session has been released")
+		session.log.Warn("Session has been released")
 		return
 	}
 	if err := session.connection.signOut(session.sessionID); err != nil {
-		session.connPool.log.Warn(fmt.Sprintf("Sign out failed, %s", err.Error()))
+		session.log.Warn(fmt.Sprintf("Sign out failed, %s", err.Error()))
 	}
 	// Release connection to pool
 	session.connPool.release(session.connection)
