@@ -40,49 +40,49 @@ public class GraphClientExample {
             for (Value rec : record) {
                 Object value = rec.getFieldValue();
                 if (value instanceof Integer) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Boolean) {
-                    System.out.print(String.format("%15s |", (Boolean)value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Long) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Double) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof byte[]) {
-                    System.out.print(String.format("%15s |", new String((byte[])value)));
+                    System.out.printf("%15s |", new String((byte[])value));
                 }
                 if (value instanceof Date) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Time) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof DateTime) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Vertex) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Edge) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Path) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof List) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Map) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof Set) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
                 if (value instanceof DataSet) {
-                    System.out.print(String.format("%15s |", value));
+                    System.out.printf("%15s |", value);
                 }
             }
             System.out.println();
@@ -115,11 +115,11 @@ public class GraphClientExample {
             TimeUnit.SECONDS.sleep(5);
             {
                 String insertVertexes = "INSERT VERTEX person(name, age) VALUES "
-                    + "\'Bob\':(\'Bob\', 10), "
-                    + "\'Lily\':(\'Lily\', 9), "
-                    + "\'Tom\':(\'Tom\', 10), "
-                    + "\'Jerry\':(\'Jerry\', 13), "
-                    + "\'John\':(\'John\', 11);";
+                    + "'Bob':('Bob', 10), "
+                    + "'Lily':('Lily', 9), "
+                    + "'Tom':('Tom', 10), "
+                    + "'Jerry':('Jerry', 13), "
+                    + "'John':('John', 11);";
                 ResultSet resp = session.execute(insertVertexes);
                 if (!resp.isSucceeded()) {
                     log.error(String.format("Execute: `%s', failed: %s",
@@ -130,11 +130,11 @@ public class GraphClientExample {
 
             {
                 String insertEdges = "INSERT EDGE like(likeness) VALUES "
-                    + "\'Bob\'->\'Lily\':(80.0), "
-                    + "\'Bob\'->\'Tom\':(70.0), "
-                    + "\'Lily\'->\'Jerry\':(84.0), "
-                    + "\'Tom\'->\'Jerry\':(68.3), "
-                    + "\'Bob\'->\'John\':(97.2);";
+                    + "'Bob'->'Lily':(80.0), "
+                    + "'Bob'->'Tom':(70.0), "
+                    + "'Lily'->'Jerry':(84.0), "
+                    + "'Tom'->'Jerry':(68.3), "
+                    + "'Bob'->'John':(97.2);";
                 ResultSet resp = session.execute(insertEdges);
                 if (!resp.isSucceeded()) {
                     log.error(String.format("Execute: `%s', failed: %s",
@@ -157,6 +157,7 @@ public class GraphClientExample {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            assert session != null;
             session.release();
             pool.close();
         }

@@ -31,6 +31,10 @@ public class RoundRobinLoadBalancer implements LoadBalancer {
         schedule.scheduleAtFixedRate(this::scheduleTask, 0, delayTime, TimeUnit.SECONDS);
     }
 
+    public void close() {
+        schedule.shutdownNow();
+    }
+
     @Override
     public HostAddress getAddress() {
         // TODO: update the server connection num into load balancer
