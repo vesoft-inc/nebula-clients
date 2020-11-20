@@ -60,12 +60,12 @@ public class VertexProcessorTest extends TestCase {
 
         List<byte[]> columns = new ArrayList<>();
         columns.add("name".getBytes());
-        columns.add("boolProp".getBytes());
-        columns.add("intProp".getBytes());
-        columns.add("longProp".getBytes());
-        columns.add("doubleProp".getBytes());
-        columns.add("dateProp".getBytes());
-        columns.add("dataTimeProp".getBytes());
+        // columns.add("boolProp".getBytes());
+        // columns.add("intProp".getBytes());
+        // columns.add("longProp".getBytes());
+        // columns.add("doubleProp".getBytes());
+        // columns.add("dateProp".getBytes());
+        // columns.add("dataTimeProp".getBytes());
 
         List<Value> values = new ArrayList<>();
         // vid and tagId
