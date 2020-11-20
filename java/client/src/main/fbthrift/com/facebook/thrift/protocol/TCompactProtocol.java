@@ -24,6 +24,7 @@ import java.util.Map;
 import java.io.UnsupportedEncodingException;
 import com.facebook.thrift.ShortStack;
 import com.facebook.thrift.TException;
+import com.facebook.thrift.transport.TMemoryInputTransport;
 import com.facebook.thrift.transport.TTransport;
 
 /**

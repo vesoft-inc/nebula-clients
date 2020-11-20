@@ -7,14 +7,23 @@
 package com.vesoft.nebula;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Collections;
 import java.util.BitSet;
+import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.facebook.thrift.*;
+import com.facebook.thrift.async.*;
 import com.facebook.thrift.meta_data.*;
+import com.facebook.thrift.server.*;
+import com.facebook.thrift.transport.*;
 import com.facebook.thrift.protocol.*;
 
 @SuppressWarnings({ "unused", "serial" })
