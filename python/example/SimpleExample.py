@@ -11,7 +11,7 @@ import time
 
 sys.path.insert(0, '../')
 
-from nebula2.net import ConnectionPool
+from nebula2.gclient.net import ConnectionPool
 from nebula2.Config import Config
 from FormatResp import print_resp
 
@@ -19,14 +19,10 @@ if __name__ == '__main__':
     client = None
     try:
         config = Config()
-        config.timeout = 1000
-        config.idle_time = 5 * 60 * 1000
-        config.max_connection_pool_size = 4
-        config.max_retry_time = 3
+        config.max_connection_pool_size = 1
 
         addresses = list()
         addresses.append(('127.0.0.1', 3699))
-        addresses.append(('127.0.0.1', 3700))
         # init connection pool
         connection_pool = ConnectionPool()
         assert connection_pool.init(addresses, config)
@@ -43,10 +39,10 @@ if __name__ == '__main__':
 
         # insert vertex
         resp = client.execute('INSERT VERTEX person(name, age) VALUES "Bob":("Bob", 10)')
-        assert resp.error_code == 0
+        assert resp.is_succeeded(), resp.error_msg()
 
         resp = client.execute('FETCH PROP ON person "Bob"')
-        assert resp.error_code == 0
+        assert resp.is_succeeded(), resp.error_msg()
         print_resp(resp)
 
     except Exception as x:

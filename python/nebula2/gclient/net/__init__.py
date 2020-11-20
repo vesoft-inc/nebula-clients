@@ -31,7 +31,7 @@ from nebula2.Exception import (
     InValidHostname
 )
 
-from nebula2.data.ResultSet import ResultSet
+from nebula2.gclient.data.ResultSet import ResultSet
 
 
 class Session(object):
