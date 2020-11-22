@@ -9,29 +9,26 @@ package com.vesoft.nebula.client.graph.data;
 import com.vesoft.nebula.Tag;
 import com.vesoft.nebula.Value;
 import com.vesoft.nebula.Vertex;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Node {
-    private Map<String, List<String>> tagPropName = new HashMap<>();
-    private Map<String, List<Value>> tagPropValue = new HashMap<>();
+    private Vertex vertex;
     private String vid;
+    private String decodeType = "utf-8";
+    List<String> tagNames = new ArrayList<>();
 
-    public Node(Vertex vertex) {
+    public Node(Vertex vertex) throws UnsupportedEncodingException {
+        if (vertex == null) {
+            throw new RuntimeException("Input an null vertex object");
+        }
         vid = new String(vertex.vid);
+        this.vertex = vertex;
         for (Tag tag : vertex.tags) {
-            List<String> names = new ArrayList<>();
-            List<Value> values = new ArrayList<>();
-            for (byte[] key : tag.props.keySet()) {
-                names.add(new String(key));
-                values.add(tag.props.get(key));
-            }
-            tagPropName.put(new String(tag.name), names);
-            tagPropValue.put(new String(tag.name), values);
+            this.tagNames.add(new String(tag.name, decodeType));
         }
     }
 
@@ -39,37 +36,52 @@ public class Node {
         return vid;
     }
 
-    public List<String> tags() {
-        return tagPropName.keySet().stream().collect(Collectors.toList());
+    public List<String> labels() {
+        return tagNames;
     }
 
-    public boolean hasTag(String tagName) {
-        return tagPropName.containsKey(tagName);
+    public boolean hasLabel(String tagName) {
+        return tagNames.contains(tagName);
     }
 
-    public List<Value> propValues(String tagName) {
-        if (tagPropValue.containsKey(tagName)) {
-            return tagPropValue.get(tagName);
-        }
-        throw new IllegalArgumentException(tagName + " is not found");
-    }
-
-    public List<String> propNames(String tag) {
-        if (tagPropName.containsKey(tag)) {
-            return tagPropName.get(tag);
-        }
-        throw new IllegalArgumentException(tag + " is not found");
-    }
-
-    public Value getValue(String tag, String propName) {
-        if (!tagPropName.containsKey(tag)) {
-            throw new IllegalArgumentException(tag + " is not found");
-        }
-        int index = tagPropName.get(tag).indexOf(propName);
+    public List<ValueWrapper> values(String tagName) {
+        int index = tagNames.indexOf(tagName);
         if (index < 0) {
-            throw new IllegalArgumentException(propName + " is not found");
+            throw new IllegalArgumentException(tagName + " is not found");
         }
-        return tagPropValue.get(tag).get(index);
+        List<ValueWrapper> values = new ArrayList<>();
+        for (Value val : vertex.tags.get(index).props.values()) {
+            values.add(new ValueWrapper(val));
+        }
+        return values;
+    }
+
+    public List<String> keys(String tagName) throws UnsupportedEncodingException {
+        int index = tagNames.indexOf(tagName);
+        if (index < 0) {
+            throw new IllegalArgumentException(tagName + " is not found");
+        }
+
+        List<String> keys = new ArrayList<>();
+        for (byte[] name : vertex.tags.get(index).props.keySet()) {
+            keys.add(new String(name, decodeType));
+        }
+        return keys;
+    }
+
+    public HashMap<String, ValueWrapper> properties(String tagName)
+        throws UnsupportedEncodingException {
+        int index = tagNames.indexOf(tagName);
+        if (index < 0) {
+            throw new IllegalArgumentException(tagName + " is not found");
+        }
+
+        HashMap<String, ValueWrapper> properties = new HashMap();
+        for (byte[] name : vertex.tags.get(index).props.keySet()) {
+            properties.put(new String(name, decodeType),
+                new ValueWrapper(vertex.tags.get(index).props.get(name)));
+        }
+        return properties;
     }
 
     @Override
@@ -86,15 +98,14 @@ public class Node {
 
     @Override
     public int hashCode() {
-        return Objects.hash(tagPropName, tagPropValue, vid);
+        return Objects.hash(vertex, vid, decodeType, tagNames);
     }
 
     @Override
     public String toString() {
-        return this.getClass().toString()
-                + "{, }tagPropName=" + tagPropName
-                + ", tagPropValue=" + tagPropValue
-                + ", vid='" + vid + '\''
-                + '}';
+        return "Node{"
+            + "vertex=" + vertex
+            + ", decodeType='" + decodeType
+            + '}';
     }
 }

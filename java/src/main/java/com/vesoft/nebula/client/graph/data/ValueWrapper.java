@@ -6,9 +6,17 @@
 
 package com.vesoft.nebula.client.graph.data;
 
-import com.vesoft.nebula.Path;
+import com.vesoft.nebula.Date;
+import com.vesoft.nebula.DateTime;
+import com.vesoft.nebula.Time;
 import com.vesoft.nebula.Value;
 import com.vesoft.nebula.client.graph.exception.InvalidValueException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
 
 public class ValueWrapper {
     public static class NullType {
@@ -31,19 +39,8 @@ public class ValueWrapper {
         }
     }
 
-    private Value value;
-
-    public ValueWrapper(Value value) {
-        this.value = value;
-    }
-
-    public Value getValue() {
-        return value;
-    }
-
-    public int getType() {
-        return value.getSetField();
-    }
+    private final Value value;
+    private final String decodeType = "utf-8";
 
     private String descType() {
         switch (value.getSetField()) {
@@ -82,25 +79,92 @@ public class ValueWrapper {
         }
     }
 
-    public NullType asNull() throws RuntimeException {
+    public ValueWrapper(Value value) {
+        this.value = value;
+    }
+
+    public Value getValue() {
+        return value;
+    }
+
+    public boolean isEmpty() {
+        return value.getSetField() == 0;
+    }
+
+    public boolean isNull() {
+        return value.getSetField() == Value.NVAL;
+    }
+
+    public boolean isBoolean() {
+        return value.getSetField() == Value.BVAL;
+    }
+
+    public boolean isLong() {
+        return value.getSetField() == Value.IVAL;
+    }
+
+    public boolean isDouble() {
+        return value.getSetField() == Value.FVAL;
+    }
+
+    public boolean isString() {
+        return value.getSetField() == Value.SVAL;
+    }
+
+    public boolean isList() {
+        return value.getSetField() == Value.LVAL;
+    }
+
+    public boolean isSet() {
+        return value.getSetField() == Value.UVAL;
+    }
+
+    public boolean isMap() {
+        return value.getSetField() == Value.MVAL;
+    }
+
+    public boolean isTime() {
+        return value.getSetField() == Value.TVAL;
+    }
+
+    public boolean isDate() {
+        return value.getSetField() == Value.DVAL;
+    }
+
+    public boolean isDateTime() {
+        return value.getSetField() == Value.DTVAL;
+    }
+
+    public boolean isVertex() {
+        return value.getSetField() == Value.VVAL;
+    }
+
+    public boolean isEdge() {
+        return value.getSetField() == Value.EVAL;
+    }
+
+    public boolean isPath() {
+        return value.getSetField() == Value.PVAL;
+    }
+
+    public NullType asNull() throws InvalidValueException {
         if (value.getSetField() == Value.NVAL) {
-            return (NullType)(value.getFieldValue());
+            return new NullType((int)value.getFieldValue());
         } else {
             throw new InvalidValueException(
                     "Cannot get field nullType because value's type is " + descType());
         }
     }
 
-    public int asInt() throws RuntimeException {
-        if (value.getSetField() == Value.IVAL) {
-            return (int)(value.getFieldValue());
-        } else {
-            throw new InvalidValueException(
-                    "Cannot get field long because value's type is " + descType());
+    public boolean asBoolean() throws InvalidValueException {
+        if (value.getSetField() == Value.BVAL) {
+            return (boolean)(value.getFieldValue());
         }
+        throw new InvalidValueException(
+            "Cannot get field boolean because value's type is " + descType());
     }
 
-    public long asLong() throws RuntimeException {
+    public long asLong() throws InvalidValueException {
         if (value.getSetField() == Value.IVAL) {
             return (long)(value.getFieldValue());
         } else {
@@ -109,39 +173,85 @@ public class ValueWrapper {
         }
     }
 
-    public boolean asBoolean() throws RuntimeException {
-        if (value.getSetField() == Value.BVAL) {
-            return (boolean)(value.getFieldValue());
-        }
-        throw new InvalidValueException(
-                "Cannot get field boolean because value's type is " + descType());
-    }
-
-    public String asString() throws RuntimeException {
+    public String asString() throws InvalidValueException, UnsupportedEncodingException {
         if (value.getSetField() == Value.SVAL) {
-            return new String((byte[])value.getFieldValue());
+            return new String((byte[])value.getFieldValue(), decodeType);
         }
         throw new InvalidValueException(
                 "Cannot get field string because value's type is " + descType());
     }
 
-    public double asDouble() throws RuntimeException {
-        if (value.getSetField() == Value.SVAL) {
+    public double asDouble() throws InvalidValueException {
+        if (value.getSetField() == Value.FVAL) {
             return (double)value.getFieldValue();
         }
         throw new InvalidValueException(
                 "Cannot get field double because value's type is " + descType());
     }
 
-    public float asFloat() throws RuntimeException {
-        if (value.getSetField() == Value.FVAL) {
-            return (float)value.getFieldValue();
+    public ArrayList<ValueWrapper> asList() throws InvalidValueException {
+        if (value.getSetField() != Value.LVAL) {
+            throw new InvalidValueException(
+                "Cannot get field type `list' because value's type is " + descType());
         }
-        throw new InvalidValueException(
-                "Cannot get field float because value's type is " + descType());
+        ArrayList<ValueWrapper> values = new ArrayList<>();
+        for (Value value : (ArrayList<Value>)(value.getFieldValue())) {
+            values.add(new ValueWrapper(value));
+        }
+        return values;
     }
 
-    public Node asNode() throws InvalidValueException {
+    public HashSet<ValueWrapper> asSet() throws InvalidValueException {
+        if (value.getSetField() != Value.UVAL) {
+            throw new InvalidValueException(
+                "Cannot get field type `set' because value's type is " + descType());
+        }
+        HashSet<ValueWrapper> values = new HashSet<>();
+        for (Value value : ((HashSet<Value>)(value.getFieldValue()))) {
+            values.add(new ValueWrapper(value));
+        }
+        return values;
+    }
+
+    public HashMap<String, ValueWrapper> asMap()
+        throws InvalidValueException, UnsupportedEncodingException {
+        if (value.getSetField() != Value.MVAL) {
+            throw new InvalidValueException(
+                "Cannot get field type `set' because value's type is " + descType());
+        }
+        HashMap<String, ValueWrapper> kvs = new HashMap<>();
+        Map<Object, Value> inValues = value.getMVal();
+        for (Object key : inValues.keySet()) {
+            kvs.put((String)key, new ValueWrapper(inValues.get(key)));
+        }
+        return kvs;
+    }
+
+    public Time asTime() throws InvalidValueException {
+        if (value.getSetField() == Value.TVAL) {
+            return (Time)value.getFieldValue();
+        }
+        throw new InvalidValueException(
+            "Cannot get field time because value's type is " + descType());
+    }
+
+    public Date asDate() throws InvalidValueException {
+        if (value.getSetField() == Value.DVAL) {
+            return (Date)value.getFieldValue();
+        }
+        throw new InvalidValueException(
+            "Cannot get field date because value's type is " + descType());
+    }
+
+    public DateTime asDateTime() throws InvalidValueException {
+        if (value.getSetField() == Value.DTVAL) {
+            return (DateTime) value.getFieldValue();
+        }
+        throw new InvalidValueException(
+            "Cannot get field datetime because value's type is " + descType());
+    }
+
+    public Node asNode() throws InvalidValueException, UnsupportedEncodingException  {
         if (value.getSetField() == Value.VVAL) {
             return new Node(value.getVVal());
         }
@@ -149,7 +259,7 @@ public class ValueWrapper {
                 "Cannot get field Node because value's type is " + descType());
     }
 
-    public Relationship asRelationShip() {
+    public Relationship asRelationship() {
         if (value.getSetField() == Value.EVAL) {
             return new Relationship(value.getEVal());
         }
@@ -157,11 +267,29 @@ public class ValueWrapper {
                 "Cannot get field Relationship because value's type is " + descType());
     }
 
-    public PathWrapper asPath() throws InvalidValueException {
+    public PathWrapper asPath() throws InvalidValueException, UnsupportedEncodingException {
         if (value.getSetField() == Value.PVAL) {
             return new PathWrapper(value.getPVal());
         }
         throw new InvalidValueException(
                 "Cannot get field PathWrapper because value's type is " + descType());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ValueWrapper that = (ValueWrapper) o;
+        return Objects.equals(value, that.value)
+            && Objects.equals(decodeType, that.decodeType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value, decodeType);
     }
 }

@@ -10,6 +10,7 @@ import com.vesoft.nebula.Edge;
 import com.vesoft.nebula.Path;
 import com.vesoft.nebula.Step;
 import com.vesoft.nebula.client.graph.exception.InvalidValueException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -108,7 +109,7 @@ public class PathWrapper implements Iterable<PathWrapper.Segment> {
         return segments;
     }
 
-    public PathWrapper(Path path) throws InvalidValueException {
+    public PathWrapper(Path path) throws InvalidValueException, UnsupportedEncodingException {
         if (path == null) {
             this.nodes = new ArrayList<>();
             this.relationships = new ArrayList<>();
@@ -116,22 +117,31 @@ public class PathWrapper implements Iterable<PathWrapper.Segment> {
             return;
         }
         nodes.add(new Node(path.src));
+        List<byte[]> vids = new ArrayList<>();
+        vids.add(path.src.vid);
+        byte[] srcId;
+        byte[] dstId;
         for (Step step : path.steps) {
-            Node startNode = null;
-            Node endNode = null;
+            Node startNode;
+            Node endNode;
             int type = step.type;
             if (step.type > 0) {
                 startNode = nodes.get(nodes.size() - 1);
                 endNode = new Node(step.dst);
                 nodes.add(endNode);
+                srcId = vids.get(vids.size() - 1);
+                dstId = step.dst.vid;
             } else {
                 type = -type;
                 startNode = new Node(step.dst);
                 endNode = nodes.get(nodes.size() - 1);
                 nodes.add(startNode);
+                dstId = vids.get(vids.size() - 1);
+                srcId = step.dst.vid;
             }
-            Edge edge = new Edge(startNode.getId().getBytes(),
-                                 endNode.getId().getBytes(),
+            vids.add(step.dst.vid);
+            Edge edge = new Edge(srcId,
+                                 dstId,
                                  type, step.name,
                                  step.ranking,
                                  step.props);
@@ -154,10 +164,7 @@ public class PathWrapper implements Iterable<PathWrapper.Segment> {
 
     public boolean containNode(Node node) {
         int index = nodes.indexOf(node);
-        if (index < 0) {
-            return false;
-        }
-        return true;
+        return index >= 0;
     }
 
     @Override
@@ -177,10 +184,7 @@ public class PathWrapper implements Iterable<PathWrapper.Segment> {
 
     public boolean containRelationShip(Relationship relationShip) {
         int index = relationships.indexOf(relationShip);
-        if (index < 0) {
-            return false;
-        }
-        return true;
+        return index >= 0;
     }
 
     @Override
