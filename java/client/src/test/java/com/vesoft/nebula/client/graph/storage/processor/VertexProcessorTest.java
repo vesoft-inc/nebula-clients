@@ -60,12 +60,12 @@ public class VertexProcessorTest extends TestCase {
 
         List<byte[]> columns = new ArrayList<>();
         columns.add("name".getBytes());
-        // columns.add("boolProp".getBytes());
-        // columns.add("intProp".getBytes());
-        // columns.add("longProp".getBytes());
-        // columns.add("doubleProp".getBytes());
-        // columns.add("dateProp".getBytes());
-        // columns.add("dataTimeProp".getBytes());
+        columns.add("boolProp".getBytes());
+        columns.add("intProp".getBytes());
+        columns.add("longProp".getBytes());
+        columns.add("doubleProp".getBytes());
+        columns.add("dateProp".getBytes());
+        columns.add("dataTimeProp".getBytes());
 
         List<Value> values = new ArrayList<>();
         // vid and tagId
@@ -73,19 +73,19 @@ public class VertexProcessorTest extends TestCase {
         values.add(Value.iVal(tagId));
         // prop values
         values.add(Value.sVal("Jena".getBytes()));
-        //values.add(Value.bVal(true));
-        //values.add(Value.nVal(1));
-        //values.add(Value.iVal(2L));
-        //values.add(Value.fVal(1.0));
+        values.add(Value.bVal(true));
+        values.add(Value.nVal(1));
+        values.add(Value.iVal(2L));
+        values.add(Value.fVal(1.0));
         short year = 2020;
         byte month = 11;
         byte day = 16;
-        //values.add(Value.dVal(new Date(year, month, day)));
+        values.add(Value.dVal(new Date(year, month, day)));
         byte hour = 12;
         byte minute = 30;
         byte sec = 30;
         int microsec = 5;
-        //values.add(Value.dtVal(new DateTime(year, month, day, hour, minute, sec, microsec)));
+        values.add(Value.dtVal(new DateTime(year, month, day, hour, minute, sec, microsec)));
 
         Row row = new Row(values);
         List<Row> rows = new ArrayList<>();
@@ -109,8 +109,14 @@ public class VertexProcessorTest extends TestCase {
     private TagItem mockTagItem() {
         Schema schema = new Schema(
                 Arrays.asList(
-                        new ColumnDef("name".getBytes(),
-                                new ColumnTypeDef(6))), new SchemaProp());
+                        new ColumnDef("name".getBytes(), new ColumnTypeDef(6)),
+                        new ColumnDef("boolProp".getBytes(), new ColumnTypeDef(1)),
+                        new ColumnDef("intProp".getBytes(), new ColumnTypeDef(10)),
+                        new ColumnDef("longProp".getBytes(), new ColumnTypeDef(2)),
+                        new ColumnDef("doubleProp".getBytes(), new ColumnTypeDef(5)),
+                        new ColumnDef("dateProp".getBytes(), new ColumnTypeDef(24)),
+                        new ColumnDef("dataTimeProp".getBytes(), new ColumnTypeDef(25))
+                ), new SchemaProp());
         TagItem tagItem = new TagItem((int) tagId, tagName.getBytes(), 1L, schema);
         return tagItem;
     }

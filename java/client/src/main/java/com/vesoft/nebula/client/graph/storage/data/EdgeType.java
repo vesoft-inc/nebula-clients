@@ -6,24 +6,19 @@
 
 package com.vesoft.nebula.client.graph.storage.data;
 
+import com.vesoft.nebula.Value;
 import java.util.Map;
 
 public class EdgeType extends Label {
-    private final long rank;
 
-    public EdgeType(String name, long rank, Map<String, Object> prop) {
+    public EdgeType(String name, Map<String, Value> prop) {
         super(name, prop);
-        this.rank = rank;
     }
 
-    public long getRank() {
-        return rank;
-    }
 
     @Override
     public String toString() {
         return "EdgeType{"
-                + "rank=" + rank + ","
                 + super.toString();
     }
 }

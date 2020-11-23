@@ -22,6 +22,7 @@ public class StorageConnPool {
 
     private GenericKeyedObjectPool<HostAndPort, StorageConnection> keyedPool;
     private final StorageConnPoolFactory poolFactory;
+    private final List<HostAndPort> metaAddresses;
     private MetaClient metaClient;
 
     public StorageConnPool(NebulaPoolConfig config, List<HostAndPort> metaAddresses)
@@ -36,6 +37,7 @@ public class StorageConnPool {
         poolConfig.setMaxTotal(config.getMaxTotal());
         poolConfig.setMaxTotalPerKey(config.getMaxTotalPerKey());
 
+        this.metaAddresses = metaAddresses;
         keyedPool = new GenericKeyedObjectPool<>(poolFactory);
         keyedPool.setConfig(poolConfig);
         metaClient = new MetaClient(metaAddresses);
@@ -46,9 +48,17 @@ public class StorageConnPool {
         keyedPool.close();
     }
 
+    public StorageClient getStorageClient() throws Exception {
+        return getStorageClient(metaAddresses.get(0));
+    }
+
     public StorageClient getStorageClient(HostAndPort address) throws Exception {
         StorageConnection connection = keyedPool.borrowObject(address);
         return new StorageClient(this, connection, metaClient);
+    }
+
+    public GeneralStorageClient getGeneralStorageClient() throws Exception {
+        return getGeneralStorageClient(metaAddresses.get(0));
     }
 
     public GeneralStorageClient getGeneralStorageClient(HostAndPort address) throws Exception {

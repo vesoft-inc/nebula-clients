@@ -7,22 +7,28 @@
 package com.vesoft.nebula.client.graph.storage.data;
 
 public class Edge {
-    private final String srcId;
-    private final String dstId;
+    private final byte[] srcId;
+    private final byte[] dstId;
+    private final long rank;
     private final EdgeType edgeType;
 
-    public Edge(String srcId, String dstId, EdgeType edgeType) {
+    public Edge(byte[] srcId, byte[] dstId, long rank, EdgeType edgeType) {
         this.srcId = srcId;
         this.dstId = dstId;
+        this.rank = rank;
         this.edgeType = edgeType;
     }
 
     public String getSrcId() {
-        return srcId;
+        return new String(srcId);
     }
 
     public String getDstId() {
-        return dstId;
+        return new String(dstId);
+    }
+
+    public long getRank() {
+        return rank;
     }
 
     public EdgeType getEdgeType() {
@@ -32,8 +38,9 @@ public class Edge {
     @Override
     public String toString() {
         return "Edge{"
-                + "srcId='" + srcId + '\''
-                + ", dstId='" + dstId + '\''
+                + "srcId='" + new String(srcId) + '\''
+                + ", dstId='" + new String(dstId) + '\''
+                + ", rank=" + rank
                 + ", edgeType=" + edgeType
                 + '}';
     }

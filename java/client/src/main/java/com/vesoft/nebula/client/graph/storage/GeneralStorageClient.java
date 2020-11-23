@@ -35,6 +35,10 @@ import org.apache.commons.codec.digest.MurmurHash2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * storage client for operater put/get/remove
+ * not support for nebula v2.0.0 yet
+ */
 public class GeneralStorageClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(GeneralStorageClient.class);
 

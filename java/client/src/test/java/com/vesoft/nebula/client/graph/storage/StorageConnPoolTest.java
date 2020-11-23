@@ -71,7 +71,5 @@ public class StorageConnPoolTest extends TestCase {
             e.printStackTrace();
             assertFalse(true);
         }
-
-
     }
 }

@@ -17,7 +17,7 @@ public class Vertex {
         this.tags = tags;
     }
 
-    public Object getVid() {
+    public String getVid() {
         return vid;
     }
 

@@ -54,11 +54,9 @@ public class VertexProcessor {
                 String vid = new String(values.get(0).getSVal());
                 long tagId = values.get(1).getIVal();
                 List<String> names = colNames.get(tagId);
-                Map<String, Object> props = Maps.newHashMap();
+                Map<String, Value> props = Maps.newHashMap();
                 for (int i = 0; i < (values.size() - 2); i++) {
-                    props.put(
-                            names.get(i),
-                            getField(values.get(i + 2).getFieldValue()));
+                    props.put(names.get(i), values.get(i + 2));
                 }
                 Tag tag = new Tag(getTagName(spaceName, tagId), props);
                 if (vertexTags.containsKey(vid)) {
@@ -100,7 +98,6 @@ public class VertexProcessor {
             }
         }
         return new ScanVertexResult(vertices, vidVertices, labelVertices);
-
     }
 
 

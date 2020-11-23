@@ -6,13 +6,14 @@
 
 package com.vesoft.nebula.client.graph.storage.data;
 
+import com.vesoft.nebula.Value;
 import java.util.Map;
 
 public class Label {
     private String name;
-    private Map<String, Object> props;
+    private Map<String, Value> props;
 
-    public Label(String name, Map<String, Object> props) {
+    public Label(String name, Map<String, Value> props) {
         this.name = name;
         this.props = props;
     }
@@ -25,18 +26,18 @@ public class Label {
         this.name = name;
     }
 
-    public Map<String, Object> getProps() {
+    public Map<String, Value> getProps() {
         return props;
     }
 
-    public void setProps(Map<String, Object> props) {
+    public void setProps(Map<String, Value> props) {
         this.props = props;
     }
 
     @Override
     public String toString() {
         return ""
-                + "name='" + name + '\''
+                + "name='" + new String(name) + '\''
                 + ", props=" + props
                 + '}';
     }

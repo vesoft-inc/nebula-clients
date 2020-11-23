@@ -39,7 +39,7 @@ public class StorageClientTest {
         HostAndPort addr = HostAndPort.fromParts(ip, 45500);
         StorageClient client = null;
         try {
-            client = pool.getStorageClient(addr);
+            client = pool.getStorageClient();
         } catch (Exception e) {
             e.printStackTrace();
         }

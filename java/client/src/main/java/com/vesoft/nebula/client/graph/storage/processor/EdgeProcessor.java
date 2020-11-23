@@ -47,23 +47,21 @@ public class EdgeProcessor {
         Map<Long, List<String>> colNames = getColNames(returnCols);
         for (Row row : rows) {
             List<Value> values = row.getValues();
-            if (values.size() < 2) {
+            if (values.size() < 4) {
                 LOGGER.error("values size error for row: " + row.toString());
             } else {
-                String srcId = new String(values.get(0).getSVal());
+                byte[] srcId = values.get(0).getSVal();
                 long edgeId = values.get(1).getIVal();
                 long rank = values.get(2).getIVal();
-                String dstId = new String(values.get(3).getSVal());
+                byte[] dstId = values.get(3).getSVal();
                 List<String> names = colNames.get(edgeId);
-                Map<String, Object> props = Maps.newHashMap();
+                Map<String, Value> props = Maps.newHashMap();
                 for (int i = 0; i < (values.size() - 4); i++) {
-                    props.put(
-                            names.get(i),
-                            getField(values.get(i + 4).getFieldValue()));
+                    props.put(names.get(i), values.get(i + 4));
                 }
                 String edgeName = getEdgeName(spaceName, edgeId);
-                EdgeType edgeType = new EdgeType(edgeName, rank, props);
-                Edge edge = new Edge(srcId, dstId, edgeType);
+                EdgeType edgeType = new EdgeType(edgeName, props);
+                Edge edge = new Edge(srcId, dstId, rank, edgeType);
                 edges.add(edge);
                 if (!labelEdges.containsKey(edgeName)) {
                     labelEdges.put(edgeName, new ArrayList<>());
@@ -71,7 +69,6 @@ public class EdgeProcessor {
                 labelEdges.get(edgeName).add(edge);
             }
         }
-
         return new ScanEdgeResult(edges, labelEdges);
     }
 
