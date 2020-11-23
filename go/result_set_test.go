@@ -16,6 +16,20 @@ import (
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 )
 
+func TestIsEmpty(t *testing.T) {
+	value := nebula.Value{}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsEmpty())
+}
+
+func TestAsNull(t *testing.T) {
+	null := nebula.NullType___NULL__
+	value := nebula.Value{NVal: &null}
+	valWrap := ValueWrapper{&value}
+	res, _ := valWrap.AsNull()
+	assert.Equal(t, value.GetNVal(), res)
+}
+
 func TestAsBool(t *testing.T) {
 	bval := new(bool)
 	*bval = true
@@ -215,6 +229,10 @@ func TestPathWrapper(t *testing.T) {
 		assert.Equal(t, srcList[i], segList[i].startNode.GetID())
 		assert.Equal(t, dstList[i], segList[i].endNode.GetID())
 	}
+	startNode, _ := pathWrapper.GetStartNode()
+	endNode, _ := pathWrapper.GetEndNode()
+	assert.Equal(t, "Tom", startNode.GetID())
+	assert.Equal(t, "vertex4", endNode.GetID())
 }
 
 func TestResultSet(t *testing.T) {
@@ -246,9 +264,9 @@ func TestResultSet(t *testing.T) {
 	}
 	temp, err := record.GetValueByIndex(0)
 	_, err = temp.AsNode()
-	assert.EqualError(t, err, "Failed to convert value to Node, value is not an vertex")
+	assert.EqualError(t, err, "Failed to convert value int to Node, value is not an vertex")
 	temp, err = record.GetValueByColName("col2")
-	assert.EqualError(t, err, "Column name does not exist")
+	assert.EqualError(t, err, "Failed to get values, given column name 'col2' does not exist")
 	val, _ := record.GetValueByColName("col2_vertex")
 	node, _ := val.AsNode()
 	assert.Equal(t, "Tom", node.GetID())

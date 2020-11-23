@@ -14,19 +14,21 @@ import (
 )
 
 type ResultSet struct {
-	resp        *graph.ExecutionResponse
-	columnNames []string
+	resp            *graph.ExecutionResponse
+	columnNames     []string
+	colNameIndexMap map[string]int
 }
 
 type Record struct {
-	columnNames *[]string
-	_record     []*ValueWrapper
+	columnNames     *[]string
+	_record         []*ValueWrapper
+	colNameIndexMap *map[string]int
 }
 
 type Node struct {
-	vertex       *nebula.Vertex
-	tags         []string // tag name
-	nameIndexMap map[string]int
+	vertex          *nebula.Vertex
+	tags            []string // tag name
+	tagNameIndexMap map[string]int
 }
 
 type Relationship struct {
@@ -55,6 +57,8 @@ type genericFunctions interface {
 
 func genResultSet(resp graph.ExecutionResponse) (*ResultSet, error) {
 	var colNames []string
+	var colNameIndexMap = make(map[string]int)
+
 	if resp.Data == nil {
 		return nil, fmt.Errorf("Failed to create result set, the dataset is empty")
 	}
@@ -64,22 +68,27 @@ func genResultSet(resp graph.ExecutionResponse) (*ResultSet, error) {
 	if resp.Data.Rows == nil {
 		return nil, fmt.Errorf("Failed to create result set, rows in dataset is empty")
 	}
-	for _, name := range resp.Data.ColumnNames {
+	for i, name := range resp.Data.ColumnNames {
 		colNames = append(colNames, string(name))
+		colNameIndexMap[string(name)] = i
 	}
 
 	return &ResultSet{
-		resp:        &resp,
-		columnNames: colNames,
+		resp:            &resp,
+		columnNames:     colNames,
+		colNameIndexMap: colNameIndexMap,
 	}, nil
 }
 
 func genValWarps(row *nebula.Row) ([]*ValueWrapper, error) {
 	if row == nil {
-		return nil, fmt.Errorf("Failed to generate Record: invalid row")
+		return nil, fmt.Errorf("Failed to generate valueWrapper: invalid row")
 	}
 	var valWraps []*ValueWrapper
 	for _, val := range row.Values {
+		if val == nil {
+			return nil, fmt.Errorf("Failed to generate valueWrapper: value is nil")
+		}
 		valWraps = append(valWraps, &ValueWrapper{val})
 	}
 	return valWraps, nil
@@ -101,9 +110,9 @@ func genNode(vertex *nebula.Vertex) (*Node, error) {
 	}
 
 	return &Node{
-		vertex:       vertex,
-		tags:         tags,
-		nameIndexMap: nameIndex,
+		vertex:          vertex,
+		tags:            tags,
+		tagNameIndexMap: nameIndex,
 	}, nil
 }
 
@@ -182,11 +191,11 @@ func genPathWrapper(path *nebula.Path) (*PathWrapper, error) {
 
 // Returns all values in the given column
 func (res ResultSet) GetValuesByColName(colName string) ([]*ValueWrapper, error) {
-	// Get index
-	index, err := res.getIndexbyColName(colName)
-	if err != nil {
-		return nil, err
+	if !res.hasColName(colName) {
+		return nil, fmt.Errorf("Failed to get values, given column name '%s' does not exist", colName)
 	}
+	// Get index
+	index := res.colNameIndexMap[colName]
 	var valList []*ValueWrapper
 	for _, row := range res.resp.Data.Rows {
 		valList = append(valList, &ValueWrapper{row.Values[index]})
@@ -204,18 +213,10 @@ func (res ResultSet) GetRowValuesByIndex(index int) (*Record, error) {
 		return nil, err
 	}
 	return &Record{
-		columnNames: &res.columnNames,
-		_record:     valWrap,
+		columnNames:     &res.columnNames,
+		_record:         valWrap,
+		colNameIndexMap: &res.colNameIndexMap,
 	}, nil
-}
-
-func (res ResultSet) getIndexbyColName(colName string) (int, error) {
-	for i, name := range res.columnNames {
-		if colName == name {
-			return i, nil
-		}
-	}
-	return -1, fmt.Errorf("Column name does not exist")
 }
 
 // Returns all rows
@@ -239,6 +240,13 @@ func (res ResultSet) IsSucceed() bool {
 	return res.GetErrorCode() == graph.ErrorCode_SUCCEEDED
 }
 
+func (res ResultSet) hasColName(colName string) bool {
+	if _, ok := res.colNameIndexMap[colName]; ok {
+		return true
+	}
+	return false
+}
+
 // Returns value in the record at given column index
 func (record Record) GetValueByIndex(index int) (*ValueWrapper, error) {
 	if err := checkIndex(index, record._record); err != nil {
@@ -249,23 +257,19 @@ func (record Record) GetValueByIndex(index int) (*ValueWrapper, error) {
 
 // Returns value in the record at given column name
 func (record Record) GetValueByColName(colName string) (*ValueWrapper, error) {
-	// Get index
-	index, err := record.getIndexbyColName(colName)
-	if err != nil {
-		return nil, err
+	if !record.hasColName(colName) {
+		return nil, fmt.Errorf("Failed to get values, given column name '%s' does not exist", colName)
 	}
+	// Get index
+	index := (*record.colNameIndexMap)[colName]
 	return record._record[index], nil
 }
 
-func (record Record) getIndexbyColName(colName string) (int, error) {
-	index := 0
-	for _, name := range *record.columnNames {
-		if colName == name {
-			return index, nil
-		}
-		index++
+func (record Record) hasColName(colName string) bool {
+	if _, ok := (*record.colNameIndexMap)[colName]; ok {
+		return true
 	}
-	return -1, fmt.Errorf("Column name does not exist")
+	return false
 }
 
 // Returns a list of tags of node
@@ -280,7 +284,7 @@ func (node Node) GetTags() []string {
 
 // Check if node contains given label
 func (node Node) HasTag(label string) bool {
-	if _, ok := node.nameIndexMap[label]; ok {
+	if _, ok := node.tagNameIndexMap[label]; ok {
 		return true
 	}
 	return false
@@ -289,22 +293,13 @@ func (node Node) HasTag(label string) bool {
 // Returns all properties of a tag
 func (node Node) Properties(tagName string) (map[string]*ValueWrapper, error) {
 	kvMap := make(map[string]*ValueWrapper)
-	var (
-		keyList   []string
-		valueList []*ValueWrapper
-	)
 	// Check if label exists
 	if !node.HasTag(tagName) {
 		return nil, fmt.Errorf("Failed to get properties: Tag name %s does not exsist in the Node", tagName)
 	}
-	index := node.nameIndexMap[tagName]
+	index := node.tagNameIndexMap[tagName]
 	for k, v := range node.vertex.Tags[index].Props {
-		keyList = append(keyList, k)
-		valueList = append(valueList, &ValueWrapper{v})
-	}
-
-	for i := 0; i < len(keyList); i++ {
-		kvMap[keyList[i]] = valueList[i]
+		kvMap[k] = &ValueWrapper{v}
 	}
 	return kvMap, nil
 }
@@ -315,7 +310,7 @@ func (node Node) Keys(tagName string) ([]string, error) {
 		return nil, fmt.Errorf("Failed to get properties: Tag name %s does not exsist in the Node", tagName)
 	}
 	var propNameList []string
-	index := node.nameIndexMap[tagName]
+	index := node.tagNameIndexMap[tagName]
 	for k, _ := range node.vertex.Tags[index].Props {
 		propNameList = append(propNameList, k)
 	}
@@ -328,7 +323,7 @@ func (node Node) Values(tagName string) ([]*ValueWrapper, error) {
 		return nil, fmt.Errorf("Failed to get properties: Tag name %s does not exsist in the Node", tagName)
 	}
 	var propValList []*ValueWrapper
-	index := node.nameIndexMap[tagName]
+	index := node.tagNameIndexMap[tagName]
 	for _, v := range node.vertex.Tags[index].Props {
 		propValList = append(propValList, &ValueWrapper{v})
 	}
@@ -442,12 +437,18 @@ func (path *PathWrapper) ContainsRelationship(relationship *Relationship) bool {
 	return false
 }
 
-func (path *PathWrapper) GetStartNode() *Node {
-	return path.segments[0].startNode
+func (path *PathWrapper) GetStartNode() (*Node, error) {
+	if len(path.segments) == 0 {
+		return nil, fmt.Errorf("Failed to get start node, no node in the path")
+	}
+	return path.segments[0].startNode, nil
 }
 
-func (path *PathWrapper) GetEndNode() *Node {
-	return path.segments[len(path.segments)].endNode
+func (path *PathWrapper) GetEndNode() (*Node, error) {
+	if len(path.segments) == 0 {
+		return nil, fmt.Errorf("Failed to get start node, no node in the path")
+	}
+	return path.segments[len(path.segments)-1].endNode, nil
 }
 
 func (p1 *PathWrapper) IsEqualTo(p2 *PathWrapper) bool {

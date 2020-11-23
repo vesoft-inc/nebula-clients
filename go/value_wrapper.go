@@ -16,136 +16,99 @@ type ValueWrapper struct {
 	value *nebula.Value
 }
 
+func (valueWrapper ValueWrapper) IsEmpty() bool {
+	return valueWrapper.GetType() == "empty"
+}
+
 func (valueWrapper ValueWrapper) IsNull() bool {
-	if valueWrapper.value.IsSetNVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetNVal()
 }
 
 func (valueWrapper ValueWrapper) IsBool() bool {
-	if valueWrapper.value.IsSetBVal() {
-		return true
-	}
-	return false
-}
-func (valueWrapper ValueWrapper) IsEmpty() bool {
-	if valueWrapper.value == nil {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetBVal()
 }
 
 func (valueWrapper ValueWrapper) IsInt() bool {
-	if valueWrapper.value.IsSetIVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetIVal()
 }
 
 func (valueWrapper ValueWrapper) IsFloat() bool {
-	if valueWrapper.value.IsSetFVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetFVal()
 }
 
 func (valueWrapper ValueWrapper) IsString() bool {
-	if valueWrapper.value.IsSetSVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetSVal()
 }
 
 func (valueWrapper ValueWrapper) IsTime() bool {
-	if valueWrapper.value.IsSetTVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetTVal()
 }
 
 func (valueWrapper ValueWrapper) IsDate() bool {
-	if valueWrapper.value.IsSetDVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetDVal()
 }
 
 func (valueWrapper ValueWrapper) IsDateTime() bool {
-	if valueWrapper.value.IsSetDtVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetDtVal()
 }
 
 func (valueWrapper ValueWrapper) IsList() bool {
-	if valueWrapper.value.IsSetLVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetLVal()
 }
 
 func (valueWrapper ValueWrapper) IsSet() bool {
-	if valueWrapper.value.IsSetSVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetSVal()
 }
 
 func (valueWrapper ValueWrapper) IsMap() bool {
-	if valueWrapper.value.IsSetMVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetMVal()
 }
 
 func (valueWrapper ValueWrapper) IsVertex() bool {
-	if valueWrapper.value.IsSetVVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetVVal()
 }
 
 func (valueWrapper ValueWrapper) IsEdge() bool {
-	if valueWrapper.value.IsSetEVal() {
-		return true
-	}
-	return false
+	return valueWrapper.value.IsSetEVal()
 }
 
 func (valueWrapper ValueWrapper) IsPath() bool {
-	if valueWrapper.value.IsSetPVal() {
-		return true
+	return valueWrapper.value.IsSetPVal()
+}
+
+func (valueWrapper ValueWrapper) AsNull() (nebula.NullType, error) {
+	if valueWrapper.value.IsSetNVal() {
+		return valueWrapper.value.GetNVal(), nil
 	}
-	return false
+	return -1, fmt.Errorf("Failed to convert value %s to Null", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsBool() (bool, error) {
 	if valueWrapper.value.IsSetBVal() {
 		return valueWrapper.value.GetBVal(), nil
 	}
-	return false, fmt.Errorf("Failed to convert value to bool")
+	return false, fmt.Errorf("Failed to convert value %s to bool", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsInt() (int64, error) {
 	if valueWrapper.value.IsSetIVal() {
 		return valueWrapper.value.GetIVal(), nil
 	}
-	return -1, fmt.Errorf("Failed to convert value to int")
+	return -1, fmt.Errorf("Failed to convert value %s to int", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsFloat() (float64, error) {
 	if valueWrapper.value.IsSetFVal() {
 		return valueWrapper.value.GetFVal(), nil
 	}
-	return -1, fmt.Errorf("Failed to convert value to float")
+	return -1, fmt.Errorf("Failed to convert value %s to float", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsString() (string, error) {
 	if valueWrapper.value.IsSetSVal() {
 		return string(valueWrapper.value.GetSVal()), nil
 	}
-	return "", fmt.Errorf("Failed to convert value to string")
+	return "", fmt.Errorf("Failed to convert value %s to string", valueWrapper.GetType())
 }
 
 // TODO: Need to wrapper TimeWrapper
@@ -153,21 +116,21 @@ func (valueWrapper ValueWrapper) AsTime() (*nebula.Time, error) {
 	if valueWrapper.value.IsSetTVal() {
 		return valueWrapper.value.GetTVal(), nil
 	}
-	return nil, fmt.Errorf("Failed to convert value to Time")
+	return nil, fmt.Errorf("Failed to convert value %s to Time", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsDate() (*nebula.Date, error) {
 	if valueWrapper.value.IsSetDVal() {
 		return valueWrapper.value.GetDVal(), nil
 	}
-	return nil, fmt.Errorf("Failed to convert value to Date")
+	return nil, fmt.Errorf("Failed to convert value %s to Date", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsDateTime() (*nebula.DateTime, error) {
 	if valueWrapper.value.IsSetDtVal() {
 		return valueWrapper.value.GetDtVal(), nil
 	}
-	return nil, fmt.Errorf("Failed to convert value to DateTime")
+	return nil, fmt.Errorf("Failed to convert value %s to DateTime", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsList() ([]ValueWrapper, error) {
@@ -179,7 +142,7 @@ func (valueWrapper ValueWrapper) AsList() ([]ValueWrapper, error) {
 		}
 		return varList, nil
 	}
-	return nil, fmt.Errorf("Failed to convert value to List")
+	return nil, fmt.Errorf("Failed to convert value %s to List", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsDedupList() ([]ValueWrapper, error) {
@@ -191,7 +154,7 @@ func (valueWrapper ValueWrapper) AsDedupList() ([]ValueWrapper, error) {
 		}
 		return varList, nil
 	}
-	return nil, fmt.Errorf("Failed to convert value to set(deduped list)")
+	return nil, fmt.Errorf("Failed to convert value %s to set(deduped list)", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsMap() (map[string]ValueWrapper, error) {
@@ -204,12 +167,12 @@ func (valueWrapper ValueWrapper) AsMap() (map[string]ValueWrapper, error) {
 		}
 		return newMap, nil
 	}
-	return nil, fmt.Errorf("Failed to convert value to Map")
+	return nil, fmt.Errorf("Failed to convert value %s to Map", valueWrapper.GetType())
 }
 
 func (valueWrapper ValueWrapper) AsNode() (*Node, error) {
 	if !valueWrapper.value.IsSetVVal() {
-		return nil, fmt.Errorf("Failed to convert value to Node, value is not an vertex")
+		return nil, fmt.Errorf("Failed to convert value %s to Node, value is not an vertex", valueWrapper.GetType())
 	}
 	vertex := valueWrapper.value.VVal
 	node, err := genNode(vertex)
@@ -221,7 +184,7 @@ func (valueWrapper ValueWrapper) AsNode() (*Node, error) {
 
 func (valueWrapper ValueWrapper) AsRelationship() (*Relationship, error) {
 	if !valueWrapper.value.IsSetEVal() {
-		return nil, fmt.Errorf("Failed to convert value to Relationship, value is not an edge")
+		return nil, fmt.Errorf("Failed to convert value %s to Relationship, value is not an edge", valueWrapper.GetType())
 	}
 	edge := valueWrapper.value.EVal
 	relationship, err := genRelationship(edge)
@@ -233,11 +196,45 @@ func (valueWrapper ValueWrapper) AsRelationship() (*Relationship, error) {
 
 func (valueWrapper ValueWrapper) AsPath() (*PathWrapper, error) {
 	if !valueWrapper.value.IsSetPVal() {
-		return nil, fmt.Errorf("Failed to convert value to PathWrapper, value is not an edge")
+		return nil, fmt.Errorf("Failed to convert value %s to PathWrapper, value is not an edge", valueWrapper.GetType())
 	}
 	path, err := genPathWrapper(valueWrapper.value.PVal)
 	if err != nil {
 		return nil, err
 	}
 	return path, nil
+}
+
+// Returns the value type of value in the valueWrapper in string
+func (valueWrapper ValueWrapper) GetType() string {
+	if valueWrapper.value.IsSetNVal() {
+		return "null"
+	} else if valueWrapper.value.IsSetBVal() {
+		return "bool"
+	} else if valueWrapper.value.IsSetIVal() {
+		return "int"
+	} else if valueWrapper.value.IsSetFVal() {
+		return "float"
+	} else if valueWrapper.value.IsSetSVal() {
+		return "string"
+	} else if valueWrapper.value.IsSetDVal() {
+		return "date"
+	} else if valueWrapper.value.IsSetTVal() {
+		return "time"
+	} else if valueWrapper.value.IsSetDtVal() {
+		return "datetime"
+	} else if valueWrapper.value.IsSetVVal() {
+		return "vertex"
+	} else if valueWrapper.value.IsSetEVal() {
+		return "edge"
+	} else if valueWrapper.value.IsSetPVal() {
+		return "path"
+	} else if valueWrapper.value.IsSetLVal() {
+		return "list"
+	} else if valueWrapper.value.IsSetMVal() {
+		return "map"
+	} else if valueWrapper.value.IsSetUVal() {
+		return "set"
+	}
+	return "empty"
 }
