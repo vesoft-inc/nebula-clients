@@ -111,21 +111,24 @@ class ResultSet(object):
         '''
         get colNames
         '''
-        assert self._resp.data is not None
+        if self._resp.data is None:
+            raise RuntimeError('Data is none')
         return self._column_names
 
     def row_size(self):
         '''
         get one row size
         '''
-        assert self._resp.data is not None
+        if self._resp.data is None:
+            raise RuntimeError('Data is none')
         return len(self._resp.data.rows)
 
     def col_size(self):
         '''
         get one col size
         '''
-        assert self._resp.data is not None
+        if self._resp.data is None:
+            raise RuntimeError('Data is none')
         return len(self._column_names)
 
     def get_row_types(self):
@@ -160,7 +163,8 @@ class ResultSet(object):
         :param index: the Record index
         :return: list<ValueWrapper>
         '''
-        assert self._resp.data is not None
+        if self._resp.data is None:
+            raise RuntimeError('Data is none')
         if row_index >= len(self._resp.data.rows):
             raise OutOfRangeException()
         return [(ValueWrapper(value)) for value in self._resp.data.rows[row_index].values]
@@ -171,7 +175,8 @@ class ResultSet(object):
         :param key: the col name
         :return: list<ValueWrapper>
         '''
-        assert self._resp.data is not None
+        if self._resp.data is None:
+            raise RuntimeError('Data is none')
         if key not in self._column_names:
             raise InvalidKeyException(key)
 
