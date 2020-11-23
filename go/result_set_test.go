@@ -11,11 +11,99 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
+	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 )
+
+func TestAsBool(t *testing.T) {
+	bval := new(bool)
+	*bval = true
+	value := nebula.Value{BVal: bval}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsBool())
+	res, _ := valWrap.AsBool()
+	assert.Equal(t, value.GetBVal(), res)
+}
+
+func TestAsInt(t *testing.T) {
+	val := new(int64)
+	*val = 100
+	value := nebula.Value{IVal: val}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsInt())
+	res, _ := valWrap.AsInt()
+	assert.Equal(t, value.GetIVal(), res)
+}
+
+func TestAsFloat(t *testing.T) {
+	val := new(float64)
+	*val = 100.111
+	value := nebula.Value{FVal: val}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsFloat())
+	res, _ := valWrap.AsFloat()
+	assert.Equal(t, value.GetFVal(), res)
+}
+
+func TestAsString(t *testing.T) {
+	val := "test_string"
+	value := nebula.Value{SVal: []byte(val)}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsString())
+	res, _ := valWrap.AsString()
+	assert.Equal(t, string(value.GetSVal()), res)
+}
+
+func TestAsList(t *testing.T) {
+	var valList = []*nebula.Value{
+		&nebula.Value{SVal: []byte("elem1")},
+		&nebula.Value{SVal: []byte("elem2")},
+		&nebula.Value{SVal: []byte("elem3")},
+	}
+	value := nebula.Value{
+		LVal: &nebula.List{Values: valList},
+	}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsList())
+
+	res, _ := valWrap.AsList()
+	for i := 0; i < len(res); i++ {
+		strTemp, err := res[i].AsString()
+		if err != nil {
+			t.Error(err.Error())
+		}
+		assert.Equal(t, string(valList[i].GetSVal()), strTemp)
+	}
+}
+
+// TODO: add tests for AsTime/Date/DateTime when service supports timezone
+func TestAsNode(t *testing.T) {
+	value := nebula.Value{VVal: getVertex("Adam")}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsVertex())
+	res, _ := valWrap.AsNode()
+	node, _ := genNode(value.GetVVal())
+	assert.Equal(t, *node, *res)
+}
+
+func TestAsRelationship(t *testing.T) {
+	value := nebula.Value{EVal: getEdge("Alice", "Bob")}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsEdge())
+	res, _ := valWrap.AsRelationship()
+	relationship, _ := genRelationship(value.GetEVal())
+	assert.Equal(t, *relationship, *res)
+}
+
+func TestAsPathWrapper(t *testing.T) {
+	value := nebula.Value{PVal: getPath("Alice", 3)}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsPath())
+	res, _ := valWrap.AsPath()
+	path, _ := genPathWrapper(value.GetPVal())
+	assert.Equal(t, *path, *res)
+}
 
 func TestNode(t *testing.T) {
 	vertex := getVertex("Tom")
@@ -25,8 +113,8 @@ func TestNode(t *testing.T) {
 	}
 
 	assert.Equal(t, "Tom", node.GetID())
-	assert.Equal(t, true, node.HasLabel("tag1"))
-	assert.Equal(t, []string{"tag0", "tag1", "tag2"}, node.Labels())
+	assert.Equal(t, true, node.HasTag("tag1"))
+	assert.Equal(t, []string{"tag0", "tag1", "tag2"}, node.GetTags())
 	keys, _ := node.Keys("tag1")
 	keysCopy := make([]string, len(keys))
 	copy(keysCopy, keys)
@@ -34,7 +122,11 @@ func TestNode(t *testing.T) {
 	assert.Equal(t, []string{"prop0", "prop1", "prop2", "prop3", "prop4"}, keysCopy)
 	props, _ := node.Properties("tag1")
 	for i := 0; i < len(keysCopy); i++ {
-		assert.Equal(t, int64(i), *props[keysCopy[i]].IVal)
+		actualVal, err := props[keysCopy[i]].AsInt()
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		assert.Equal(t, int64(i), actualVal)
 	}
 }
 
@@ -55,7 +147,11 @@ func TestRelationship(t *testing.T) {
 	assert.Equal(t, []string{"prop0", "prop1", "prop2", "prop3", "prop4"}, keysCopy)
 	props := relationship.Properties()
 	for i := 0; i < len(keysCopy); i++ {
-		assert.Equal(t, int64(i), *props[keysCopy[i]].IVal)
+		actualVal, err := props[keysCopy[i]].AsInt()
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		assert.Equal(t, int64(i), actualVal)
 	}
 }
 
@@ -75,7 +171,7 @@ func TestPathWrapper(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	assert.Equal(t, true, pathWrapper.ContainsRelationship(*relationship))
+	assert.Equal(t, true, pathWrapper.ContainsRelationship(relationship))
 
 	var nodeList []Node
 	nodeList = append(nodeList, *node)
@@ -107,9 +203,9 @@ func TestPathWrapper(t *testing.T) {
 	for i := 0; i < len(nodeList); i++ {
 		assert.Equal(t, nodeList[i].GetID(), l1[i].GetID())
 	}
-	l2 := pathWrapper.GetRelations()
+	l2 := pathWrapper.GetRelationships()
 	for i := 0; i < len(relationshipList); i++ {
-		assert.Equal(t, true, AreEqualRelationship(*relationshipList[i], l2[i]))
+		assert.Equal(t, true, relationshipList[i].IsEqualTo(l2[i]))
 	}
 	// Check segments
 	segList := pathWrapper.GetSegments()
@@ -144,28 +240,42 @@ func TestResultSet(t *testing.T) {
 		assert.Equal(t, expectedColNames[i], colNames[i])
 	}
 
-	records := resultSet.GetRecords()
-	assert.Equal(t, 1, len(records))
-	record := records[0]
-	_, err = record.AsNode(0)
-	assert.EqualError(t, err, "Type Error: Value being checked is not a vertex")
-	_, err = record.AsNode("col2")
+	record, err := resultSet.GetRowValuesByIndex(0)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	temp, err := record.GetValueByIndex(0)
+	_, err = temp.AsNode()
+	assert.EqualError(t, err, "Failed to convert value to Node, value is not an vertex")
+	temp, err = record.GetValueByColName("col2")
 	assert.EqualError(t, err, "Column name does not exist")
-	_, err = record.AsNode(2.0)
-	assert.EqualError(t, err, "Failed to get node: requested coloumn name or index is invalid, the parameter shuold be int or string")
-	node, _ := record.AsNode("col2_vertex")
+	val, _ := record.GetValueByColName("col2_vertex")
+	node, _ := val.AsNode()
 	assert.Equal(t, "Tom", node.GetID())
 
 	// Check get row values
-	valueList, err := resultSet.GetRowValues(10)
+	_, err = resultSet.GetRowValuesByIndex(10)
 	assert.EqualError(t, err, "Failed to get Value, the index is out of range")
 
-	valueList, err = resultSet.GetRowValues(0)
-	assert.Equal(t, int64(1), ConvertValue(valueList[0]))
-	assert.Equal(t, "value1", ConvertValue(valueList[1]))
-	assert.Equal(t, getVertex("Tom"), ConvertValue(valueList[2]))
-	assert.Equal(t, getEdge("Tom", "Lily"), ConvertValue(valueList[3]))
-	assert.Equal(t, getPath("Tom", 3), ConvertValue(valueList[4]))
+	vlist := record._record
+
+	expected_v1, err := vlist[0].AsInt()
+	expected_v2, err := vlist[1].AsString()
+	expected_v3, err := vlist[2].AsNode()
+	expected_v4, err := vlist[3].AsRelationship()
+	expected_v5, err := vlist[4].AsPath()
+
+	v1 := int64(1)
+	v2 := "value1"
+	v3, err := genNode(getVertex("Tom"))
+	v4, err := genRelationship(getEdge("Tom", "Lily"))
+	v5, err := genPathWrapper(getPath("Tom", 3))
+
+	assert.Equal(t, v1, expected_v1)
+	assert.Equal(t, v2, expected_v2)
+	assert.Equal(t, v3.GetID(), expected_v3.GetID())
+	assert.Equal(t, true, v4.IsEqualTo(expected_v4))
+	assert.Equal(t, true, v5.IsEqualTo(expected_v5))
 }
 
 func getVertex(vid string) *nebula.Vertex {
