@@ -11,6 +11,7 @@ import com.vesoft.nebula.Row;
 import com.vesoft.nebula.Value;
 import com.vesoft.nebula.graph.ErrorCode;
 import com.vesoft.nebula.graph.ExecutionResponse;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,47 +19,76 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 public class ResultSet {
-    private int code = ErrorCode.SUCCEEDED;
-    private String errorMessage;
+    private final ExecutionResponse response;
     private List<String> columnNames;
-    private List<Record> records;
+    private final String decodeType = "utf-8";
 
-    public static class Record implements Iterable<Value> {
-        private final Row row;
-        private final List<String> columnNames;
-        private int curror = -1;
+    public static class Record implements Iterable<ValueWrapper> {
+        private final List<ValueWrapper> colValues = new ArrayList<>();
+        private List<String> columnNames = new ArrayList<>();
 
         public Record(List<String> columnNames, Row row) {
-            this.row = row;
+            if (columnNames == null) {
+                return;
+            }
+
+            if (row == null || row.values == null) {
+                return;
+            }
+
+            for (Value value : row.values) {
+                this.colValues.add(new ValueWrapper(value));
+            }
+
             this.columnNames = columnNames;
         }
 
         @Override
-        public Iterator<Value> iterator() {
-            return this.row.values.iterator();
+        public Iterator<ValueWrapper> iterator() {
+            return this.colValues.iterator();
         }
 
         @Override
-        public void forEach(Consumer<? super Value> action) {
-            this.row.values.forEach(action);
+        public void forEach(Consumer<? super ValueWrapper> action) {
+            this.colValues.forEach(action);
         }
 
         @Override
-        public Spliterator<Value> spliterator() {
-            return this.row.values.spliterator();
+        public Spliterator<ValueWrapper> spliterator() {
+            return this.colValues.spliterator();
         }
 
-        public Value get(int index) {
-            return this.row.values.get(index);
+
+        @Override
+        public String toString() {
+            StringBuilder rowStr = new StringBuilder();
+            for (ValueWrapper v : colValues) {
+                rowStr.append(v.toString()).append(',');
+            }
+            return "Record{row=" + rowStr
+                    + ", columnNames=" + columnNames.toString()
+                    + '}';
         }
 
-        public Value get(String key) {
+        public ValueWrapper get(int index) {
+            if (index >= columnNames.size()) {
+                throw new IllegalArgumentException(
+                        String.format("Cannot get field because the key '%d' out of range", index));
+            }
+            return this.colValues.get(index);
+        }
+
+        public ValueWrapper get(String key) {
             int index = columnNames.indexOf(key);
             if (index == -1) {
                 throw new IllegalArgumentException(
                         "Cannot get field because the key '" + key + "' is not exist");
             }
-            return this.row.values.get(index);
+            return this.colValues.get(index);
+        }
+
+        public List<ValueWrapper> values() {
+            return colValues;
         }
 
         public int size() {
@@ -68,50 +98,89 @@ public class ResultSet {
         public boolean contains(String key) {
             return this.columnNames.contains(key);
         }
+
     }
 
     /**
      * Constructor
      */
-    public ResultSet() {
-        this(new ExecutionResponse());
-    }
-
-    public ResultSet(ExecutionResponse resp) {
-        if (resp.error_msg != null) {
-            errorMessage = new String(resp.error_msg).intern();
+    public ResultSet(ExecutionResponse resp) throws UnsupportedEncodingException {
+        if (resp == null) {
+            throw new RuntimeException("Input an null `ExecutionResponse' object");
         }
-        code = resp.error_code;
+        this.response = resp;
         if (resp.data != null) {
             this.columnNames = Lists.newArrayListWithCapacity(resp.data.column_names.size());
-            this.records = Lists.newArrayListWithCapacity(resp.data.rows.size());
             for (byte[] column : resp.data.column_names) {
-                this.columnNames.add(new String(column).intern());
-            }
-            this.records = new ArrayList<>(resp.data.rows.size());
-            for (Row row : resp.data.rows) {
-                this.records.add(new Record(this.columnNames, row));
+                this.columnNames.add(new String(column, decodeType));
             }
         }
     }
 
     public boolean isSucceeded() {
-        return this.code == ErrorCode.SUCCEEDED;
+        return response.error_code == ErrorCode.SUCCEEDED;
     }
 
     public int getErrorCode() {
-        return this.code;
+        return response.error_code;
     }
 
-    public String getErrorMessage() {
-        return this.errorMessage;
+    public String getErrorMessage() throws UnsupportedEncodingException {
+        if (response.error_msg == null) {
+            return "";
+        }
+        return new String(response.error_msg, decodeType);
     }
 
-    public List<String> getColumnNames() {
-        return this.columnNames;
+    public List<String> keys() {
+        return columnNames;
     }
 
-    public List<Record> getRecords() {
-        return this.records;
+    public int rowsSize() {
+        if (response.data == null) {
+            return 0;
+        }
+        return response.data.rows.size();
+    }
+
+    /**
+     * get all row values on the row index
+     */
+    public Record rowValues(int index) {
+        if (response.data == null) {
+            throw new RuntimeException("Empty data");
+        }
+        if (index >= response.data.rows.size()) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        return new Record(columnNames, response.data.rows.get(index));
+    }
+
+    /**
+     * get all col values on the col key
+     */
+    public List<ValueWrapper> colValues(String key) {
+        if (response.data == null) {
+            throw new RuntimeException("Empty data");
+        }
+        int index = columnNames.indexOf(key);
+        if (index < 0) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        List<ValueWrapper> values = new ArrayList<>();
+        for (int i = 0; i < response.data.rows.size(); i++) {
+            values.add(new ValueWrapper(response.data.rows.get(i).values.get(index)));
+        }
+        return values;
+    }
+
+    /**
+     * get all rows, the value is the origin value, the string is bianry
+     */
+    public List<Row> getRows() {
+        if (response.data == null) {
+            throw new RuntimeException("Empty data");
+        }
+        return response.data.rows;
     }
 }

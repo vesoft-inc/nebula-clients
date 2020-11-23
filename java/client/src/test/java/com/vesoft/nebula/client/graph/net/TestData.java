@@ -1,3 +1,9 @@
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License,
+ * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ */
+
 package com.vesoft.nebula.client.graph.data;
 
 import com.vesoft.nebula.DataSet;
@@ -263,63 +269,63 @@ public class TestData {
                 "col11_datetime", "col12_vertex", "col13_edge", "col14_path");
             assert Objects.equals(resultSet.keys(), expectColNames);
             assert resultSet.getRows().size() == 1;
-            List<ValueWrapper> rowValues = resultSet.rowValues(0);
-            assert rowValues.size() == 15;
-            assert rowValues.get(0).isEmpty();
+            ResultSet.Record record = resultSet.rowValues(0);
+            assert record.size() == 15;
+            assert record.get(0).isEmpty();
 
-            assert rowValues.get(1).isNull();
-            assert rowValues.get(1).asNull().nullType == ValueWrapper.NullType.OUT_OF_RANGE;
+            assert record.get(1).isNull();
+            assert record.get(1).asNull().getNullType() == ValueWrapper.NullType.OUT_OF_RANGE;
 
-            assert rowValues.get(2).isBoolean();
-            assert rowValues.get(2).asBoolean() == false;
+            assert record.get(2).isBoolean();
+            assert record.get(2).asBoolean() == false;
 
-            assert rowValues.get(3).isLong();
-            assert rowValues.get(3).asLong() == 1;
+            assert record.get(3).isLong();
+            assert record.get(3).asLong() == 1;
 
-            assert rowValues.get(4).isDouble();
-            assert Double.compare(rowValues.get(4).asDouble(), 10.01) == 0;
+            assert record.get(4).isDouble();
+            assert Double.compare(record.get(4).asDouble(), 10.01) == 0;
 
-            assert rowValues.get(5).isString();
-            assert Objects.equals("value1", rowValues.get(5).asString());
+            assert record.get(5).isString();
+            assert Objects.equals("value1", record.get(5).asString());
 
             Assert.assertArrayEquals(
-                rowValues.get(6).asList().stream().map(ValueWrapper::asLong).toArray(),
+                record.get(6).asList().stream().map(ValueWrapper::asLong).toArray(),
                 Arrays.asList((long)1, (long)2).toArray());
 
-            assert rowValues.get(7).isSet();
-            Set<Long> set = rowValues.get(7).asSet().stream().map(ValueWrapper::asLong)
+            assert record.get(7).isSet();
+            Set<Long> set = record.get(7).asSet().stream().map(ValueWrapper::asLong)
                 .collect(Collectors.toSet());
             assert set.size() == 2;
             assert set.contains((long) 1);
             assert set.contains((long) 2);
 
-            assert rowValues.get(8).isMap();
-            HashMap<String, ValueWrapper> map = rowValues.get(8).asMap();
+            assert record.get(8).isMap();
+            HashMap<String, ValueWrapper> map = record.get(8).asMap();
             assert map.keySet().size() == 2;
             Assert.assertArrayEquals(map.keySet().toArray(),
                 Arrays.asList("key1", "key2").toArray());
             Assert.assertArrayEquals(map.values().stream().map(ValueWrapper::asLong).toArray(),
                 Arrays.asList((long)1, (long)2).toArray());
 
-            assert rowValues.get(9).isTime();
-            assert rowValues.get(9).asTime() instanceof Time;
+            assert record.get(9).isTime();
+            assert record.get(9).asTime() instanceof Time;
 
-            assert rowValues.get(10).isDate();
-            assert rowValues.get(10).asDate() instanceof Date;
+            assert record.get(10).isDate();
+            assert record.get(10).asDate() instanceof Date;
 
-            assert rowValues.get(11).isDateTime();
-            assert rowValues.get(11).asDateTime() instanceof DateTime;
+            assert record.get(11).isDateTime();
+            assert record.get(11).asDateTime() instanceof DateTime;
 
-            assert rowValues.get(12).isVertex();
-            assert Objects.equals(rowValues.get(12).asNode(),
+            assert record.get(12).isVertex();
+            assert Objects.equals(record.get(12).asNode(),
                 new Node(getVertex("Tom")));
 
-            assert rowValues.get(13).isEdge();
-            assert Objects.equals(rowValues.get(13).asRelationship(),
+            assert record.get(13).isEdge();
+            assert Objects.equals(record.get(13).asRelationship(),
                 new Relationship(getEdge("Tom", "Lily")));
 
-            assert rowValues.get(14).isPath();
-            assert Objects.equals(rowValues.get(14).asPath(),
+            assert record.get(14).isPath();
+            assert Objects.equals(record.get(14).asPath(),
                 new PathWrapper(getPath("Tom", 3)));
         } catch (Exception e) {
             e.printStackTrace();
