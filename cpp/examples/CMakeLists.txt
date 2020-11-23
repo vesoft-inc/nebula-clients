@@ -4,9 +4,6 @@
 # attached with Common Clause Condition 1.0, found in the LICENSES directory.
 #
 
-# CMake version check
-cmake_minimum_required(VERSION 3.5.0)
-
 # Set the project name
 project("Nebula C++ Client simple example" C CXX)
 
