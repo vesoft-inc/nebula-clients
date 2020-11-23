@@ -35,6 +35,7 @@ public class MockNebulaGraph {
                     + "CREATE EDGE IF NOT EXISTS friend(duration int,degree int,relation string)";
             ResultSet resp = session.execute(createSchema);
             if (!resp.isSucceeded()) {
+                pool.close();
                 System.exit(1);
             }
         } catch (UnknownHostException | NotValidConnectionException
