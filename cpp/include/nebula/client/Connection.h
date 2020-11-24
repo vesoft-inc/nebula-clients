@@ -41,11 +41,6 @@ public:
 
         clientLoopThread_ = c.clientLoopThread_;
         c.clientLoopThread_ = nullptr;
-
-        address_ = std::move(c.address_);
-
-        port_ = c.port_;
-        c.port_ = -1;
     }
 
     Connection &operator=(Connection &&c);
@@ -53,7 +48,6 @@ public:
     ~Connection();
 
     bool open(const std::string &address, int32_t port);
-    bool open();
 
     AuthResponse authenticate(const std::string &user, const std::string &password);
 
@@ -74,9 +68,6 @@ public:
     void signout(int64_t sessionId);
 
 private:
-    std::string                           address_;
-    int32_t                               port_{-1};
-
     graph::cpp2::GraphServiceAsyncClient *client_{nullptr};
     folly::ScopedEventBaseThread         *clientLoopThread_{nullptr};
 };
