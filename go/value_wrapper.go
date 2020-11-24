@@ -111,7 +111,7 @@ func (valueWrapper ValueWrapper) AsString() (string, error) {
 	return "", fmt.Errorf("Failed to convert value %s to string", valueWrapper.GetType())
 }
 
-// TODO: Need to wrapper TimeWrapper
+// TODO: Need to wrap TimeWrapper
 func (valueWrapper ValueWrapper) AsTime() (*nebula.Time, error) {
 	if valueWrapper.value.IsSetTVal() {
 		return valueWrapper.value.GetTVal(), nil
@@ -237,4 +237,37 @@ func (valueWrapper ValueWrapper) GetType() string {
 		return "set"
 	}
 	return "empty"
+}
+
+func (valWarp ValueWrapper) printValue() {
+	value := valWarp.value
+	if value.IsSetNVal() {
+		fmt.Printf("%15s |", value.GetNVal().String())
+	} else if value.IsSetBVal() {
+		fmt.Printf("%15t |", value.GetBVal())
+	} else if value.IsSetIVal() {
+		fmt.Printf("%15d |", value.GetIVal())
+	} else if value.IsSetFVal() {
+		fmt.Printf("%15.1f |", value.GetFVal())
+	} else if value.IsSetSVal() {
+		fmt.Printf("%15s |", string(value.GetSVal()))
+	} else if value.IsSetDVal() {
+		fmt.Printf("%15s |", value.GetDVal().String())
+	} else if value.IsSetTVal() {
+		fmt.Printf("%15s |", value.GetTVal().String())
+	} else if value.IsSetDtVal() {
+		fmt.Printf("%15s |", value.GetDtVal().String())
+	} else if value.IsSetVVal() {
+		fmt.Printf("%15s |", value.GetVVal().String())
+	} else if value.IsSetEVal() {
+		fmt.Printf("%15s |", value.GetEVal().String())
+	} else if value.IsSetPVal() {
+		fmt.Printf("%15s |", value.GetPVal().String())
+	} else if value.IsSetLVal() {
+		fmt.Printf("%15s |", value.GetLVal().String())
+	} else if value.IsSetMVal() {
+		fmt.Printf("%15s |", value.GetMVal().String())
+	} else if value.IsSetUVal() {
+		fmt.Printf("%15s |", value.GetUVal().String())
+	}
 }

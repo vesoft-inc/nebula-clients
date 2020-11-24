@@ -47,25 +47,24 @@ type PathWrapper struct {
 	segments         []segment
 }
 
-func genResultSet(resp graph.ExecutionResponse) *ResultSet {
+func genResultSet(resp *graph.ExecutionResponse) *ResultSet {
 	var colNames []string
 	var colNameIndexMap = make(map[string]int)
 
 	if resp.Data == nil || resp.Data.ColumnNames == nil || resp.Data.Rows == nil {
 		return &ResultSet{
-			resp:            &resp,
+			resp:            resp,
 			columnNames:     colNames,
 			colNameIndexMap: colNameIndexMap,
 		}
 	}
-
 	for i, name := range resp.Data.ColumnNames {
 		colNames = append(colNames, string(name))
 		colNameIndexMap[string(name)] = i
 	}
 
 	return &ResultSet{
-		resp:            &resp,
+		resp:            resp,
 		columnNames:     colNames,
 		colNameIndexMap: colNameIndexMap,
 	}
@@ -212,10 +211,6 @@ func (res ResultSet) GetRowValuesByIndex(index int) (*Record, error) {
 
 // Returns all rows
 func (res ResultSet) GetRows() []*nebula.Row {
-	if res.resp.Data == nil || res.resp.Data.Rows == nil {
-		var empty []*nebula.Row
-		return empty
-	}
 	return res.resp.Data.Rows
 }
 
@@ -228,10 +223,6 @@ func (res ResultSet) GetErrorCode() graph.ErrorCode {
 }
 
 func (res ResultSet) GetErrorMsg() []byte {
-	if res.resp.ErrorMsg == nil {
-		var empty []byte
-		return empty
-	}
 	return res.resp.ErrorMsg
 }
 
@@ -262,6 +253,12 @@ func (record Record) GetValueByColName(colName string) (*ValueWrapper, error) {
 	// Get index
 	index := (*record.colNameIndexMap)[colName]
 	return record._record[index], nil
+}
+
+func (record Record) PrintRow() {
+	for _, val := range record._record {
+		val.printValue()
+	}
 }
 
 func (record Record) hasColName(colName string) bool {

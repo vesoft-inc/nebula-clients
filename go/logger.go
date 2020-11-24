@@ -20,17 +20,17 @@ type Logger interface {
 type DefaultLogger struct{}
 
 func (l DefaultLogger) Info(msg string) {
-	log.Printf("[INFO] %s", msg)
+	log.Printf("\n[INFO] %s", msg)
 }
 
 func (l DefaultLogger) Warn(msg string) {
-	log.Printf("[WARNING] %s", msg)
+	log.Printf("\n[WARNING] %s", msg)
 }
 
 func (l DefaultLogger) Error(msg string) {
-	log.Printf("[ERROR] %s", msg)
+	log.Printf("\n[ERROR] %s", msg)
 }
 
 func (l DefaultLogger) Fatal(msg string) {
-	log.Fatalf("[FATAL] %s", msg)
+	log.Fatalf("\n[FATAL] %s", msg)
 }

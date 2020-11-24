@@ -236,7 +236,7 @@ func TestPathWrapper(t *testing.T) {
 }
 
 func TestResultSet(t *testing.T) {
-	resp := graph.ExecutionResponse{
+	resp := &graph.ExecutionResponse{
 		graph.ErrorCode_SUCCEEDED,
 		1000,
 		getDateset(),

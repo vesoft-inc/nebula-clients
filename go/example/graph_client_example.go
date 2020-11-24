@@ -8,12 +8,10 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 
 	nebula "github.com/vesoft-inc/nebula-clients/go"
-	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
 )
 
 const (
@@ -53,9 +51,9 @@ func main() {
 		// Release session and return connection back to connection pool
 		defer session.Release()
 		// Method used to check execution response
-		checkResp := func(prefix string, err *graph.ExecutionResponse) {
-			if nebula.IsError(err) {
-				fmt.Printf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
+		checkResultSet := func(prefix string, res *nebula.ResultSet) {
+			if !res.IsSucceed() {
+				fmt.Printf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, res.GetErrorCode(), res.GetErrorMsg())
 			}
 		}
 		{
@@ -65,12 +63,12 @@ func main() {
 				"CREATE EDGE IF NOT EXISTS like(likeness double)"
 
 			// Excute a query
-			resp, err := session.Execute(createSchema)
+			resultSet, err := session.Execute(createSchema)
 			if err != nil {
 				fmt.Printf(err.Error())
 				return
 			}
-			checkResp(createSchema, resp)
+			checkResultSet(createSchema, resultSet)
 		}
 		time.Sleep(5 * time.Second)
 		{
@@ -82,12 +80,12 @@ func main() {
 				"'John':('John', 11);"
 
 			// Insert multiple vertexes
-			resp, err := session.Execute(insertVertexes)
+			resultSet, err := session.Execute(insertVertexes)
 			if err != nil {
 				fmt.Printf(err.Error())
 				return
 			}
-			checkResp(insertVertexes, resp)
+			checkResultSet(insertVertexes, resultSet)
 		}
 
 		{
@@ -99,73 +97,60 @@ func main() {
 				"'Tom'->'Jerry':(68.3), " +
 				"'Bob'->'John':(97.2);"
 
-			resp, err := session.Execute(insertEdges)
+			resultSet, err := session.Execute(insertEdges)
 			if err != nil {
 				fmt.Printf(err.Error())
 				return
 			}
-			checkResp(insertEdges, resp)
+			checkResultSet(insertEdges, resultSet)
 		}
 
 		{
 			query := "GO FROM 'Bob' OVER like YIELD $^.person.name, $^.person.age, like.likeness"
 			// Send query
-			resp, err := session.Execute(query)
+			resultSet, err := session.Execute(query)
 			if err != nil {
 				fmt.Printf(err.Error())
 				return
 			}
-			checkResp(query, resp)
-			printResult(resp)
-		}
-	}(&wg)
+			checkResultSet(query, resultSet)
 
-	wg.Wait()
+			// Get all column names from the resultSet
+			colNames := resultSet.GetColNames()
+			for _, name := range colNames {
+				fmt.Printf("%15s |", name)
+			}
+			fmt.Print("\n")
 
-	log.Info("Example finished")
-}
-
-func printResult(resp *graph.ExecutionResponse) {
-	data := resp.GetData()
-	colNames := data.GetColumnNames()
-	for _, col := range colNames {
-		fmt.Printf("%15s |", col)
-	}
-	fmt.Println()
-	rows := data.GetRows()
-	for _, row := range rows {
-		values := row.GetValues()
-		for _, value := range values {
-			if value.IsSetNVal() {
-				fmt.Printf("%15s |", "__NULL__")
-			} else if value.IsSetBVal() {
-				fmt.Printf("%15t |", strconv.FormatBool(value.GetBVal()))
-			} else if value.IsSetIVal() {
-				fmt.Printf("%15d |", value.GetIVal())
-			} else if value.IsSetFVal() {
-				fmt.Printf("%15.1f |", value.GetFVal())
-			} else if value.IsSetSVal() {
-				fmt.Printf("%15s |", value.GetSVal())
-			} else if value.IsSetDVal() {
-				fmt.Printf("%15s |", value.GetDVal())
-			} else if value.IsSetTVal() {
-				fmt.Printf("%15s |", value.GetTVal())
-			} else if value.IsSetDtVal() {
-				fmt.Printf("%15s |", value.GetDtVal())
-			} else if value.IsSetVVal() {
-				fmt.Printf("%15s |", value.GetVVal())
-			} else if value.IsSetEVal() {
-				fmt.Printf("%15s |", value.GetEVal())
-			} else if value.IsSetPVal() {
-				fmt.Printf("%15s |", value.GetPVal())
-			} else if value.IsSetLVal() {
-				fmt.Printf("%15s |", value.GetLVal())
-			} else if value.IsSetMVal() {
-				fmt.Printf("%15s |", value.GetMVal())
-			} else if value.IsSetUVal() {
-				fmt.Printf("%15s |", value.GetUVal())
+			// Get a row from resultSet
+			record, err := resultSet.GetRowValuesByIndex(0)
+			if err != nil {
+				log.Error(err.Error())
+			}
+			// Print whole row
+			record.PrintRow()
+			fmt.Print("\n")
+			// Get a value in the row by column index
+			v1, err := record.GetValueByIndex(0)
+			if err != nil {
+				log.Error(err.Error())
+			}
+			// Get type of the value
+			v1Type := v1.GetType()
+			fmt.Printf("v1 type: %s \n", v1Type)
+			// Check if v1 is a tring type
+			if v1.IsString() {
+				// Convert v1 to a string value
+				v1Str, err := v1.AsString()
+				if err != nil {
+					log.Error(err.Error())
+				}
+				fmt.Print(v1Str)
 			}
 		}
-		fmt.Println()
-	}
+	}(&wg)
+	wg.Wait()
+
+	fmt.Print("\n")
+	log.Info("Example finished")
 }
