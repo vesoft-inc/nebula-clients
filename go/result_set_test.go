@@ -244,10 +244,7 @@ func TestResultSet(t *testing.T) {
 		[]byte("test"),
 		graph.NewPlanDescription(),
 		[]byte("test_comment")}
-	resultSet, err := genResultSet(resp)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
+	resultSet := genResultSet(resp)
 
 	assert.Equal(t, graph.ErrorCode_SUCCEEDED, resultSet.GetErrorCode())
 	assert.Equal(t, true, resultSet.IsSucceed())

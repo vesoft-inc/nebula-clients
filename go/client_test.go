@@ -56,10 +56,6 @@ func logoutAndClose(conn *connection, sessionID int64) {
 }
 
 func TestConnection(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping client test in short mode")
-	}
-
 	hostAdress := HostAddress{Host: address, Port: port}
 
 	conn := newConnection(hostAdress)

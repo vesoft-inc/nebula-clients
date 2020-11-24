@@ -47,27 +47,18 @@ type PathWrapper struct {
 	segments         []segment
 }
 
-type genericFunctions interface {
-	IsEqualTo() bool
-	getIndexbyColName(str string) int
-	Properties() map[string]*nebula.Value
-	Keys() []string
-	Values() []*nebula.Value
-}
-
-func genResultSet(resp graph.ExecutionResponse) (*ResultSet, error) {
+func genResultSet(resp graph.ExecutionResponse) *ResultSet {
 	var colNames []string
 	var colNameIndexMap = make(map[string]int)
 
-	if resp.Data == nil {
-		return nil, fmt.Errorf("Failed to create result set, the dataset is empty")
+	if resp.Data == nil || resp.Data.ColumnNames == nil || resp.Data.Rows == nil {
+		return &ResultSet{
+			resp:            &resp,
+			columnNames:     colNames,
+			colNameIndexMap: colNameIndexMap,
+		}
 	}
-	if resp.Data.ColumnNames == nil {
-		return nil, fmt.Errorf("Failed to create result set, columnNames in dataset is empty")
-	}
-	if resp.Data.Rows == nil {
-		return nil, fmt.Errorf("Failed to create result set, rows in dataset is empty")
-	}
+
 	for i, name := range resp.Data.ColumnNames {
 		colNames = append(colNames, string(name))
 		colNameIndexMap[string(name)] = i
@@ -77,7 +68,7 @@ func genResultSet(resp graph.ExecutionResponse) (*ResultSet, error) {
 		resp:            &resp,
 		columnNames:     colNames,
 		colNameIndexMap: colNameIndexMap,
-	}, nil
+	}
 }
 
 func genValWarps(row *nebula.Row) ([]*ValueWrapper, error) {
@@ -221,6 +212,10 @@ func (res ResultSet) GetRowValuesByIndex(index int) (*Record, error) {
 
 // Returns all rows
 func (res ResultSet) GetRows() []*nebula.Row {
+	if res.resp.Data == nil || res.resp.Data.Rows == nil {
+		var empty []*nebula.Row
+		return empty
+	}
 	return res.resp.Data.Rows
 }
 
@@ -233,6 +228,10 @@ func (res ResultSet) GetErrorCode() graph.ErrorCode {
 }
 
 func (res ResultSet) GetErrorMsg() []byte {
+	if res.resp.ErrorMsg == nil {
+		var empty []byte
+		return empty
+	}
 	return res.resp.ErrorMsg
 }
 
