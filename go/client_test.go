@@ -41,12 +41,6 @@ var poolAddress = []HostAddress{
 	},
 }
 
-// Set up logger
-// const (
-// 	logPath  = "logrus.nebulaLog"
-// 	logLevel = "info"
-// )
-
 var nebulaLog = DefaultLogger{}
 
 // Create default configs
@@ -62,10 +56,6 @@ func logoutAndClose(conn *connection, sessionID int64) {
 }
 
 func TestConnection(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping client test in short mode")
-	}
-
 	hostAdress := HostAddress{Host: address, Port: port}
 
 	conn := newConnection(hostAdress)
@@ -365,7 +355,7 @@ func TestReconnect(t *testing.T) {
 
 	// Send query to server periodically
 	for i := 0; i < timeoutConfig.MaxConnPoolSize; i++ {
-		time.Sleep(1 * time.Second)
+		time.Sleep(200 * time.Millisecond)
 		if i == 3 {
 			stopContainer(t, "nebula-docker-compose_graphd_1")
 		}
