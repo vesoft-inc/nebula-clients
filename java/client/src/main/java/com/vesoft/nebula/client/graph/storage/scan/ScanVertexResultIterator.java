@@ -34,14 +34,24 @@ public class ScanVertexResultIterator extends ScanResultIterator {
 
     private final ScanVertexRequest request;
     private final VertexProcessor processor;
+    private final int partSize;
+    private final boolean partSuccess;
+    private boolean stop = false;
 
-    private ScanVertexResultIterator(MetaClient metaClient, String spaceName, StorageConnPool pool,
-                                     Map<Integer, HostAndPort> partLeaders,
-                                     ScanVertexRequest request, VertexProcessor processor) {
-        super(metaClient, spaceName, pool, partLeaders);
 
+    private ScanVertexResultIterator(MetaClient metaClient,
+                                     String spaceName,
+                                     StorageConnPool pool,
+                                     Set<PartScanInfo> partScanInfoList,
+                                     List<HostAndPort> addresses,
+                                     ScanVertexRequest request,
+                                     VertexProcessor processor,
+                                     boolean partSuccess) {
+        super(metaClient, spaceName, pool, new PartScanQueue(partScanInfoList), addresses);
         this.request = request;
         this.processor = processor;
+        this.partSize = partScanInfoList.size();
+        this.partSuccess = partSuccess;
     }
 
 
@@ -50,70 +60,78 @@ public class ScanVertexResultIterator extends ScanResultIterator {
      *
      * @return ScanVertexResult
      */
-    public ScanVertexResult next() throws IllegalAccessException, InterruptedException {
+    public ScanVertexResult next() throws Exception {
         if (!hasNext()) {
             throw new IllegalAccessException("iterator has no more data");
         }
-
-        int partSize = partLeaders.size();
+        hasNext = false;
         final List<ScanVertexResult> results =
                 Collections.synchronizedList(new ArrayList<>(partSize));
-        final CountDownLatch countDownLatch = new CountDownLatch(partSize);
+        final CountDownLatch countDownLatch = new CountDownLatch(addresses.size());
 
-        Set<Integer> parts = partLeaders.keySet();
-        for (int part : parts) {
+        for (HostAndPort addr : addresses) {
             threadPool.submit(() -> {
-                int retry = 0;
-                ScanVertexRequest partRequest = new ScanVertexRequest(request);
-                partRequest.setPart_id(part);
-                partRequest.setCursor(partCursor.get(part));
-                ScanVertexResponse response = null;
                 StorageConnection connection;
-                while (retry++ <= metaClient.getMetaInfo().getConnectionRetry()) {
-                    try {
-                        connection = pool.getStorageClient(
-                                partLeaders.get(part)).getConnection();
-                    } catch (Exception e) {
-                        LOGGER.error(String.format("get connection of part %d error, ", part), e);
-                        continue;
-                    }
-                    retry = Integer.MAX_VALUE;
-                    int executeRetry = 0;
-                    while (executeRetry++ <= metaClient.getMetaInfo().getExecutionRetry()) {
+                try {
+                    connection = pool.getStorageClient(addr).getConnection();
+                } catch (Exception e) {
+                    LOGGER.error("get storage client error, ", e);
+                    stop = !partSuccess;
+                    return;
+                }
+                ScanVertexRequest partRequest = new ScanVertexRequest(request);
+                ScanVertexResponse response = null;
+                PartScanInfo partInfo = partScanQueue.getPart(addr);
+                while (partInfo != null) {
+                    partRequest.setPart_id(partInfo.getPart());
+                    partRequest.setCursor(partInfo.getCursor());
+                    int retry = 1;
+                    while (retry-- > 0) {
                         try {
                             response = connection.scanVertex(partRequest);
                         } catch (TException e) {
-                            LOGGER.error(String.format("Scan vertex failed for retry %d: ",
-                                    executeRetry), e);
+                            LOGGER.error(String.format("Scan vertex failed for %s",
+                                    e.getMessage()), e);
+                            if (!partSuccess) {
+                                stop = true;
+                                return;
+                            }
                         }
-                        executeRetry = Integer.MAX_VALUE;
+
                         if (isSuccessful(response)) {
-                            partCursor.put(part, response.getNext_cursor());
-                            if (!response.isHas_next()) {
-                                partLeaders.remove(part);
+                            if (!response.has_next) {
+                                partScanQueue.drop(partInfo);
+                            } else {
+                                partInfo.setCursor(response.getNext_cursor());
                             }
                             DataSet dataSet = response.getVertex_data();
                             results.add(processor.constructResult(dataSet,
                                     partRequest.getReturn_columns()));
-                            countDownLatch.countDown();
-                            pool.release(connection.getAddress(), connection);
-                            return;
                         }
-                    }
 
-                    if (response != null && response.getResult() != null) {
-                        for (PartitionResult partResult : response.getResult().getFailed_parts()) {
-                            if (partResult.code == ErrorCode.E_LEADER_CHANGED) {
-                                freshLeader(spaceName, part, partResult.getLeader());
-                            } else {
-                                LOGGER.error(String.format("part scan failed while retry %d, "
-                                        + "error code=%d", (retry + 1), partResult.code));
+                        if (response != null && response.getResult() != null) {
+                            for (PartitionResult partResult :
+                                    response.getResult().getFailed_parts()) {
+                                if (partResult.code == ErrorCode.E_LEADER_CHANGED) {
+                                    freshLeader(spaceName, partInfo.getPart(),
+                                            partResult.getLeader());
+                                    partInfo.setLeader(getLeader(partResult.getLeader()));
+                                    partScanQueue.putPart(partInfo);
+                                } else {
+                                    LOGGER.error(String.format("part scan failed, error code=%d",
+                                            partResult.code));
+                                    if (partSuccess) {
+                                        stop = true;
+                                        return;
+                                    }
+                                }
                             }
+                        } else {
+                            LOGGER.error("part scan failed, response result is null");
                         }
-                    } else {
-                        LOGGER.error("part scan failed, response result is null");
+                        pool.release(addr, connection);
                     }
-                    pool.release(connection.getAddress(), connection);
+                    partInfo = partScanQueue.getPart(addr);
                 }
                 countDownLatch.countDown();
             });
@@ -125,7 +143,7 @@ public class ScanVertexResultIterator extends ScanResultIterator {
             LOGGER.error("scan interrupted:", interruptedE);
             throw interruptedE;
         }
-        hasNext = partLeaders.size() > 0;
+        hasNext = partScanQueue.size() > 0;
         return processor.constructResult(results);
     }
 
@@ -142,16 +160,23 @@ public class ScanVertexResultIterator extends ScanResultIterator {
      * builder to build ScanVertexResult
      */
     public static class ScanVertexResultBuilder {
-        Map<Integer, HostAndPort> partLeaders;
+        Set<PartScanInfo> partScanInfoList;
+        List<HostAndPort> addresses;
         ScanVertexRequest request;
         VertexProcessor processor;
         MetaClient metaClient;
         String spaceName;
         StorageConnPool pool;
+        boolean partSuccess;
 
         public ScanVertexResultBuilder withPartLeaders(
-                Map<Integer, HostAndPort> partLeaders) {
-            this.partLeaders = partLeaders;
+                Set<PartScanInfo> partScanInfoList) {
+            this.partScanInfoList = partScanInfoList;
+            return this;
+        }
+
+        public ScanVertexResultBuilder withAddresses(List<HostAndPort> addresses) {
+            this.addresses = addresses;
             return this;
         }
 
@@ -180,14 +205,21 @@ public class ScanVertexResultIterator extends ScanResultIterator {
             return this;
         }
 
+        public ScanVertexResultBuilder withPartSuccess(boolean partSuccess) {
+            this.partSuccess = partSuccess;
+            return this;
+        }
+
         public ScanVertexResultIterator build() {
             return new ScanVertexResultIterator(
                     metaClient,
                     spaceName,
                     pool,
-                    partLeaders,
+                    partScanInfoList,
+                    addresses,
                     request,
-                    processor);
+                    processor,
+                    partSuccess);
         }
     }
 }

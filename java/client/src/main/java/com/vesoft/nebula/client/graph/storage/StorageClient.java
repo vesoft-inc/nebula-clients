@@ -13,6 +13,7 @@ import com.vesoft.nebula.client.graph.meta.MetaClient;
 import com.vesoft.nebula.client.graph.meta.MetaInfo;
 import com.vesoft.nebula.client.graph.storage.processor.EdgeProcessor;
 import com.vesoft.nebula.client.graph.storage.processor.VertexProcessor;
+import com.vesoft.nebula.client.graph.storage.scan.PartScanInfo;
 import com.vesoft.nebula.client.graph.storage.scan.ScanEdgeResultIterator;
 import com.vesoft.nebula.client.graph.storage.scan.ScanVertexResultIterator;
 import com.vesoft.nebula.storage.EdgeProp;
@@ -20,6 +21,7 @@ import com.vesoft.nebula.storage.ScanEdgeRequest;
 import com.vesoft.nebula.storage.ScanVertexRequest;
 import com.vesoft.nebula.storage.VertexProp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,12 +105,12 @@ public class StorageClient {
                                                int limit,
                                                long startTime,
                                                long endTime) {
-        Map<Integer, HostAndPort> partLeaders = Maps.newHashMap();
+        Set<PartScanInfo> partScanInfos = new HashSet<>();
         HostAndPort leader = getLeader(spaceName, part);
         if (leader == null) {
             throw new IllegalArgumentException("Part " + part + " not found in space " + spaceName);
         }
-        partLeaders.put(part, getLeader(spaceName, part));
+        partScanInfos.add(new PartScanInfo(part, leader));
 
         List<VertexProp> vertexCols = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : returnCols.entrySet()) {
@@ -130,7 +132,7 @@ public class StorageClient {
                 .setEnd_time(endTime);
 
 
-        return doScanVertex(spaceName, partLeaders, request);
+        return doScanVertex(spaceName, partScanInfos, request);
     }
 
 
@@ -170,9 +172,9 @@ public class StorageClient {
                                                 long startTime,
                                                 long endTime) {
 
-        Map<Integer, HostAndPort> leaders = Maps.newHashMap();
+        Set<PartScanInfo> partScanInfoSet = new HashSet<>();
         for (int part : parts) {
-            leaders.put(part, getLeader(spaceName, part));
+            partScanInfoSet.add(new PartScanInfo(part, getLeader(spaceName, part)));
         }
 
         List<VertexProp> vertexCols = new ArrayList<>();
@@ -194,7 +196,7 @@ public class StorageClient {
                 .setStart_time(startTime)
                 .setEnd_time(endTime);
 
-        return doScanVertex(spaceName, leaders, request);
+        return doScanVertex(spaceName, partScanInfoSet, request);
     }
 
 
@@ -202,18 +204,18 @@ public class StorageClient {
      * do scan vertex
      *
      * @param spaceName   nebula graph space
-     * @param partLeaders leaders of all parts
+     * @param partScanInfoSet leaders of all parts
      * @param request     {@link ScanVertexRequest}
      * @return result iterator
      */
     private ScanVertexResultIterator doScanVertex(String spaceName,
-                                                  Map<Integer, HostAndPort> partLeaders,
+                                                  Set<PartScanInfo> partScanInfoSet,
                                                   ScanVertexRequest request) {
 
         VertexProcessor vertexProcessor = new VertexProcessor(spaceName, metaInfo);
 
         return new ScanVertexResultIterator.ScanVertexResultBuilder()
-                .withPartLeaders(partLeaders)
+                .withPartLeaders(partScanInfoSet)
                 .withRequest(request)
                 .withProcessor(vertexProcessor)
                 .withMetaClient(metaClient)

@@ -6,7 +6,10 @@
 
 package com.vesoft.nebula.client.graph.storage.scan;
 
+import com.google.common.collect.Maps;
 import com.vesoft.nebula.client.graph.storage.data.Vertex;
+import com.vesoft.nebula.client.graph.storage.data.VertexDataSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.StringUtils;
@@ -16,15 +19,13 @@ import org.slf4j.LoggerFactory;
 public class ScanVertexResult {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScanVertexResult.class);
 
-    private final List<Vertex> vertices;
-    private final Map<String, Vertex> vidVertices;
-    private final Map<String, List<Vertex>> labelVertices;
+    private final List<VertexDataSet> vertexDataSets;
+    private List<Vertex> vertices = new ArrayList<>();
+    private Map<String, Vertex> vidVertices = Maps.newHashMap();
+    private Map<String, List<Vertex>> labelVertices = Maps.newHashMap();
 
-    public ScanVertexResult(List<Vertex> vertices, Map<String, Vertex> vidVertices,
-                            Map<String, List<Vertex>> labelVertices) {
-        this.vertices = vertices;
-        this.vidVertices = vidVertices;
-        this.labelVertices = labelVertices;
+    public ScanVertexResult(List<VertexDataSet> vertexDataSets) {
+        this.vertexDataSets = vertexDataSets;
     }
 
     /**
