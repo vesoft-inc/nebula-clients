@@ -75,7 +75,7 @@ func TestAsString(t *testing.T) {
 	value := nebula.Value{SVal: []byte(val)}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsString())
-	assert.Equal(t, "test_string", valWrap.String())
+	assert.Equal(t, "\"test_string\"", valWrap.String())
 	res, _ := valWrap.AsString()
 	assert.Equal(t, string(value.GetSVal()), res)
 }
@@ -90,7 +90,7 @@ func TestAsList(t *testing.T) {
 		LVal: &nebula.List{Values: valList},
 	}
 	valWrap := ValueWrapper{&value}
-	assert.Equal(t, "[elem1, elem2, elem3]", valWrap.String())
+	assert.Equal(t, "[\"elem1\", \"elem2\", \"elem3\"]", valWrap.String())
 	assert.Equal(t, true, valWrap.IsList())
 
 	res, _ := valWrap.AsList()
@@ -113,7 +113,7 @@ func TestAsDedupList(t *testing.T) {
 		UVal: &nebula.Set{Values: valList},
 	}
 	valWrap := ValueWrapper{&value}
-	assert.Equal(t, "[elem1, elem2, elem3]", valWrap.String())
+	assert.Equal(t, "[\"elem1\", \"elem2\", \"elem3\"]", valWrap.String())
 	assert.Equal(t, true, valWrap.IsSet())
 
 	res, _ := valWrap.AsList()
@@ -136,7 +136,7 @@ func TestAsMap(t *testing.T) {
 	mval := nebula.Map{Kvs: valueMap}
 	value := nebula.Value{MVal: &mval}
 	valWrap := ValueWrapper{&value}
-	assert.Equal(t, "{key0: val0, key1: val1, key2: val2}", valWrap.String())
+	assert.Equal(t, "{key0: \"val0\", key1: \"val1\", key2: \"val2\"}", valWrap.String())
 	assert.Equal(t, true, valWrap.IsMap())
 	vMap := value.GetMVal().Kvs
 	valWrapMap, err := valWrap.AsMap()
@@ -156,9 +156,9 @@ func TestAsNode(t *testing.T) {
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsVertex())
 	assert.Equal(t,
-		"[Adam: {tag0:{[prop0: 0], [prop1: 1], [prop2: 2], [prop3: 3], [prop4: 4]}, "+
-			"tag1:{[prop0: 0], [prop1: 1], [prop2: 2], [prop3: 3], [prop4: 4]}, "+
-			"tag2:{[prop0: 0], [prop1: 1], [prop2: 2], [prop3: 3], [prop4: 4]}}]",
+		"[Adam: {tag0:{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}, "+
+			"tag1:{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}, "+
+			"tag2:{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}}]",
 		valWrap.String())
 	res, _ := valWrap.AsNode()
 	node, _ := genNode(value.GetVVal())
@@ -169,7 +169,7 @@ func TestAsRelationship(t *testing.T) {
 	value := nebula.Value{EVal: getEdge("Alice", "Bob")}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsEdge())
-	assert.Equal(t, "(Alice)-[classmate:1@100 {[prop0: 0], [prop1: 1], [prop2: 2], [prop3: 3], [prop4: 4]}]->(Bob)", valWrap.String())
+	assert.Equal(t, "(\"Alice\")-[classmate]->(\"Bob\")@100{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}", valWrap.String())
 	res, _ := valWrap.AsRelationship()
 	relationship, _ := genRelationship(value.GetEVal())
 	assert.Equal(t, *relationship, *res)
@@ -180,7 +180,7 @@ func TestAsPathWrapper(t *testing.T) {
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsPath())
 	assert.Equal(t,
-		"Alice-[classmate:1@100]->vertex0-[classmate:-1@100]<-vertex1-[classmate:1@100]->vertex2-[classmate:-1@100]<-vertex3-[classmate:1@100]->vertex4",
+		"(Alice)-[classmate@100]->(vertex0)<-[classmate@100]-(vertex1)-[classmate@100]->(vertex2)<-[classmate@100]-(vertex3)-[classmate@100]->(vertex4)",
 		valWrap.String())
 
 	res, _ := valWrap.AsPath()

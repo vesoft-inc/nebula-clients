@@ -131,22 +131,23 @@ func main() {
 			record.PrintRow()
 			fmt.Print("\n")
 			// Get a value in the row by column index
-			v1, err := record.GetValueByIndex(0)
+			valueWrapper, err := record.GetValueByIndex(0)
 			if err != nil {
 				log.Error(err.Error())
 			}
 			// Get type of the value
-			v1Type := v1.GetType()
-			fmt.Printf("v1 type: %s \n", v1Type)
-			// Check if v1 is a tring type
-			if v1.IsString() {
-				// Convert v1 to a string value
-				v1Str, err := v1.AsString()
+			fmt.Printf("valueWrapper type: %s \n", valueWrapper.GetType())
+			// Check if valueWrapper is a string type
+			if valueWrapper.IsString() {
+				// Convert valueWrapper to a string value
+				v1Str, err := valueWrapper.AsString()
 				if err != nil {
 					log.Error(err.Error())
 				}
-				fmt.Print(v1Str)
+				fmt.Printf("Result of ValueWrapper.AsString(): %s\n", v1Str)
 			}
+			// Print ValueWrapper using String()
+			fmt.Printf("Print using ValueWrapper.String(): %s", valueWrapper.String())
 		}
 	}(&wg)
 	wg.Wait()
