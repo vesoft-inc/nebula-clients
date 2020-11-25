@@ -19,6 +19,7 @@ import (
 func TestIsEmpty(t *testing.T) {
 	value := nebula.Value{}
 	valWrap := ValueWrapper{&value}
+	assert.Equal(t, "__EMPTY__", valWrap.String())
 	assert.Equal(t, true, valWrap.IsEmpty())
 }
 
@@ -27,6 +28,7 @@ func TestAsNull(t *testing.T) {
 	value := nebula.Value{NVal: &null}
 	valWrap := ValueWrapper{&value}
 	res, _ := valWrap.AsNull()
+	assert.Equal(t, "__NULL__", valWrap.String())
 	assert.Equal(t, value.GetNVal(), res)
 }
 
@@ -36,6 +38,7 @@ func TestAsBool(t *testing.T) {
 	value := nebula.Value{BVal: bval}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsBool())
+	assert.Equal(t, "true", valWrap.String())
 	res, _ := valWrap.AsBool()
 	assert.Equal(t, value.GetBVal(), res)
 }
@@ -46,6 +49,7 @@ func TestAsInt(t *testing.T) {
 	value := nebula.Value{IVal: val}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsInt())
+	assert.Equal(t, "100", valWrap.String())
 	res, _ := valWrap.AsInt()
 	assert.Equal(t, value.GetIVal(), res)
 }
@@ -55,6 +59,12 @@ func TestAsFloat(t *testing.T) {
 	*val = 100.111
 	value := nebula.Value{FVal: val}
 	valWrap := ValueWrapper{&value}
+	val2 := new(float64)
+	*val2 = 100.00
+	value2 := nebula.Value{FVal: val2}
+	valWrap2 := ValueWrapper{&value2}
+	assert.Equal(t, "100.111", valWrap.String())
+	assert.Equal(t, "100.0", valWrap2.String())
 	assert.Equal(t, true, valWrap.IsFloat())
 	res, _ := valWrap.AsFloat()
 	assert.Equal(t, value.GetFVal(), res)
@@ -65,6 +75,7 @@ func TestAsString(t *testing.T) {
 	value := nebula.Value{SVal: []byte(val)}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsString())
+	assert.Equal(t, "test_string", valWrap.String())
 	res, _ := valWrap.AsString()
 	assert.Equal(t, string(value.GetSVal()), res)
 }
@@ -79,6 +90,7 @@ func TestAsList(t *testing.T) {
 		LVal: &nebula.List{Values: valList},
 	}
 	valWrap := ValueWrapper{&value}
+	assert.Equal(t, "[elem1, elem2, elem3]", valWrap.String())
 	assert.Equal(t, true, valWrap.IsList())
 
 	res, _ := valWrap.AsList()
@@ -91,11 +103,63 @@ func TestAsList(t *testing.T) {
 	}
 }
 
+func TestAsDedupList(t *testing.T) {
+	var valList = []*nebula.Value{
+		&nebula.Value{SVal: []byte("elem1")},
+		&nebula.Value{SVal: []byte("elem2")},
+		&nebula.Value{SVal: []byte("elem3")},
+	}
+	value := nebula.Value{
+		UVal: &nebula.Set{Values: valList},
+	}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, "[elem1, elem2, elem3]", valWrap.String())
+	assert.Equal(t, true, valWrap.IsSet())
+
+	res, _ := valWrap.AsList()
+	for i := 0; i < len(res); i++ {
+		strTemp, err := res[i].AsString()
+		if err != nil {
+			t.Error(err.Error())
+		}
+		assert.Equal(t, string(valList[i].GetSVal()), strTemp)
+	}
+}
+
+func TestAsMap(t *testing.T) {
+	valueMap := make(map[string]*nebula.Value)
+	for i := 0; i < 3; i++ {
+		key := fmt.Sprintf("key%d", i)
+		val := fmt.Sprintf("val%d", i)
+		valueMap[key] = &nebula.Value{SVal: []byte(val)}
+	}
+	mval := nebula.Map{Kvs: valueMap}
+	value := nebula.Value{MVal: &mval}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, "{key0: val0, key1: val1, key2: val2}", valWrap.String())
+	assert.Equal(t, true, valWrap.IsMap())
+	vMap := value.GetMVal().Kvs
+	valWrapMap, err := valWrap.AsMap()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	for i := 0; i < len(vMap); i++ {
+		key := fmt.Sprintf("key%d", i)
+		str, _ := valWrapMap[key].AsString()
+		assert.Equal(t, string(vMap[key].GetSVal()), str)
+	}
+}
+
 // TODO: add tests for AsTime/Date/DateTime when service supports timezone
 func TestAsNode(t *testing.T) {
 	value := nebula.Value{VVal: getVertex("Adam")}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsVertex())
+	assert.Equal(t,
+		"[Adam: {tag0:{[prop0: 0], [prop1: 1], [prop2: 2], [prop3: 3], [prop4: 4]}, "+
+			"tag1:{[prop0: 0], [prop1: 1], [prop2: 2], [prop3: 3], [prop4: 4]}, "+
+			"tag2:{[prop0: 0], [prop1: 1], [prop2: 2], [prop3: 3], [prop4: 4]}}]",
+		valWrap.String())
 	res, _ := valWrap.AsNode()
 	node, _ := genNode(value.GetVVal())
 	assert.Equal(t, *node, *res)
@@ -105,15 +169,20 @@ func TestAsRelationship(t *testing.T) {
 	value := nebula.Value{EVal: getEdge("Alice", "Bob")}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsEdge())
+	assert.Equal(t, "(Alice)-[classmate:1@100 {[prop0: 0], [prop1: 1], [prop2: 2], [prop3: 3], [prop4: 4]}]->(Bob)", valWrap.String())
 	res, _ := valWrap.AsRelationship()
 	relationship, _ := genRelationship(value.GetEVal())
 	assert.Equal(t, *relationship, *res)
 }
 
 func TestAsPathWrapper(t *testing.T) {
-	value := nebula.Value{PVal: getPath("Alice", 3)}
+	value := nebula.Value{PVal: getPath("Alice", 5)}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsPath())
+	assert.Equal(t,
+		"Alice-[classmate:1@100]->vertex0-[classmate:-1@100]<-vertex1-[classmate:1@100]->vertex2-[classmate:-1@100]<-vertex3-[classmate:1@100]->vertex4",
+		valWrap.String())
+
 	res, _ := valWrap.AsPath()
 	path, _ := genPathWrapper(value.GetPVal())
 	assert.Equal(t, *path, *res)

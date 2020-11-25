@@ -257,7 +257,7 @@ func (record Record) GetValueByColName(colName string) (*ValueWrapper, error) {
 
 func (record Record) PrintRow() {
 	for _, val := range record._record {
-		val.printValue()
+		fmt.Printf("%15s |", val.String())
 	}
 }
 

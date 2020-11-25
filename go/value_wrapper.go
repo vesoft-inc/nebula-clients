@@ -8,6 +8,9 @@ package nebula
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
 )
@@ -57,7 +60,7 @@ func (valueWrapper ValueWrapper) IsList() bool {
 }
 
 func (valueWrapper ValueWrapper) IsSet() bool {
-	return valueWrapper.value.IsSetSVal()
+	return valueWrapper.value.IsSetUVal()
 }
 
 func (valueWrapper ValueWrapper) IsMap() bool {
@@ -239,35 +242,115 @@ func (valueWrapper ValueWrapper) GetType() string {
 	return "empty"
 }
 
-func (valWarp ValueWrapper) printValue() {
+/*
+String() returns the value in the ValueWrapper as a string.
+Maps in the output will be sorted by key value in alphabetical order.
+For vetex, the output is in form (vid: tagName{[propKey: propVal], [propKey2, propVal2]}),
+For edge, the output is in form (SrcVid)-[name:edgeType@edgeRanking{propKey: propVal, propKey2, propVal2}]->(DstVid)
+where arrow direction depends on edgeType
+For path,
+*/
+func (valWarp ValueWrapper) String() string {
 	value := valWarp.value
 	if value.IsSetNVal() {
-		fmt.Printf("%15s |", value.GetNVal().String())
+		return value.GetNVal().String()
 	} else if value.IsSetBVal() {
-		fmt.Printf("%15t |", value.GetBVal())
+		return fmt.Sprintf("%t", value.GetBVal())
 	} else if value.IsSetIVal() {
-		fmt.Printf("%15d |", value.GetIVal())
+		return fmt.Sprintf("%d", value.GetIVal())
 	} else if value.IsSetFVal() {
-		fmt.Printf("%15.1f |", value.GetFVal())
+		fStr := strconv.FormatFloat(value.GetFVal(), 'f', -1, 64)
+		if !strings.Contains(fStr, ".") {
+			fStr = fStr + ".0"
+		}
+		return fStr
 	} else if value.IsSetSVal() {
-		fmt.Printf("%15s |", string(value.GetSVal()))
+		return string(value.GetSVal())
 	} else if value.IsSetDVal() {
-		fmt.Printf("%15s |", value.GetDVal().String())
+		return value.GetDVal().String()
 	} else if value.IsSetTVal() {
-		fmt.Printf("%15s |", value.GetTVal().String())
+		return value.GetTVal().String()
 	} else if value.IsSetDtVal() {
-		fmt.Printf("%15s |", value.GetDtVal().String())
-	} else if value.IsSetVVal() {
-		fmt.Printf("%15s |", value.GetVVal().String())
-	} else if value.IsSetEVal() {
-		fmt.Printf("%15s |", value.GetEVal().String())
-	} else if value.IsSetPVal() {
-		fmt.Printf("%15s |", value.GetPVal().String())
+		return value.GetDtVal().String()
+	} else if value.IsSetVVal() { // (vid: tagName{[propKey: propVal], [propKey2, propVal2]})
+		var keyList []string
+		var kvStr []string
+		var tagStr []string
+		vertex := value.GetVVal()
+		vid := vertex.GetVid()
+		for _, tag := range vertex.GetTags() {
+			kvs := tag.GetProps()
+			tagName := tag.GetName()
+			for k, _ := range kvs {
+				keyList = append(keyList, k)
+			}
+			sort.Strings(keyList)
+			for _, k := range keyList {
+
+				kvTemp := fmt.Sprintf("[%s: %s]", k, ValueWrapper{kvs[k]}.String())
+				kvStr = append(kvStr, kvTemp)
+			}
+			tagStr = append(tagStr, fmt.Sprintf("%s:{%s}", tagName, strings.Join(kvStr, ", ")))
+			keyList = nil
+			kvStr = nil
+		}
+		return fmt.Sprintf("[%s: {%s}]", vid, strings.Join(tagStr, ", "))
+
+	} else if value.IsSetEVal() { // (SrcVid)-[name:edgeType@edgeRanking{propKey: propVal, propKey2, propVal2}]->(DstVid)
+		edge := value.GetEVal()
+		var keyList []string
+		var kvStr []string
+		for k, _ := range edge.Props {
+			keyList = append(keyList, k)
+		}
+		sort.Strings(keyList)
+		for _, k := range keyList {
+			kvTemp := fmt.Sprintf("[%s: %s]", k, ValueWrapper{edge.Props[k]}.String())
+			kvStr = append(kvStr, kvTemp)
+		}
+		if edge.Type > 0 {
+			return fmt.Sprintf("(%s)-[%s:%d@%d {%s}]->(%s)",
+				string(edge.Src), string(edge.Name), edge.Type, edge.Ranking, fmt.Sprintf("%s", strings.Join(kvStr, ", ")), string(edge.Dst))
+		}
+		return fmt.Sprintf("(%s)-[%s:%d@%d {%s}]<-(%s)", string(edge.Src), string(edge.Name),
+			edge.Type, edge.Ranking, fmt.Sprintf("%s", strings.Join(kvStr, ", ")), string(edge.Dst))
+	} else if value.IsSetPVal() { // (v1)-[name:edgeType@edgeRanking]->(v2)-[name:edgeType@edgeRanking]->(v3)
+		path := value.GetPVal()
+		src := path.Src
+		steps := path.Steps
+		resStr := string(src.Vid)
+		for _, step := range steps {
+			if step.Type > 0 {
+				resStr = resStr + fmt.Sprintf("-[%s:%d@%d]->%s", string(step.Name), step.Type, step.Ranking, string(step.Dst.Vid))
+			} else {
+				resStr = resStr + fmt.Sprintf("-[%s:%d@%d]<-%s", string(step.Name), step.Type, step.Ranking, string(step.Dst.Vid))
+			}
+		}
+		return resStr
 	} else if value.IsSetLVal() {
-		fmt.Printf("%15s |", value.GetLVal().String())
+		lval := value.GetLVal()
+		var strs []string
+		for _, val := range lval.Values {
+			strs = append(strs, ValueWrapper{val}.String())
+		}
+		return fmt.Sprintf("[%s]", strings.Join(strs, ", "))
 	} else if value.IsSetMVal() {
-		fmt.Printf("%15s |", value.GetMVal().String())
+		// {k0: v0, k1: v1}
+		mval := value.GetMVal()
+		var output []string
+		for k, v := range mval.Kvs {
+			output = append(output, fmt.Sprintf("%s: %s", k, ValueWrapper{v}.String()))
+		}
+		return fmt.Sprintf("{%s}", strings.Join(output, ", "))
 	} else if value.IsSetUVal() {
-		fmt.Printf("%15s |", value.GetUVal().String())
+		// set to string
+		uval := value.GetUVal()
+		var strs []string
+		for _, val := range uval.Values {
+			strs = append(strs, ValueWrapper{val}.String())
+		}
+		return fmt.Sprintf("[%s]", strings.Join(strs, ", "))
+	} else { // is empty
+		return "__EMPTY__"
 	}
 }
