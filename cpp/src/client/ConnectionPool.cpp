@@ -75,17 +75,19 @@ void ConnectionPool::giveBack(Connection &&conn) {
 }
 
 void ConnectionPool::newConnection(std::size_t cursor, std::size_t count) {
-    for (std::size_t i = 0, j = cursor, k = 0; i < count; ++j, ++k) {
-        if (k > count * address_.size()) {
+    for (std::size_t connectionCount = 0, addrCursor = cursor, loopCount = 0;
+         connectionCount < count;
+         ++addrCursor, ++loopCount) {
+        if (loopCount > count * address_.size()) {
             // Can't get so many connections, return to avoid dead loop
             return;
         }
-        if (j >= address_.size()) {
-            j = 0;
+        if (addrCursor >= address_.size()) {
+            addrCursor = 0;
         }
         Connection conn;
-        if (conn.open(address_[j].first, address_[j].second)) {
-            ++i;
+        if (conn.open(address_[addrCursor].first, address_[addrCursor].second)) {
+            ++connectionCount;
             conns_.emplace_back(std::move(conn));
         }
         // ignore error
