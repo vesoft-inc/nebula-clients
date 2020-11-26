@@ -20,6 +20,6 @@ setup(
                       'futures; python_version == "2.7"'],
     packages=find_packages(),
     platforms=["2.7, 3.5, 3.7"],
-    package_dir={'nebula2': 'nebula',
+    package_dir={'nebula2': 'nebula2',
                  'thirft': 'thirft'},
 )
