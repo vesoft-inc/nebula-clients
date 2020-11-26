@@ -277,7 +277,7 @@ func (valWarp ValueWrapper) String() string {
 		return fmt.Sprintf("%d-%d-%dT%d:%d:%d.%d",
 			dateTime.Year, dateTime.Month, dateTime.Day,
 			dateTime.Hour, dateTime.Minute, dateTime.Sec, dateTime.Microsec)
-	} else if value.IsSetVVal() { // Vertex (vid: tagName{propKey: propVal, propKey2, propVal2})
+	} else if value.IsSetVVal() { // Vertex format: ("VertexID" :tag1{k0: v0,k1: v1}:tag2{k2: v2})
 		var keyList []string
 		var kvStr []string
 		var tagStr []string
@@ -291,15 +291,15 @@ func (valWarp ValueWrapper) String() string {
 			}
 			sort.Strings(keyList)
 			for _, k := range keyList {
-				kvTemp := fmt.Sprintf("\"%s\": %s", k, ValueWrapper{kvs[k]}.String())
+				kvTemp := fmt.Sprintf("%s: %s", k, ValueWrapper{kvs[k]}.String())
 				kvStr = append(kvStr, kvTemp)
 			}
-			tagStr = append(tagStr, fmt.Sprintf("%s:{%s}", tagName, strings.Join(kvStr, ", ")))
+			tagStr = append(tagStr, fmt.Sprintf("%s{%s}", tagName, strings.Join(kvStr, ", ")))
 			keyList = nil
 			kvStr = nil
 		}
-		return fmt.Sprintf("[%s: {%s}]", vid, strings.Join(tagStr, ", "))
-	} else if value.IsSetEVal() { // Edge (SrcVid)-[name]->(DstVid)@Ranking{prop1: val1, prop2: val2}
+		return fmt.Sprintf("(\"%s\" :%s)", vid, strings.Join(tagStr, " :"))
+	} else if value.IsSetEVal() { // Edge format: (src)-[:edge@ranking{props}]->(dst)
 		edge := value.GetEVal()
 		var keyList []string
 		var kvStr []string
@@ -308,25 +308,25 @@ func (valWarp ValueWrapper) String() string {
 		}
 		sort.Strings(keyList)
 		for _, k := range keyList {
-			kvTemp := fmt.Sprintf("\"%s\": %s", k, ValueWrapper{edge.Props[k]}.String())
+			kvTemp := fmt.Sprintf("%s: %s", k, ValueWrapper{edge.Props[k]}.String())
 			kvStr = append(kvStr, kvTemp)
 		}
 		if edge.Type > 0 {
-			return fmt.Sprintf(`("%s")-[%s]->("%s")@%d{%s}`,
-				string(edge.Src), string(edge.Name), string(edge.Dst), edge.Ranking, fmt.Sprintf("%s", strings.Join(kvStr, ", ")))
+			return fmt.Sprintf(`("%s")-[:%s@%d{%s}]->("%s")`,
+				string(edge.Src), string(edge.Name), edge.Ranking, fmt.Sprintf("%s", strings.Join(kvStr, ", ")), string(edge.Dst))
 		}
-		return fmt.Sprintf(`("%s")<-[%s]-("%s")@%d{%s}`,
-			string(edge.Src), string(edge.Name), string(edge.Dst), edge.Ranking, fmt.Sprintf("%s", strings.Join(kvStr, ", ")))
-	} else if value.IsSetPVal() { // Path (v1)-[name@edgeRanking]->(v2)-[name@edgeRanking]->(v3)
+		return fmt.Sprintf(`("%s")<-[:%s@%d{%s}]-("%s")`,
+			string(edge.Src), string(edge.Name), edge.Ranking, fmt.Sprintf("%s", strings.Join(kvStr, ", ")), string(edge.Dst))
+	} else if value.IsSetPVal() { // Path format: (src)-[:TypeName@ranking]->(dst)-[:TypeName@ranking]->(dst)
 		path := value.GetPVal()
 		src := path.Src
 		steps := path.Steps
-		resStr := `(` + string(src.Vid) + `)`
+		resStr := "(\"" + string(src.Vid) + "\")"
 		for _, step := range steps {
 			if step.Type > 0 {
-				resStr = resStr + fmt.Sprintf("-[%s@%d]->(%s)", string(step.Name), step.Ranking, string(step.Dst.Vid))
+				resStr = resStr + fmt.Sprintf("-[:%s@%d]->(\"%s\")", string(step.Name), step.Ranking, string(step.Dst.Vid))
 			} else {
-				resStr = resStr + fmt.Sprintf("<-[%s@%d]-(%s)", string(step.Name), step.Ranking, string(step.Dst.Vid))
+				resStr = resStr + fmt.Sprintf("<-[:%s@%d]-(\"%s\")", string(step.Name), step.Ranking, string(step.Dst.Vid))
 			}
 		}
 		return resStr
@@ -348,7 +348,7 @@ func (valWarp ValueWrapper) String() string {
 		}
 		sort.Strings(keyList)
 		for _, k := range keyList {
-			output = append(output, fmt.Sprintf("\"%s\": %s", k, ValueWrapper{kvs[k]}.String()))
+			output = append(output, fmt.Sprintf("%s: %s", k, ValueWrapper{kvs[k]}.String()))
 		}
 		return fmt.Sprintf("{%s}", strings.Join(output, ", "))
 	} else if value.IsSetUVal() {

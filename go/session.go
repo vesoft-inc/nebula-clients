@@ -38,10 +38,10 @@ func (session *Session) Execute(stmt string) (*ResultSet, error) {
 	if err, ok := err.(thrift.TransportException); ok && err.TypeID() == thrift.END_OF_FILE {
 		_err := session.reConnect()
 		if _err != nil {
-			session.log.Error(fmt.Sprintf("Failed to reconnect, %s \n", _err.Error()))
+			session.log.Error(fmt.Sprintf("Failed to reconnect, %s", _err.Error()))
 			return nil, _err
 		}
-		session.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d \n",
+		session.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d",
 			session.connection.severAddress.Host, session.connection.severAddress.Port))
 		// Execute with the new connetion
 		resp, err := session.connection.execute(session.sessionID, stmt)

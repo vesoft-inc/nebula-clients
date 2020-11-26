@@ -136,7 +136,7 @@ func TestAsMap(t *testing.T) {
 	mval := nebula.Map{Kvs: valueMap}
 	value := nebula.Value{MVal: &mval}
 	valWrap := ValueWrapper{&value}
-	assert.Equal(t, "{\"key0\": \"val0\", \"key1\": \"val1\", \"key2\": \"val2\"}", valWrap.String())
+	assert.Equal(t, "{key0: \"val0\", key1: \"val1\", key2: \"val2\"}", valWrap.String())
 	assert.Equal(t, true, valWrap.IsMap())
 	vMap := value.GetMVal().Kvs
 	valWrapMap, err := valWrap.AsMap()
@@ -177,9 +177,9 @@ func TestAsNode(t *testing.T) {
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsVertex())
 	assert.Equal(t,
-		"[Adam: {tag0:{\"prop0\": 0, \"prop1\": 1, \"prop2\": 2, \"prop3\": 3, \"prop4\": 4}, "+
-			"tag1:{\"prop0\": 0, \"prop1\": 1, \"prop2\": 2, \"prop3\": 3, \"prop4\": 4}, "+
-			"tag2:{\"prop0\": 0, \"prop1\": 1, \"prop2\": 2, \"prop3\": 3, \"prop4\": 4}}]",
+		"(\"Adam\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})",
 		valWrap.String())
 	res, _ := valWrap.AsNode()
 	node, _ := genNode(value.GetVVal())
@@ -190,20 +190,19 @@ func TestAsRelationship(t *testing.T) {
 	value := nebula.Value{EVal: getEdge("Alice", "Bob")}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsEdge())
-	assert.Equal(t, "(\"Alice\")-[classmate]->(\"Bob\")@100{\"prop0\": 0, \"prop1\": 1, \"prop2\": 2, \"prop3\": 3, \"prop4\": 4}", valWrap.String())
+	assert.Equal(t, "(\"Alice\")-[:classmate@100{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}]->(\"Bob\")", valWrap.String())
 	res, _ := valWrap.AsRelationship()
 	relationship, _ := genRelationship(value.GetEVal())
 	assert.Equal(t, *relationship, *res)
 }
 
-func TestAsPathWrapper(t *testing.T) {
+func TestAsPathWrapper(t *testing.T) { //("Tim Duncan")-[:serve@0]->("Spurs")<-[:serve@0]-("Tony Parker")
 	value := nebula.Value{PVal: getPath("Alice", 5)}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsPath())
 	assert.Equal(t,
-		"(Alice)-[classmate@100]->(vertex0)<-[classmate@100]-(vertex1)-[classmate@100]->(vertex2)<-[classmate@100]-(vertex3)-[classmate@100]->(vertex4)",
+		"(\"Alice\")-[:classmate@100]->(\"vertex0\")<-[:classmate@100]-(\"vertex1\")-[:classmate@100]->(\"vertex2\")<-[:classmate@100]-(\"vertex3\")-[:classmate@100]->(\"vertex4\")",
 		valWrap.String())
-
 	res, _ := valWrap.AsPath()
 	path, _ := genPathWrapper(value.GetPVal())
 	assert.Equal(t, *path, *res)
