@@ -266,12 +266,17 @@ func (valWarp ValueWrapper) String() string {
 		return fStr
 	} else if value.IsSetSVal() {
 		return `"` + string(value.GetSVal()) + `"`
-	} else if value.IsSetDVal() {
-		return value.GetDVal().String()
-	} else if value.IsSetTVal() {
-		return value.GetTVal().String()
-	} else if value.IsSetDtVal() {
-		return value.GetDtVal().String()
+	} else if value.IsSetDVal() { // Date yyyy-mm-dd
+		date := value.GetDVal()
+		return fmt.Sprintf("%d-%d-%d", date.Year, date.Month, date.Day)
+	} else if value.IsSetTVal() { // Time HH:MM:SS.MS
+		time := value.GetTVal()
+		return fmt.Sprintf("%d:%d:%d.%d", time.Hour, time.Minute, time.Sec, time.Microsec)
+	} else if value.IsSetDtVal() { // DateTime yyyy-mm-ddTHH:MM:SS.MS  TODO: add time zone
+		dateTime := value.GetDtVal()
+		return fmt.Sprintf("%d-%d-%dT%d:%d:%d.%d",
+			dateTime.Year, dateTime.Month, dateTime.Day,
+			dateTime.Hour, dateTime.Minute, dateTime.Sec, dateTime.Microsec)
 	} else if value.IsSetVVal() { // Vertex (vid: tagName{propKey: propVal, propKey2, propVal2})
 		var keyList []string
 		var kvStr []string
@@ -286,7 +291,7 @@ func (valWarp ValueWrapper) String() string {
 			}
 			sort.Strings(keyList)
 			for _, k := range keyList {
-				kvTemp := fmt.Sprintf("%s: %s", k, ValueWrapper{kvs[k]}.String())
+				kvTemp := fmt.Sprintf("\"%s\": %s", k, ValueWrapper{kvs[k]}.String())
 				kvStr = append(kvStr, kvTemp)
 			}
 			tagStr = append(tagStr, fmt.Sprintf("%s:{%s}", tagName, strings.Join(kvStr, ", ")))
@@ -303,7 +308,7 @@ func (valWarp ValueWrapper) String() string {
 		}
 		sort.Strings(keyList)
 		for _, k := range keyList {
-			kvTemp := fmt.Sprintf("%s: %s", k, ValueWrapper{edge.Props[k]}.String())
+			kvTemp := fmt.Sprintf("\"%s\": %s", k, ValueWrapper{edge.Props[k]}.String())
 			kvStr = append(kvStr, kvTemp)
 		}
 		if edge.Type > 0 {
@@ -325,14 +330,14 @@ func (valWarp ValueWrapper) String() string {
 			}
 		}
 		return resStr
-	} else if value.IsSetLVal() {
+	} else if value.IsSetLVal() { // List
 		lval := value.GetLVal()
 		var strs []string
 		for _, val := range lval.Values {
 			strs = append(strs, ValueWrapper{val}.String())
 		}
 		return fmt.Sprintf("[%s]", strings.Join(strs, ", "))
-	} else if value.IsSetMVal() {
+	} else if value.IsSetMVal() { // Map
 		// {k0: v0, k1: v1}
 		mval := value.GetMVal()
 		var keyList []string
@@ -343,7 +348,7 @@ func (valWarp ValueWrapper) String() string {
 		}
 		sort.Strings(keyList)
 		for _, k := range keyList {
-			output = append(output, fmt.Sprintf("%s: %s", k, ValueWrapper{kvs[k]}.String()))
+			output = append(output, fmt.Sprintf("\"%s\": %s", k, ValueWrapper{kvs[k]}.String()))
 		}
 		return fmt.Sprintf("{%s}", strings.Join(output, ", "))
 	} else if value.IsSetUVal() {

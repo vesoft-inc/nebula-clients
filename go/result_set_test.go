@@ -136,7 +136,7 @@ func TestAsMap(t *testing.T) {
 	mval := nebula.Map{Kvs: valueMap}
 	value := nebula.Value{MVal: &mval}
 	valWrap := ValueWrapper{&value}
-	assert.Equal(t, "{key0: \"val0\", key1: \"val1\", key2: \"val2\"}", valWrap.String())
+	assert.Equal(t, "{\"key0\": \"val0\", \"key1\": \"val1\", \"key2\": \"val2\"}", valWrap.String())
 	assert.Equal(t, true, valWrap.IsMap())
 	vMap := value.GetMVal().Kvs
 	valWrapMap, err := valWrap.AsMap()
@@ -151,14 +151,35 @@ func TestAsMap(t *testing.T) {
 }
 
 // TODO: add tests for AsTime/Date/DateTime when service supports timezone
+func TestAsDate(t *testing.T) {
+	value := nebula.Value{DVal: &nebula.Date{2020, 12, 25}}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsDate())
+	assert.Equal(t, "2020-12-25", valWrap.String())
+}
+
+func TestAsTime(t *testing.T) {
+	value := nebula.Value{TVal: &nebula.Time{13, 12, 25, 29}}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsTime())
+	assert.Equal(t, "13:12:25.29", valWrap.String())
+}
+
+func TestAsDateTime(t *testing.T) {
+	value := nebula.Value{DtVal: &nebula.DateTime{2020, 12, 25, 13, 12, 25, 29}}
+	valWrap := ValueWrapper{&value}
+	assert.Equal(t, true, valWrap.IsDateTime())
+	assert.Equal(t, "2020-12-25T13:12:25.29", valWrap.String())
+}
+
 func TestAsNode(t *testing.T) {
 	value := nebula.Value{VVal: getVertex("Adam")}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsVertex())
 	assert.Equal(t,
-		"[Adam: {tag0:{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}, "+
-			"tag1:{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}, "+
-			"tag2:{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}}]",
+		"[Adam: {tag0:{\"prop0\": 0, \"prop1\": 1, \"prop2\": 2, \"prop3\": 3, \"prop4\": 4}, "+
+			"tag1:{\"prop0\": 0, \"prop1\": 1, \"prop2\": 2, \"prop3\": 3, \"prop4\": 4}, "+
+			"tag2:{\"prop0\": 0, \"prop1\": 1, \"prop2\": 2, \"prop3\": 3, \"prop4\": 4}}]",
 		valWrap.String())
 	res, _ := valWrap.AsNode()
 	node, _ := genNode(value.GetVVal())
@@ -169,7 +190,7 @@ func TestAsRelationship(t *testing.T) {
 	value := nebula.Value{EVal: getEdge("Alice", "Bob")}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsEdge())
-	assert.Equal(t, "(\"Alice\")-[classmate]->(\"Bob\")@100{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}", valWrap.String())
+	assert.Equal(t, "(\"Alice\")-[classmate]->(\"Bob\")@100{\"prop0\": 0, \"prop1\": 1, \"prop2\": 2, \"prop3\": 3, \"prop4\": 4}", valWrap.String())
 	res, _ := valWrap.AsRelationship()
 	relationship, _ := genRelationship(value.GetEVal())
 	assert.Equal(t, *relationship, *res)

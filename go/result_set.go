@@ -211,6 +211,10 @@ func (res ResultSet) GetRowValuesByIndex(index int) (*Record, error) {
 
 // Returns all rows
 func (res ResultSet) GetRows() []*nebula.Row {
+	if res.resp.Data == nil || res.resp.Data.Rows == nil {
+		var empty []*nebula.Row
+		return empty
+	}
 	return res.resp.Data.Rows
 }
 
@@ -223,6 +227,10 @@ func (res ResultSet) GetErrorCode() graph.ErrorCode {
 }
 
 func (res ResultSet) GetErrorMsg() []byte {
+	if res.resp.ErrorMsg == nil {
+		var empty []byte
+		return empty
+	}
 	return res.resp.ErrorMsg
 }
 
