@@ -1,4 +1,4 @@
-# Copyright (c) 2018 vesoft inc. All rights reserved.
+# Copyright (c) 2020 vesoft inc. All rights reserved.
 #
 # This source code is licensed under Apache 2.0 License,
 # attached with Common Clause Condition 1.0, found in the LICENSES directory.
@@ -21,6 +21,8 @@ cmake_minimum_required(VERSION 3.5.0)
 
 # Set the project name
 project("Nebula C++ Client" C CXX)
+
+set(CMAKE_CXX_STANDARD 11)  # specify the C++ standard
 
 option(ENABLE_MODULE_UPDATE "Automatically update module" OFF)
 
@@ -66,6 +68,7 @@ list(APPEND CMAKE_MODULE_PATH ${nebula_common_source_dir}/cmake/nebula)
 include(PlatformCheck)
 include(NebulaCMakeMacros)
 include(GeneralCMakeOptions)
+include(ABIConfig)
 include(GeneralCMakeConfig)
 include(GeneralCompilerConfig)
 include(LinkerConfig)
@@ -75,6 +78,7 @@ include(SanitizerConfig)
 include(GitHooksConfig)
 include(GitInfoConfig)
 include(NebulaCustomTargets)
+include(NebulaCMakeMacros)
 include(ConfigNebulaCommon)
 
 set(ENABLE_PIC ON FORCE)
@@ -105,14 +109,34 @@ nebula_add_shared_linker_flag(-static-libstdc++)
 nebula_add_shared_linker_flag(-static-libgcc)
 nebula_add_shared_linker_flag(-rdynamic)
 nebula_add_shared_linker_flag(-Wl,--no-undefined)
-nebula_add_shared_linker_flag("-Wl,--version-script=${CMAKE_SOURCE_DIR}/exported-symbols.txt")
+#nebula_add_shared_linker_flag("-Wl,--version-script=${CMAKE_SOURCE_DIR}/exported-symbols.txt")
+
+
+nebula_add_subdirectory(src)
 
 install(
     DIRECTORY include/nebula
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
+# resuse the datatypes in common
+install(DIRECTORY ${nebula_common_source_dir}/src/common/datatypes
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/common
+        FILES_MATCHING PATTERN "*.h")
+
+# reuse the response of graph in common
+install(DIRECTORY ${nebula_common_source_dir}/src/common/graph
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/common
+        FILES_MATCHING PATTERN "*.h")
+    
+# reuse the thrift types in common
 install(
-    TARGETS nebula-graph-client
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    FILES
+        ${nebula_common_source_dir}/src/common/thrift/ThriftTypes.h
+    PERMISSIONS
+        OWNER_WRITE OWNER_READ
+        GROUP_READ
+        WORLD_READ
+    DESTINATION
+        ${CMAKE_INSTALL_INCLUDEDIR}/common/thrift
 )
