@@ -9,6 +9,7 @@ package nebula
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
@@ -273,9 +274,11 @@ func (record Record) GetValueByColName(colName string) (*ValueWrapper, error) {
 }
 
 func (record Record) PrintRow() {
+	var strList []string
 	for _, val := range record._record {
-		fmt.Printf("%15s |", val.String())
+		strList = append(strList, val.String())
 	}
+	fmt.Printf(strings.Join(strList, ", "))
 }
 
 func (record Record) hasColName(colName string) bool {
