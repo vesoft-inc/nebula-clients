@@ -26,8 +26,8 @@ from nebula2.Config import Config
 
 from nebula2.Exception import (
     NotValidConnectionException,
-    InValidHostname
-)
+    InValidHostname,
+    IOErrorException)
 
 
 class TestConnection(TestCase):
