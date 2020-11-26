@@ -39,6 +39,15 @@ class ValueWrapper(object):
     def is_string(self):
         return self._value.getType() == ttypes.Value.SVAL
 
+    def is_list(self):
+        return self._value.getType() == ttypes.Value.LVAL
+
+    def is_set(self):
+        return self._value.getType() == ttypes.Value.UVAL
+
+    def is_map(self):
+        return self._value.getType() == ttypes.Value.MVAL
+
     def is_time(self):
         '''
         TODO: Need to wrapper TimeWrapper
@@ -72,74 +81,110 @@ class ValueWrapper(object):
     def as_bool(self):
         if self._value.getType() == ttypes.Value.BVAL:
             return self._value.get_bVal()
-        raise InvalidValueTypeException("expect bool type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect bool type, but is " + self._get_type_name())
 
     def as_int(self):
         if self._value.getType() == ttypes.Value.IVAL:
             return self._value.get_iVal()
-        raise InvalidValueTypeException("expect bool type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect bool type, but is " + self._get_type_name())
 
     def as_double(self):
         if self._value.getType() == ttypes.Value.FVAL:
             return self._value.get_fVal()
-        raise InvalidValueTypeException("expect int type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect int type, but is " + self._get_type_name())
 
     def as_string(self):
         if self._value.getType() == ttypes.Value.SVAL:
             return self._value.get_sVal().decode(self._decode_type)
-        raise InvalidValueTypeException("expect string type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect string type, but is " + self._get_type_name())
 
     def as_time(self):
         if self._value.getType() == ttypes.Value.TVAL:
             return self._value.get_tVal()
-        raise InvalidValueTypeException("expect time type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect time type, but is " + self._get_type_name())
 
     def as_date(self):
         if self._value.getType() == ttypes.Value.DVAL:
             return self._value.get_dVal()
-        raise InvalidValueTypeException("expect date type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect date type, but is " + self._get_type_name())
 
     def as_datetime(self):
         if self._value.getType() == ttypes.Value.DTVAL:
             return self._value.get_dtVal()
-        raise InvalidValueTypeException("expect datetime type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect datetime type, but is " + self._get_type_name())
 
     def as_list(self):
         if self._value.getType() == ttypes.Value.LVAL:
             result = []
-            for val in self._value.get_lVal().values:
+            for val in self._value.get_lVal():
                 result.append(ValueWrapper(val))
-        raise InvalidValueTypeException("expect list type, but is " + self._value.getType())
+            return result
+        raise InvalidValueTypeException("expect list type, but is " + self._get_type_name())
 
     def as_set(self):
         if self._value.getType() == ttypes.Value.UVAL:
             result = set()
             for val in self._value.get_uVal().values:
                 result.add(ValueWrapper(val))
-        raise InvalidValueTypeException("expect set type, but is " + self._value.getType())
+            return result
+        raise InvalidValueTypeException("expect set type, but is " + self._get_type_name())
 
     def as_map(self):
         if self._value.getType() == ttypes.Value.MVAL:
             result = {}
-            kvs = self._value.get_mVal().kvs
+            kvs = self._value.get_mVal()
             for key in kvs:
                 result[key] = ValueWrapper(kvs[key])
-        raise InvalidValueTypeException("expect map type, but is " + self._value.getType())
+            return result
+        raise InvalidValueTypeException("expect map type, but is " + self._get_type_name())
 
     def as_node(self):
         if self._value.getType() == ttypes.Value.VVAL:
             return Node(self._value.get_vVal())
-        raise InvalidValueTypeException("expect vertex type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect vertex type, but is " + self._get_type_name())
 
     def as_relationship(self):
         if self._value.getType() == ttypes.Value.EVAL:
             return Relationship(self._value.get_eVal())
-        raise InvalidValueTypeException("expect edge type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect edge type, but is " + self._get_type_name())
 
     def as_path(self):
         if self._value.getType() == ttypes.Value.PVAL:
             return Path(self._value.get_pVal())
-        raise InvalidValueTypeException("expect path type, but is " + self._value.getType())
+        raise InvalidValueTypeException("expect path type, but is " + self._get_type_name())
+
+    def _get_type_name(self):
+        if self.is_empty():
+            return "empty"
+        if self.is_null():
+            return "null"
+        if self.is_bool():
+            return "bool"
+        if self.is_int():
+            return "int"
+        if self.is_double():
+            return "double"
+        if self.is_string():
+            return "string"
+        if self.is_list():
+            return "list"
+        if self.is_set():
+            return "set"
+        if self.is_map():
+            return "map"
+        if self.is_time():
+            return "time"
+        if self.is_date():
+            return "date"
+        if self.is_datetime():
+            return "datetime"
+        if self.is_vertex():
+            return "vertex"
+        if self.is_edge():
+            return "edge"
+        if self.is_path():
+            return "path"
+        return "unknown"
 
 
 class GenValue(object):

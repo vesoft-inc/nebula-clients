@@ -8,11 +8,13 @@
 
 import sys
 import os
+from datetime import date
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.join(current_dir, '..')
 sys.path.insert(0, root_dir)
 
+from nebula2.common.ttypes import Value, NullType, Time, DateTime, Set
 from nebula2.common import ttypes
 from nebula2.graph import ttypes as graphTtype
 from unittest import TestCase
@@ -85,30 +87,75 @@ class TestBaseCase(TestCase):
         resp.space_name = b"test"
         resp.latency_in_us = 100
         data_set = ttypes.DataSet()
-        data_set.column_names = [b"col1", b"col2", b"col3", b"col4", b"col5", b"col6", b"col7"]
+        data_set.column_names = [b"col1_empty",
+                                 b"col2_null",
+                                 b"col3_bool",
+                                 b"col4_int",
+                                 b"col5_double",
+                                 b"col6_string",
+                                 b"col7_list",
+                                 b"col8_set",
+                                 b"col9_map",
+                                 b"col10_time",
+                                 b"col11_date",
+                                 b"col12_datetime",
+                                 b"col13_vertex",
+                                 b"col14_edge",
+                                 b"col15_path"]
         row = ttypes.Row()
-        value1 = ttypes.Value()
-        value1.set_bVal(False)
         row.values = []
+        value1 = ttypes.Value()
         row.values.append(value1)
         value2 = ttypes.Value()
-        value2.set_iVal(100)
+        value2.set_nVal(NullType.BAD_DATA)
         row.values.append(value2)
         value3 = ttypes.Value()
-        value3.set_fVal(10.01)
+        value3.set_bVal(False)
         row.values.append(value3)
         value4 = ttypes.Value()
-        value4.set_sVal(b"hello world")
+        value4.set_iVal(100)
         row.values.append(value4)
         value5 = ttypes.Value()
-        value5.set_vVal(self.get_vertex_value(b"Tom"))
+        value5.set_fVal(10.01)
         row.values.append(value5)
         value6 = ttypes.Value()
-        value6.set_eVal(self.get_edge_value(b"Tom", b"Lily"))
+        value6.set_sVal(b"hello world")
         row.values.append(value6)
         value7 = ttypes.Value()
-        value7.set_pVal(self.get_path_value(b"Tom", 3))
+        str_val1 = ttypes.Value()
+        str_val1.set_sVal(b"word")
+        str_val2 = ttypes.Value()
+        str_val2.set_sVal(b"car")
+        value7.set_lVal([str_val1, str_val2])
         row.values.append(value7)
+        value8 = ttypes.Value()
+        set_val = Set()
+        set_val.values = set()
+        set_val.values.add(str_val1)
+        set_val.values.add(str_val2)
+        value8.set_uVal(set_val)
+        row.values.append(value8)
+        value9 = ttypes.Value()
+        value9.set_mVal({b"a": str_val1, b"b": str_val2})
+        row.values.append(value9)
+        value10 = ttypes.Value()
+        value10.set_tVal(Time(10, 10, 10, 10000))
+        row.values.append(value10)
+        value11 = ttypes.Value()
+        value11.set_dVal(date(2020, 10, 1))
+        row.values.append(value11)
+        value12 = ttypes.Value()
+        value12.set_dtVal(DateTime(2020, 10, 1, 10, 10, 10, 10000))
+        row.values.append(value12)
+        value13 = ttypes.Value()
+        value13.set_vVal(self.get_vertex_value(b"Tom"))
+        row.values.append(value13)
+        value14 = ttypes.Value()
+        value14.set_eVal(self.get_edge_value(b"Tom", b"Lily"))
+        row.values.append(value14)
+        value15 = ttypes.Value()
+        value15.set_pVal(self.get_path_value(b"Tom", 3))
+        row.values.append(value15)
         data_set.rows = []
         data_set.rows.append(row)
         resp.data = data_set
@@ -149,8 +196,51 @@ class TesValueWrapper(TestBaseCase):
         value_wrapper = ValueWrapper(value)
         assert value_wrapper.is_string()
 
-        strVal = value_wrapper.as_string()
-        assert isinstance(strVal, str)
+        str_val = value_wrapper.as_string()
+        assert isinstance(str_val, str)
+
+    def test_as_list(self):
+        value = ttypes.Value()
+        str_val1 = ttypes.Value()
+        str_val1.set_sVal(b"word")
+        str_val2 = ttypes.Value()
+        str_val2.set_sVal(b"car")
+        value.set_lVal([str_val1, str_val2])
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_list()
+
+        list_val = value_wrapper.as_list()
+        assert isinstance(list_val, list)
+
+    def test_as_set(self):
+        value = ttypes.Value()
+        str_val1 = ttypes.Value()
+        str_val1.set_sVal(b"word")
+        str_val2 = ttypes.Value()
+        str_val2.set_uVal(b"car")
+        set_val = Set()
+        set_val.values = set()
+        set_val.values.add(str_val1)
+        set_val.values.add(str_val2)
+        value.set_uVal(set_val)
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_set()
+
+        set_val = value_wrapper.as_set()
+        assert isinstance(set_val, set)
+
+    def test_as_map(self):
+        value = ttypes.Value()
+        str_val1 = ttypes.Value()
+        str_val1.set_sVal(b"word")
+        str_val2 = ttypes.Value()
+        str_val2.set_sVal(b"car")
+        value.set_mVal({b"a": str_val1, b"b": str_val2})
+        value_wrapper = ValueWrapper(value)
+        assert value_wrapper.is_map()
+
+        map_val = value_wrapper.as_map()
+        assert isinstance(map_val, dict)
 
     def test_as_node(self):
         value = ttypes.Value()
@@ -170,7 +260,7 @@ class TesValueWrapper(TestBaseCase):
         relationship = value_wrapper.as_relationship()
         assert isinstance(relationship, Relationship)
 
-    def test_convert_path(self):
+    def test_as_path(self):
         value = ttypes.Value()
         value.set_pVal(self.get_path_value(b'Tom'))
         vaue_wrapper = ValueWrapper(value)
@@ -182,6 +272,8 @@ class TesValueWrapper(TestBaseCase):
 
 class TestNode(TestBaseCase):
     def test_node_api(self):
+        test_set = set()
+        test_set.add(Value())
         node = Node(self.get_vertex_value(b'Tom'))
         assert 'Tom' == node.get_id()
 
@@ -260,17 +352,39 @@ class TestResultset(TestBaseCase):
         assert result.error_msg() == "Permission"
         assert result.error_code() == graphTtype.ErrorCode.E_BAD_PERMISSION
         assert not result.is_succeeded()
-        assert result.keys() == ["col1", "col2", "col3", "col4", "col5", "col6", "col7"]
-        assert result.col_size() == 7
+        assert result.keys() == ["col1_empty",
+                                 "col2_null",
+                                 "col3_bool",
+                                 "col4_int",
+                                 "col5_double",
+                                 "col6_string",
+                                 "col7_list",
+                                 "col8_set",
+                                 "col9_map",
+                                 "col10_time",
+                                 "col11_date",
+                                 "col12_datetime",
+                                 "col13_vertex",
+                                 "col14_edge",
+                                 "col15_path"]
+        assert result.col_size() == 15
         assert result.row_size() == 1
-        assert len(result.column_values("col6")) == 1
-        assert len(result.row_values(0)) == 7
+        assert len(result.column_values("col6_string")) == 1
+        assert len(result.row_values(0)) == 15
         assert len(result.rows()) == 1
         assert isinstance(result.get_row_types(), list)
-        assert result.get_row_types() == [ttypes.Value.BVAL,
+        assert result.get_row_types() == [ttypes.Value.__EMPTY__,
+                                          ttypes.Value.NVAL,
+                                          ttypes.Value.BVAL,
                                           ttypes.Value.IVAL,
                                           ttypes.Value.FVAL,
                                           ttypes.Value.SVAL,
+                                          ttypes.Value.LVAL,
+                                          ttypes.Value.UVAL,
+                                          ttypes.Value.MVAL,
+                                          ttypes.Value.TVAL,
+                                          ttypes.Value.DVAL,
+                                          ttypes.Value.DTVAL,
                                           ttypes.Value.VVAL,
                                           ttypes.Value.EVAL,
                                           ttypes.Value.PVAL]
