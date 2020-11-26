@@ -34,7 +34,7 @@ public class StorageConnPoolTest extends TestCase {
         // invalidate host
         try {
             List<HostAndPort> address = Arrays.asList(HostAndPort.fromString("hostname:45500"));
-            NebulaPoolConfig config = new NebulaPoolConfig();
+            StoragePoolConfig config = new StoragePoolConfig();
             config.setMaxTotal(20);
             config.setMaxTotalPerKey(8);
             StorageConnPool pool = new StorageConnPool(config, address);
@@ -51,22 +51,26 @@ public class StorageConnPoolTest extends TestCase {
                     HostAndPort.fromParts("127.0.0.1", 45501),
                     HostAndPort.fromParts("127.0.0.1", 45502)
             );
-            NebulaPoolConfig config = new NebulaPoolConfig();
+            StoragePoolConfig config = new StoragePoolConfig();
             pool = new StorageConnPool(config, address);
-            assertEquals(pool.getNumActive(HostAndPort.fromParts("127.0.0.1", 45500)), 0);
+            assertEquals(pool.getNumActive(HostAndPort
+                    .fromParts("127.0.0.1", 45500)), 0);
         } catch (Exception e) {
             e.printStackTrace();
-            assertFalse(true);
+            fail();
         }
     }
 
 
-    public void testGetClient() {
+    public void testGetConnection() {
         try {
-            HostAndPort address = HostAndPort.fromParts("127.0.0.1", 45500);
-            StorageClient client = pool.getStorageClient(address);
-            assertEquals(pool.getNumActive(address), 1);
+            List<HostAndPort> address = Arrays.asList(HostAndPort.fromParts("127.0.0.1",
+                    45500));
+            StoragePoolConfig config = new StoragePoolConfig();
+            pool = new StorageConnPool(config, address);
+            pool.getStorageConnection(address.get(0));
 
+            assertEquals(pool.getNumActive(address.get(0)), 1);
         } catch (Exception e) {
             e.printStackTrace();
             assertFalse(true);

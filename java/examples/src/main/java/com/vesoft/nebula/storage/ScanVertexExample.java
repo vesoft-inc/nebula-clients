@@ -6,15 +6,14 @@
 
 package com.vesoft.nebula.storage;
 
-import com.facebook.thrift.TException;
 import com.google.common.collect.Maps;
 import com.google.common.net.HostAndPort;
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.storage.StorageClient;
-import com.vesoft.nebula.client.graph.storage.StorageConnPool;
-import com.vesoft.nebula.client.graph.storage.data.Vertex;
+import com.vesoft.nebula.client.graph.storage.data.VertexRow;
+import com.vesoft.nebula.client.graph.storage.data.VertexTableView;
 import com.vesoft.nebula.client.graph.storage.scan.ScanVertexResult;
 import com.vesoft.nebula.client.graph.storage.scan.ScanVertexResultIterator;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -28,44 +27,38 @@ public class ScanVertexExample {
     static String tag = "person";
 
     public static void main(String[] args) {
-        NebulaPoolConfig config = new NebulaPoolConfig();
+
         List<HostAndPort> metaAddress = Arrays.asList(HostAndPort.fromParts(args[0],
                 Integer.parseInt(args[1])));
-        StorageConnPool pool;
+        StorageClient client = new StorageClient(metaAddress);
         try {
-            pool = new StorageConnPool(config, metaAddress);
-        } catch (TException e) {
-            LOGGER.error("failed to get pool,", e);
-            return;
-        }
-        StorageClient client;
-        try {
-            client = pool.getStorageClient();
+            client.connect();
         } catch (Exception e) {
-            LOGGER.error("failed to get client,", e);
+            LOGGER.error("connect error, ", e);
             return;
         }
-
-        testScanVertexWithNoColumn(client);
-        testScanVertexWithAllColumns(client);
-        testScanVertexWithSpecificColumns(client);
-        pool.close();
+        scanVertexWithNoColumn(client);
+        scanVertexWithAllColumns(client);
+        scanVertexWithSpecificColumns(client);
     }
 
     /**
-     * test scan vertex with noColumns
+     * scan vertex with noColumns
      */
-    public static void testScanVertexWithNoColumn(StorageClient client) {
+    public static void scanVertexWithNoColumn(StorageClient client) {
         Map<String, List<String>> returnCols = Maps.newHashMap();
         returnCols.put(tag, Arrays.asList("name"));
         ScanVertexResultIterator iterator;
         try {
-            iterator = client.scanVertex(space, returnCols, true);
+            iterator = client.scanVertex(space, tag);
             ScanVertexResult result;
             while (iterator.hasNext()) {
                 result = iterator.next();
-                for (Vertex vertex : result.getAllVertices()) {
-                    System.out.println(vertex.toString());
+                for (VertexRow vertexRow : result.getVertices()) {
+                    System.out.println(vertexRow.toString());
+                }
+                for (VertexTableView row : result.getVertexRows()) {
+                    System.out.println(row.getVid());
                 }
             }
         } catch (Exception e) {
@@ -74,19 +67,18 @@ public class ScanVertexExample {
     }
 
     /**
-     * test scan vertex with all columns
+     * scan vertex with all columns
      */
-    public static void testScanVertexWithAllColumns(StorageClient client) {
-        Map<String, List<String>> returnCols = Maps.newHashMap();
-        returnCols.put(tag, Arrays.asList());
+    public static void scanVertexWithAllColumns(StorageClient client) {
+        List<String> returnCols = new ArrayList<>();
         ScanVertexResultIterator iterator;
         try {
-            iterator = client.scanVertex(space, returnCols, false);
+            iterator = client.scanVertex(space, tag, returnCols);
             ScanVertexResult result;
             while (iterator.hasNext()) {
                 result = iterator.next();
-                for (Vertex vertex : result.getAllVertices()) {
-                    System.out.println(vertex.toString());
+                for (VertexRow vertexRow : result.getVertices()) {
+                    System.out.println(vertexRow.toString());
                 }
             }
         } catch (Exception e) {
@@ -95,19 +87,18 @@ public class ScanVertexExample {
     }
 
     /**
-     * test scan vertex with all columns
+     * scan vertex with all columns
      */
-    public static void testScanVertexWithSpecificColumns(StorageClient client) {
-        Map<String, List<String>> returnCols = Maps.newHashMap();
-        returnCols.put(tag, Arrays.asList("name"));
+    public static void scanVertexWithSpecificColumns(StorageClient client) {
+        List<String> returnCols = Arrays.asList("name");
         ScanVertexResultIterator iterator;
         try {
-            iterator = client.scanVertex(space, returnCols, false);
+            iterator = client.scanVertex(space, tag, returnCols);
             ScanVertexResult result;
             while (iterator.hasNext()) {
                 result = iterator.next();
-                for (Vertex vertex : result.getAllVertices()) {
-                    System.out.println(vertex.toString());
+                for (VertexRow vertexRow : result.getVertices()) {
+                    System.out.println(vertexRow.toString());
                 }
             }
         } catch (Exception e) {

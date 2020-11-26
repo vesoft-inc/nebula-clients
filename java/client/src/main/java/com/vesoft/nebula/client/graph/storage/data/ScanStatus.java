@@ -7,6 +7,10 @@
 
 package com.vesoft.nebula.client.graph.storage.data;
 
-public class EdgeDataSet {
+public enum ScanStatus {
+    /** all parts succeed */
+    ALL_SUCCESS,
 
+    /** part of parts succeed*/
+    PART_SUCCESS;
 }

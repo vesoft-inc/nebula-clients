@@ -1,10 +1,11 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2020 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-package com.vesoft.nebula.client.graph.storage;
+package com.vesoft.nebula.client.graph.storage.general;
 
 import com.facebook.thrift.TException;
 import com.google.common.collect.Lists;
@@ -14,6 +15,7 @@ import com.vesoft.nebula.HostAddr;
 import com.vesoft.nebula.KeyValue;
 import com.vesoft.nebula.client.graph.meta.MetaClient;
 import com.vesoft.nebula.client.graph.meta.MetaInfo;
+import com.vesoft.nebula.client.graph.storage.StoragePoolConfig;
 import com.vesoft.nebula.storage.ErrorCode;
 import com.vesoft.nebula.storage.ExecResponse;
 import com.vesoft.nebula.storage.KVGetRequest;
@@ -37,25 +39,51 @@ import org.slf4j.LoggerFactory;
 
 /**
  * storage client for operater put/get/remove
- * not support for nebula v2.0.0 yet
+ * GeneralStorageClient is not thread safe. not support for nebula v2.0.0 yet
  */
 public class GeneralStorageClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(GeneralStorageClient.class);
 
-    private StorageConnection connection;
-    private final StorageConnPool pool;
-    private final MetaInfo metaInfo;
+    private GeneralStorageConnection connection;
+    private MetaInfo metaInfo;
     private MetaClient metaClient;
-    private final ExecutorService threadPool;
+    private final List<HostAndPort> addresses;
+    private ExecutorService threadPool;
+    private int timeout = 10000; // ms
+    private final int parallel = 10;
 
-    public GeneralStorageClient(StorageConnPool pool,
-                                StorageConnection connection,
-                                MetaClient metaClient) {
-        this.pool = pool;
-        this.connection = connection;
-        this.metaClient = metaClient;
-        this.metaInfo = metaClient.getMetaInfo();
-        this.threadPool = Executors.newCachedThreadPool();
+    private final Map<HostAndPort, GeneralStorageConnection> leaderConnections = Maps.newHashMap();
+
+    public GeneralStorageClient(String ip, int port) {
+        this(HostAndPort.fromParts(ip, port));
+    }
+
+    public GeneralStorageClient(HostAndPort address) {
+        this(Arrays.asList(address));
+    }
+
+    public GeneralStorageClient(HostAndPort address, int timeout) {
+        this(Arrays.asList(address), timeout);
+    }
+
+    public GeneralStorageClient(List<HostAndPort> addresses) {
+        this.connection = new GeneralStorageConnection();
+        this.addresses = addresses;
+    }
+
+    public GeneralStorageClient(List<HostAndPort> addresses, int timeout) {
+        this.connection = new GeneralStorageConnection();
+        this.addresses = addresses;
+        this.timeout = timeout;
+    }
+
+    public boolean connect() throws Exception {
+        connection.open(addresses.get(0), timeout);
+        StoragePoolConfig config = new StoragePoolConfig();
+        metaClient = new MetaClient(addresses);
+        metaInfo = metaClient.getMetaInfo();
+        threadPool = Executors.newFixedThreadPool(parallel);
+        return true;
     }
 
     /**
@@ -167,7 +195,12 @@ public class GeneralStorageClient {
         while (retry++ != metaInfo.getConnectionRetry()) {
 
             try {
-                connection = pool.getGeneralStorageClient(leader).getConnection();
+                connection = getConnection(leader);
+                if (connection == null) {
+                    LOGGER.error("connection is in usage");
+                    return false;
+                }
+                connection.setBusy();
             } catch (Exception e) {
                 LOGGER.error("Connect error: ", e);
                 return false;
@@ -176,23 +209,23 @@ public class GeneralStorageClient {
             try {
                 ExecResponse result = connection.put(request);
                 if (isSuccessfully(result)) {
+                    connection.release();
                     return true;
                 }
                 for (PartitionResult partResult : result.getResult().getFailed_parts()) {
                     if (partResult.code == ErrorCode.E_LEADER_CHANGED) {
                         freshLeader(spaceName, partResult.part_id, partResult.leader);
                     } else {
-                        // todo 使connection失效
-                        LOGGER.error(String
-                                .format("Put failed while retry %d, error code=%d",
-                                        (retry + 1), partResult.code));
+                        LOGGER.error(String.format("Put failed, error code=%d", partResult.code));
                     }
                 }
             } catch (TException e) {
                 LOGGER.error("Put Failed:", e);
+                connection.release();
                 return false;
             }
         }
+        connection.release();
         return false;
     }
 
@@ -205,8 +238,7 @@ public class GeneralStorageClient {
      * @return String value
      */
     public String get(String spaceName, String key) throws TException {
-        // todo check if spaceName exists in spaceaNameMap
-        int spaceId = metaInfo.getSpaceNameMap().get(spaceName);
+        int spaceId = metaClient.getSpaceId(spaceName);
         int part = keyToPartId(spaceName, key);
         HostAndPort leader = getLeader(spaceName, part);
 
@@ -290,7 +322,11 @@ public class GeneralStorageClient {
                 new ArrayList<>(partKeys.size()));
         for (final Map.Entry<HostAndPort, KVGetRequest> entry : requests.entrySet()) {
             threadPool.submit(() -> {
-                responses.add(doGet(spaceName, entry.getKey(), entry.getValue()));
+                try {
+                    responses.add(doGet(spaceName, entry.getKey(), entry.getValue()));
+                } catch (TException e) {
+                    LOGGER.error("doGet error, ", e);
+                }
                 countDownLatch.countDown();
             });
         }
@@ -320,17 +356,21 @@ public class GeneralStorageClient {
      * @return Map
      */
     private Map<byte[], byte[]> doGet(String spaceName,
-                                      HostAndPort leader, KVGetRequest request) {
+                                      HostAndPort leader, KVGetRequest request) throws TException {
 
         int retry = 0;
         while (retry++ != metaInfo.getConnectionRetry()) {
             try {
-                connection = pool.getGeneralStorageClient(leader).getConnection();
+                connection = getConnection(leader);
+                if (connection == null) {
+                    LOGGER.error("connection is in usage");
+                    throw new TException("connection is in usage");
+                }
             } catch (Exception e) {
                 LOGGER.error("Connect error: ", e);
-                // throw new TException("Connect failed, ", e);
-                return null;
+                throw new TException("Connect failed, ", e);
             }
+            connection.setBusy();
 
             try {
                 KVGetResponse result = connection.get(request);
@@ -341,18 +381,15 @@ public class GeneralStorageClient {
                     if (partResult.code == ErrorCode.E_LEADER_CHANGED) {
                         freshLeader(spaceName, partResult.part_id, partResult.leader);
                     } else {
-                        // todo 使connection失效
-                        LOGGER.error(String
-                                .format("Put failed while retry %d, error code=%d",
-                                        (retry + 1), partResult.code));
+                        LOGGER.error(String.format("Put failed, error code=%d", partResult.code));
+                        connection.release();
                     }
                 }
             } catch (TException e) {
                 LOGGER.error("Get failed, ", e);
-                return null;
+                throw e;
             }
         }
-        // todo 区分异常返回和 正常空值
         return Maps.newHashMap();
     }
 
@@ -364,7 +401,7 @@ public class GeneralStorageClient {
      * @param key       nebula key
      * @return boolean
      */
-    public boolean remove(String spaceName, String key) {
+    public boolean remove(String spaceName, String key) throws TException {
         int spaceId = metaInfo.getSpaceNameMap().get(spaceName);
         int part = keyToPartId(spaceName, key);
 
@@ -425,7 +462,11 @@ public class GeneralStorageClient {
                 new ArrayList<>(partKeys.size()));
         for (final Map.Entry<HostAndPort, KVRemoveRequest> entry : requests.entrySet()) {
             threadPool.submit(() -> {
-                responses.add(doRemove(spaceName, entry.getKey(), entry.getValue()));
+                try {
+                    responses.add(doRemove(spaceName, entry.getKey(), entry.getValue()));
+                } catch (TException e) {
+                    LOGGER.error("doRemove error, ", e);
+                }
                 countDownLatch.countDown();
             });
         }
@@ -436,7 +477,6 @@ public class GeneralStorageClient {
             throw interruptedE;
         }
 
-        Map<String, String> result = new HashMap<>();
         for (Boolean response : responses) {
             if (!response) {
                 return false;
@@ -454,36 +494,43 @@ public class GeneralStorageClient {
      * @param request   KVRemoveRequest
      * @return boolean
      */
-    private boolean doRemove(String spaceName, HostAndPort leader, KVRemoveRequest request) {
+    private boolean doRemove(String spaceName, HostAndPort leader, KVRemoveRequest request)
+            throws TException {
         int retry = 0;
         while (retry++ != metaInfo.getConnectionRetry()) {
             try {
-                connection = pool.getGeneralStorageClient(leader).getConnection();
+                connection = getConnection(leader);
+                if (connection == null) {
+                    LOGGER.error("Connect is in usage");
+                    throw new TException("Connection is in usage");
+                }
             } catch (Exception e) {
                 LOGGER.error("Connect error: ", e);
-                return false;
+                throw new TException("Connect error,", e);
             }
 
+            connection.setBusy();
             try {
                 ExecResponse result = connection.remove(request);
                 if (isSuccessfully(result)) {
+                    connection.release();
                     return true;
                 }
                 for (PartitionResult partResult : result.getResult().getFailed_parts()) {
                     if (partResult.code == ErrorCode.E_LEADER_CHANGED) {
                         freshLeader(spaceName, partResult.part_id, partResult.leader);
                     } else {
-                        // todo 使connection失效
-                        LOGGER.error(String
-                                .format("Remove failed while retry %d, error code=%d",
-                                        (retry + 1), partResult.code));
+                        LOGGER.error(String.format("Remove failed, error code=%d",
+                                partResult.code));
                     }
                 }
             } catch (TException e) {
                 LOGGER.error("Put Failed:", e);
+                connection.release();
                 return false;
             }
         }
+        connection.release();
         return false;
     }
 
@@ -557,7 +604,12 @@ public class GeneralStorageClient {
      * release storage client
      */
     public void close() throws Exception {
-        pool.release(connection.getAddress(), connection);
+        for (Map.Entry<HostAndPort, GeneralStorageConnection> entry :
+                leaderConnections.entrySet()) {
+            entry.getValue().close();
+        }
+        leaderConnections.clear();
+        connection.close();
     }
 
 
@@ -591,7 +643,17 @@ public class GeneralStorageClient {
      *
      * @return StorageConnection
      */
-    private StorageConnection getConnection() {
-        return this.connection;
+    private GeneralStorageConnection getConnection(HostAndPort leader) throws Exception {
+        if (!leaderConnections.containsKey(leader)) {
+            GeneralStorageConnection connection = new GeneralStorageConnection();
+            connection.open(leader, timeout);
+            leaderConnections.put(leader, connection);
+        }
+
+        GeneralStorageConnection conn = leaderConnections.get(leader);
+        if (conn.isBusy()) {
+            return null;
+        }
+        return conn;
     }
 }

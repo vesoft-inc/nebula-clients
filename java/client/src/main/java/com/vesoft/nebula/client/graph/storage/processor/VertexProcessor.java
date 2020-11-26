@@ -11,14 +11,13 @@ import com.vesoft.nebula.DataSet;
 import com.vesoft.nebula.Row;
 import com.vesoft.nebula.Value;
 import com.vesoft.nebula.client.graph.meta.MetaInfo;
-import com.vesoft.nebula.client.graph.storage.data.Tag;
-import com.vesoft.nebula.client.graph.storage.data.Vertex;
-import com.vesoft.nebula.client.graph.storage.scan.ScanVertexResult;
+import com.vesoft.nebula.client.graph.storage.data.VertexRow;
+import com.vesoft.nebula.client.graph.storage.data.VertexTableView;
 import com.vesoft.nebula.meta.ColumnDef;
 import com.vesoft.nebula.meta.TagItem;
 import com.vesoft.nebula.storage.VertexProp;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,69 +36,53 @@ public class VertexProcessor {
         this.spaceName = spaceName;
     }
 
-    public ScanVertexResult constructResult(DataSet dataSet, List<VertexProp> returnCols) {
-        List<Vertex> vertices = new ArrayList<>();
-        Map<String, Vertex> vidVertices = Maps.newHashMap();
-        Map<String, List<Vertex>> labelVertices = Maps.newHashMap();
+    public Map<String, VertexRow> constructVertexRow(List<DataSet> dataSets,
+                                                     List<VertexProp> returnCols) {
+        Map<String, VertexRow> vidVertices = Maps.newHashMap();
         // todo List<byte[]> columnNames = dataSet.getColumn_names();
-        List<Row> rows = dataSet.getRows();
-        Map<String, List<Tag>> vertexTags = Maps.newHashMap();
-
         Map<Long, List<String>> colNames = getColNames(returnCols);
-        for (Row row : rows) {
-            List<Value> values = row.getValues();
-            if (values.size() < 2) {
-                LOGGER.error("values size error for row: " + row.toString());
-            } else {
-                String vid = new String(values.get(0).getSVal());
-                long tagId = values.get(1).getIVal();
-                List<String> names = colNames.get(tagId);
-                Map<String, Value> props = Maps.newHashMap();
-                for (int i = 0; i < (values.size() - 2); i++) {
-                    props.put(names.get(i), values.get(i + 2));
-                }
-                Tag tag = new Tag(getTagName(spaceName, tagId), props);
-                if (vertexTags.containsKey(vid)) {
-                    vertexTags.get(vid).add(tag);
+        for (DataSet dataSet : dataSets) {
+            List<Row> rows = dataSet.getRows();
+            for (Row row : rows) {
+                List<Value> values = row.getValues();
+                if (values.size() < 2) {
+                    LOGGER.error("values size error for row: " + row.toString());
                 } else {
-                    vertexTags.put(vid, Collections.singletonList(tag));
+                    Value vid = values.get(0);
+                    long tagId = values.get(1).getIVal();
+                    List<String> names = colNames.get(tagId);
+                    Map<String, Object> props = Maps.newHashMap();
+                    for (int i = 0; i < (values.size() - 2); i++) {
+                        props.put(names.get(i), getField(values.get(i + 2).getFieldValue()));
+                    }
+                    VertexRow vertexRow = new VertexRow(vid, props);
+                    try {
+                        vidVertices.put(new String(vid.getSVal(), metaInfo.getDecodeType()),
+                                vertexRow);
+                    } catch (UnsupportedEncodingException e) {
+                        LOGGER.error("encode error with " + metaInfo.getDecodeType(), e);
+                    }
                 }
             }
         }
-
-        // construct vertices/vidVertices/labelVertices
-        for (Map.Entry<String, List<Tag>> vertexTag : vertexTags.entrySet()) {
-            Vertex vertex = new Vertex(vertexTag.getKey(), vertexTag.getValue());
-            vertices.add(vertex);
-            vidVertices.put(vertexTag.getKey(), vertex);
-            for (Tag tag : vertexTag.getValue()) {
-                if (!labelVertices.containsKey(tag.getName())) {
-                    labelVertices.put(tag.getName(), new ArrayList<>());
-                }
-                labelVertices.get(tag.getName()).add(vertex);
-            }
-        }
-        return new ScanVertexResult(vertices, vidVertices, labelVertices);
+        return vidVertices;
     }
 
-    public ScanVertexResult constructResult(List<ScanVertexResult> results) {
-        List<Vertex> vertices = new ArrayList<>();
-        Map<String, Vertex> vidVertices = Maps.newHashMap();
-        Map<String, List<Vertex>> labelVertices = Maps.newHashMap();
-        for (ScanVertexResult result : results) {
-            vertices.addAll(result.getAllVertices());
-            vidVertices.putAll(result.getVidVertices());
-            Map<String, List<Vertex>> labelVs = result.getLabelVertices();
-            for (Map.Entry<String, List<Vertex>> entry : labelVs.entrySet()) {
-                if (!labelVertices.containsKey(entry.getKey())) {
-                    labelVertices.put(entry.getKey(), new ArrayList<>());
+    public List<VertexTableView> constructVertexTableView(List<DataSet> dataSets) {
+        List<VertexTableView> vertexRows = new ArrayList<>();
+        for (DataSet dataSet : dataSets) {
+            List<Row> rows = dataSet.getRows();
+            for (Row row : rows) {
+                List<Value> values = row.getValues();
+                List<Object> props = new ArrayList<>();
+                for (int i = 0; i < values.size(); i++) {
+                    props.add(values.get(i).getFieldValue());
                 }
-                labelVertices.get(entry.getKey()).addAll(entry.getValue());
+                vertexRows.add(new VertexTableView(props));
             }
         }
-        return new ScanVertexResult(vertices, vidVertices, labelVertices);
+        return vertexRows;
     }
-
 
     /**
      * get tag name according to tag id
@@ -114,7 +97,12 @@ public class VertexProcessor {
 
     private Object getField(Object obj) {
         if (obj.getClass().getTypeName().equals("byte[]")) {
-            return new String((byte[]) obj);
+            try {
+                return new String((byte[]) obj, metaInfo.getDecodeType());
+            } catch (UnsupportedEncodingException e) {
+                LOGGER.error("encode error with " + metaInfo.getDecodeType(), e);
+                return null;
+            }
         }
         return obj;
     }

@@ -24,9 +24,12 @@ import com.vesoft.nebula.meta.GetSpaceReq;
 import com.vesoft.nebula.meta.GetSpaceResp;
 import com.vesoft.nebula.meta.GetTagReq;
 import com.vesoft.nebula.meta.GetTagResp;
+import com.vesoft.nebula.meta.HostItem;
 import com.vesoft.nebula.meta.IdName;
 import com.vesoft.nebula.meta.ListEdgesReq;
 import com.vesoft.nebula.meta.ListEdgesResp;
+import com.vesoft.nebula.meta.ListHostsReq;
+import com.vesoft.nebula.meta.ListHostsResp;
 import com.vesoft.nebula.meta.ListSpacesReq;
 import com.vesoft.nebula.meta.ListSpacesResp;
 import com.vesoft.nebula.meta.ListTagsReq;
@@ -35,6 +38,8 @@ import com.vesoft.nebula.meta.MetaService;
 import com.vesoft.nebula.meta.Schema;
 import com.vesoft.nebula.meta.SpaceItem;
 import com.vesoft.nebula.meta.TagItem;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -214,10 +219,10 @@ public class MetaClient extends AbstractMetaClient {
     }
 
     /**
-     * get schema of specific edge
+     * get schema of specific edgeRow
      *
      * @param spaceName nebula graph space
-     * @param edgeName  nebula edge name
+     * @param edgeName  nebula edgeRow name
      * @return Schema
      */
     public Schema getEdge(String spaceName, String edgeName)
@@ -315,7 +320,7 @@ public class MetaClient extends AbstractMetaClient {
             metaInfo.getTagNameMap().put(spaceName, tagsName);
             metaInfo.getTagIdMap().put(spaceName, tagsId);
 
-            // edge schema
+            // edgeRow schema
             Map<Long, EdgeItem> edges = Maps.newHashMap();
             Map<String, Long> edgesName = Maps.newHashMap();
             Map<Long, String> edgesId = Maps.newHashMap();
@@ -436,9 +441,9 @@ public class MetaClient extends AbstractMetaClient {
     }
 
     /**
-     * check if edge exist
+     * check if edgeRow exist
      */
-    private boolean existEdge(String spaceName, String edge) {
+    private boolean existEdge(String spaceName, String edgeRow) {
         List<EdgeItem> edges;
         try {
             edges = getEdges(spaceName);
@@ -447,7 +452,7 @@ public class MetaClient extends AbstractMetaClient {
             return false;
         }
         for (EdgeItem item : edges) {
-            if (new String(item.getEdge_name()).equals(edge)) {
+            if (new String(item.getEdge_name()).equals(edgeRow)) {
                 return true;
             }
         }
@@ -622,5 +627,23 @@ public class MetaClient extends AbstractMetaClient {
         }
 
         metaInfo.getLeaders().get(spaceName).put(part, newLeader);
+    }
+
+
+    public Set<HostAndPort> listHosts() {
+        ListHostsReq request = new ListHostsReq();
+        ListHostsResp resp;
+        try {
+            resp = client.listHosts(request);
+        } catch (TException e) {
+            LOGGER.error("listHosts error", e);
+            return null;
+        }
+        Set<HostAndPort> hostAndPorts = new HashSet<>();
+        for (HostItem hostItem : resp.hosts) {
+            HostAddr addr = hostItem.getHostAddr();
+            hostAndPorts.add(HostAndPort.fromParts(addr.getHost(), addr.getPort()));
+        }
+        return hostAndPorts;
     }
 }

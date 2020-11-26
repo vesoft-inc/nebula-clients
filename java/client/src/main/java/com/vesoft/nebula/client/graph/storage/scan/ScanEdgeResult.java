@@ -6,56 +6,119 @@
 
 package com.vesoft.nebula.client.graph.storage.scan;
 
-import com.vesoft.nebula.client.graph.storage.data.Edge;
+import com.vesoft.nebula.DataSet;
+import com.vesoft.nebula.client.graph.storage.data.EdgeRow;
+import com.vesoft.nebula.client.graph.storage.data.EdgeTableView;
+import com.vesoft.nebula.client.graph.storage.data.ScanStatus;
+import com.vesoft.nebula.client.graph.storage.processor.EdgeProcessor;
+import com.vesoft.nebula.storage.EdgeProp;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ScanEdgeResult {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScanEdgeResult.class);
 
-    private final List<Edge> edges;
-    private final Map<String, List<Edge>> labelEdges;
+    private final List<DataSet> dataSets;
 
-    public ScanEdgeResult(List<Edge> edges, Map<String, List<Edge>> labelEdges) {
-        this.edges = edges;
-        this.labelEdges = labelEdges;
-    }
+    private final List<EdgeProp> returnCols;
+
+    private final String edgeName;
 
     /**
-     * get all edge of tag
-     *
-     * @param edge edge type
-     * @return List
+     * scan result
      */
-    public List<Edge> getEdges(String edge) {
-        if (StringUtils.isBlank(edge) || !labelEdges.containsKey(edge)) {
-            throw new IllegalArgumentException(String.format("label %s doesn't exist.", edge));
+    private final ScanStatus scanStatus;
+    /**
+     * VertexRow for table view
+     */
+    private List<EdgeTableView> edgeTableViews;
+
+    /**
+     * schema for VertexRow's values
+     */
+    private List<String> propNames;
+
+    /**
+     * Vertex for structure view with prop name
+     */
+    private List<EdgeRow> edgeRows;
+
+    private final EdgeProcessor processor;
+
+    public ScanEdgeResult(List<DataSet> dataSets, List<EdgeProp> returnCols, ScanStatus status,
+                          String edgeName, EdgeProcessor processor) {
+        this.dataSets = dataSets;
+        this.returnCols = returnCols;
+        this.scanStatus = status;
+        this.edgeName = edgeName;
+        this.processor = processor;
+    }
+
+    public String getEdgeName() {
+        return edgeName;
+    }
+
+    public List<EdgeTableView> getEdgeTableViews() {
+        if (edgeTableViews == null) {
+            constructEdgeRow();
         }
-        return labelEdges.get(edge);
+        return edgeTableViews;
     }
 
-
-    /**
-     * get all edge
-     *
-     * @return List
-     */
-    public List<Edge> getAllEdges() {
-        return edges;
+    public List<String> getPropNames() {
+        if (propNames == null) {
+            constructPropNames();
+        }
+        return propNames;
     }
 
-    public Map<String, List<Edge>> getLabelEdges() {
-        return labelEdges;
+    public List<EdgeRow> getEdges() {
+        if (edgeRows == null) {
+            constructEdgeRow();
+        }
+        return edgeRows;
     }
 
-    @Override
-    public String toString() {
-        return "ScanEdgeResult{"
-                + "edges=" + edges
-                + ", labelEdges=" + labelEdges
-                + '}';
+    public boolean isAllSuccess() {
+        return scanStatus == ScanStatus.ALL_SUCCESS;
+    }
+
+    private void constructEdgeTableView() {
+        if (dataSets.isEmpty()) {
+            return;
+        }
+        synchronized (this) {
+            if (edgeTableViews == null) {
+                edgeTableViews = processor.constructEdgeTableView(dataSets);
+            }
+        }
+    }
+
+    private void constructEdgeRow() {
+        if (dataSets.isEmpty()) {
+            return;
+        }
+        synchronized (this) {
+            if (edgeRows == null) {
+                edgeRows = processor.constructEdgeRow(dataSets, returnCols);
+            }
+        }
+    }
+
+    private void constructPropNames() {
+        if (dataSets.isEmpty()) {
+            return;
+        }
+        synchronized (this) {
+            if (propNames == null) {
+                propNames = new ArrayList<>();
+                List<byte[]> colNames = dataSets.get(0).getColumn_names();
+                for (byte[] colName : colNames) {
+                    propNames.add(new String(colName));
+                }
+            }
+        }
     }
 }

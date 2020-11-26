@@ -6,13 +6,8 @@
 
 package com.vesoft.nebula.storage;
 
-import com.facebook.thrift.TException;
 import com.google.common.net.HostAndPort;
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.storage.StorageClient;
-import com.vesoft.nebula.client.graph.storage.StorageConnPool;
-import java.util.Arrays;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,19 +20,8 @@ public class StorageClientExample {
                     + "<meta_server_ip> <meta_server_port>");
             return;
         }
-
-        NebulaPoolConfig config = new NebulaPoolConfig();
-        List<HostAndPort> metaAddress = Arrays.asList(HostAndPort.fromParts(args[0],
-                Integer.valueOf(args[1])));
-        StorageConnPool pool = null;
         try {
-            pool = new StorageConnPool(config, metaAddress);
-        } catch (TException e) {
-            LOGGER.error("failed to get pool,", e);
-            return;
-        }
-        try {
-            StorageClient client = pool.getStorageClient();
+            StorageClient client = new StorageClient(HostAndPort.fromString("192.168.8.171:45500"));
         } catch (Exception e) {
             LOGGER.error("failed to get client,", e);
         }

@@ -11,12 +11,12 @@ import com.vesoft.nebula.DataSet;
 import com.vesoft.nebula.Row;
 import com.vesoft.nebula.Value;
 import com.vesoft.nebula.client.graph.meta.MetaInfo;
-import com.vesoft.nebula.client.graph.storage.data.Edge;
-import com.vesoft.nebula.client.graph.storage.data.EdgeType;
-import com.vesoft.nebula.client.graph.storage.scan.ScanEdgeResult;
+import com.vesoft.nebula.client.graph.storage.data.EdgeRow;
+import com.vesoft.nebula.client.graph.storage.data.EdgeTableView;
 import com.vesoft.nebula.meta.ColumnDef;
 import com.vesoft.nebula.meta.EdgeItem;
 import com.vesoft.nebula.storage.EdgeProp;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,78 +36,82 @@ public class EdgeProcessor {
         this.spaceName = spaceName;
     }
 
-    public ScanEdgeResult constructResult(DataSet dataSet, List<EdgeProp> returnCols) {
-        List<Edge> edges = new ArrayList<>();
-        Map<String, List<Edge>> labelEdges = Maps.newHashMap();
-        // TODO use columnNames returned by server: List<byte[]> columnNames = dataSet
-        //  .getColumn_names();
-        List<Row> rows = dataSet.getRows();
-        Map<String, List<EdgeType>> edgeTyps = Maps.newHashMap();
-
+    public List<EdgeRow> constructEdgeRow(List<DataSet> dataSets, List<EdgeProp> returnCols) {
+        List<EdgeRow> edgeRows = new ArrayList<>();
         Map<Long, List<String>> colNames = getColNames(returnCols);
-        for (Row row : rows) {
-            List<Value> values = row.getValues();
-            if (values.size() < 4) {
-                LOGGER.error("values size error for row: " + row.toString());
-            } else {
-                byte[] srcId = values.get(0).getSVal();
-                long edgeId = values.get(1).getIVal();
-                long rank = values.get(2).getIVal();
-                byte[] dstId = values.get(3).getSVal();
-                List<String> names = colNames.get(edgeId);
-                Map<String, Value> props = Maps.newHashMap();
-                for (int i = 0; i < (values.size() - 4); i++) {
-                    props.put(names.get(i), values.get(i + 4));
+        for (DataSet dataSet : dataSets) {
+            List<Row> rows = dataSet.getRows();
+            for (Row row : rows) {
+                List<Value> values = row.getValues();
+                if (values.size() < 4) {
+                    LOGGER.error("values size error for row: " + row.toString());
+                } else {
+                    Value srcId = values.get(0);
+                    long edgeId = values.get(1).getIVal();
+                    Value rank = values.get(2);
+                    Value dstId = values.get(3);
+                    List<String> names = colNames.get(edgeId);
+                    Map<String, Object> props = Maps.newHashMap();
+                    for (int i = 0; i < (values.size() - 4); i++) {
+                        props.put(names.get(i), getField(values.get(i + 4).getFieldValue()));
+                    }
+                    EdgeRow edgeRow = new EdgeRow(srcId, dstId, rank, props);
+                    edgeRows.add(edgeRow);
                 }
-                String edgeName = getEdgeName(spaceName, edgeId);
-                EdgeType edgeType = new EdgeType(edgeName, props);
-                Edge edge = new Edge(srcId, dstId, rank, edgeType);
-                edges.add(edge);
-                if (!labelEdges.containsKey(edgeName)) {
-                    labelEdges.put(edgeName, new ArrayList<>());
-                }
-                labelEdges.get(edgeName).add(edge);
             }
         }
-        return new ScanEdgeResult(edges, labelEdges);
+        return edgeRows;
     }
 
-
-    public ScanEdgeResult constructResult(List<ScanEdgeResult> results) {
-        List<Edge> edges = new ArrayList<>();
-        Map<String, List<Edge>> labelEdges = Maps.newHashMap();
-        for (ScanEdgeResult result : results) {
-            edges.addAll(result.getAllEdges());
-            Map<String, List<Edge>> labelEs = result.getLabelEdges();
-            for (Map.Entry<String, List<Edge>> entry : labelEs.entrySet()) {
-                if (!labelEdges.containsKey(entry.getKey())) {
-                    labelEdges.put(entry.getKey(), new ArrayList<>());
+    public List<EdgeTableView> constructEdgeTableView(List<DataSet> dataSets) {
+        List<EdgeTableView> edgeRows = new ArrayList<>();
+        for (DataSet dataSet : dataSets) {
+            List<Row> rows = dataSet.getRows();
+            for (Row row : rows) {
+                List<Value> values = row.getValues();
+                List<Object> props = new ArrayList<>();
+                for (int i = 0; i < values.size(); i++) {
+                    props.add(values.get(i).getFieldValue());
                 }
-                labelEdges.get(entry.getKey()).addAll(entry.getValue());
+                edgeRows.add(new EdgeTableView(props));
             }
         }
-        return new ScanEdgeResult(edges, labelEdges);
-
+        return edgeRows;
     }
+
 
     /**
-     * get edge name according to edge id
+     * get edgeRow name according to edgeRow id
      *
      * @param spaceName nebula graph space
-     * @param edgeId    edge id
+     * @param edgeId    edgeRow id
      * @return String
      */
     private String getEdgeName(String spaceName, long edgeId) {
         return metaInfo.getEdgeIdMap().get(spaceName).get(edgeId);
     }
 
+    /**
+     * get decoded field
+     */
     private Object getField(Object obj) {
         if (obj.getClass().getTypeName().equals("byte[]")) {
-            return new String((byte[]) obj);
+            try {
+                return new String((byte[]) obj, metaInfo.getDecodeType());
+            } catch (UnsupportedEncodingException e) {
+                LOGGER.error("encode error with " + metaInfo.getDecodeType(), e);
+                return null;
+            }
         }
         return obj;
     }
 
+    /**
+     * get col names according to scan parameters
+     *
+     * @param returnCols scan parameters
+     * @return
+     */
     private Map<Long, List<String>> getColNames(List<EdgeProp> returnCols) {
         Map<Long, List<String>> colNames = new HashMap<>();
         if (returnCols.isEmpty()) {

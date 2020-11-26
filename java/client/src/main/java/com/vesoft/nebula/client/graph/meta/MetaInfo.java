@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 public class MetaInfo {
+
+    private String decodeType = "utf-8";
+
     private final Map<String, Integer> spaceNameMap = Maps.newHashMap();
     private final Map<String, Map<Integer, List<HostAndPort>>>
             spacePartLocation = Maps.newHashMap();
@@ -26,11 +29,10 @@ public class MetaInfo {
     private final Map<String, Map<Long, String>> edgeIdMap = Maps.newHashMap();
     private final Map<String, Map<Integer, HostAndPort>> leaders = Maps.newHashMap();
 
-    protected int connectionRetry;
-    protected int connectionTimeout;
-    protected int executionRetry;
-    protected int timeout;
-
+    protected int connectionRetry = 1;
+    protected int connectionTimeout = 10000;
+    protected int timeout = 10000;
+    protected int executionRetry = 1;
 
     public MetaInfo() {
 
@@ -88,5 +90,7 @@ public class MetaInfo {
         return timeout;
     }
 
-
+    public String getDecodeType() {
+        return decodeType;
+    }
 }

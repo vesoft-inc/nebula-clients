@@ -25,13 +25,13 @@ public class StorageConnPool {
     private final List<HostAndPort> metaAddresses;
     private MetaClient metaClient;
 
-    public StorageConnPool(NebulaPoolConfig config, List<HostAndPort> metaAddresses)
+    public StorageConnPool(StoragePoolConfig config, List<HostAndPort> metaAddresses)
             throws TException {
         poolFactory = new StorageConnPoolFactory(config);
 
         GenericKeyedObjectPoolConfig poolConfig = new GenericKeyedObjectPoolConfig();
-        poolConfig.setMaxIdlePerKey(config.getMaxConnSize());
-        poolConfig.setMinIdlePerKey(config.getMinConnSize());
+        poolConfig.setMaxIdlePerKey(config.getMaxConnsSize());
+        poolConfig.setMinIdlePerKey(config.getMinConnsSize());
         poolConfig.setMinEvictableIdleTimeMillis(
                 config.getIdleTime() <= 0 ? Long.MAX_VALUE : config.getIdleTime());
         poolConfig.setMaxTotal(config.getMaxTotal());
@@ -48,22 +48,8 @@ public class StorageConnPool {
         keyedPool.close();
     }
 
-    public StorageClient getStorageClient() throws Exception {
-        return getStorageClient(metaAddresses.get(0));
-    }
-
-    public StorageClient getStorageClient(HostAndPort address) throws Exception {
-        StorageConnection connection = keyedPool.borrowObject(address);
-        return new StorageClient(this, connection, metaClient);
-    }
-
-    public GeneralStorageClient getGeneralStorageClient() throws Exception {
-        return getGeneralStorageClient(metaAddresses.get(0));
-    }
-
-    public GeneralStorageClient getGeneralStorageClient(HostAndPort address) throws Exception {
-        StorageConnection connection = keyedPool.borrowObject(address);
-        return new GeneralStorageClient(this, connection, metaClient);
+    public StorageConnection getStorageConnection(HostAndPort address) throws Exception {
+        return keyedPool.borrowObject(address);
     }
 
     public void release(HostAndPort address, StorageConnection connection) {
@@ -76,5 +62,9 @@ public class StorageConnPool {
 
     public int get(HostAndPort address) {
         return keyedPool.getNumIdle(address);
+    }
+
+    public MetaClient getMetaClient() {
+        return metaClient;
     }
 }

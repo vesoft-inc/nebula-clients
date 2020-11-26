@@ -19,9 +19,9 @@ public class StorageConnPoolFactory
         implements KeyedPooledObjectFactory<HostAndPort, StorageConnection> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnPoolFactory.class);
 
-    private final NebulaPoolConfig config;
+    private final StoragePoolConfig config;
 
-    public StorageConnPoolFactory(NebulaPoolConfig config) {
+    public StorageConnPoolFactory(StoragePoolConfig config) {
         this.config = config;
     }
 

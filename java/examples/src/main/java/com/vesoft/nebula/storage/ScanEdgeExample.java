@@ -6,18 +6,14 @@
 
 package com.vesoft.nebula.storage;
 
-import com.facebook.thrift.TException;
-import com.google.common.collect.Maps;
 import com.google.common.net.HostAndPort;
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.storage.StorageClient;
-import com.vesoft.nebula.client.graph.storage.StorageConnPool;
-import com.vesoft.nebula.client.graph.storage.data.Edge;
+import com.vesoft.nebula.client.graph.storage.data.EdgeRow;
 import com.vesoft.nebula.client.graph.storage.scan.ScanEdgeResult;
 import com.vesoft.nebula.client.graph.storage.scan.ScanEdgeResultIterator;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,48 +21,38 @@ public class ScanEdgeExample {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScanEdgeExample.class);
 
     static String space = "test";
-    static String tag = "friend";
+    static String edge = "like";
 
     public static void main(String[] args) {
-        NebulaPoolConfig config = new NebulaPoolConfig();
+
         List<HostAndPort> metaAddress = Arrays.asList(HostAndPort.fromParts(args[0],
                 Integer.valueOf(args[1])));
-        StorageConnPool pool;
+        StorageClient client = new StorageClient(metaAddress);
         try {
-            pool = new StorageConnPool(config, metaAddress);
-        } catch (TException e) {
-            LOGGER.error("failed to get pool,", e);
-            return;
-        }
-        StorageClient client;
-        try {
-            client = pool.getStorageClient();
+            client.connect();
         } catch (Exception e) {
-            LOGGER.error("failed to get client,", e);
+            LOGGER.error("connect error, ", e);
             return;
         }
 
-        testScanEdgeWithAllColumns(client);
-        testScanEdgeWithNoColumns(client);
-        testScanEdgeWithSpecificColumns(client);
-        pool.close();
+        scanEdgeWithAllColumns(client);
+        scanEdgeWithNoColumns(client);
+        scanEdgeWithSpecificColumns(client);
     }
 
     /**
-     * test scan edge with no columns
+     * scan edge with no columns
      */
-    public static void testScanEdgeWithNoColumns(StorageClient client) {
-        Map<String, List<String>> returnCols = Maps.newHashMap();
-        returnCols.put(tag, Arrays.asList("duration"));
+    public static void scanEdgeWithNoColumns(StorageClient client) {
         ScanEdgeResultIterator iterator;
         try {
-            iterator = client.scanEdge(space, returnCols, true);
+            iterator = client.scanEdge(space, edge);
             ScanEdgeResult result;
             while (iterator.hasNext()) {
                 result = iterator.next();
-                for (Edge edge : result.getAllEdges()) {
-                    assert (edge.getEdgeType().getProps().size() == 0);
-                    System.out.println(edge.toString());
+                for (EdgeRow edgeRow : result.getEdges()) {
+                    assert (edgeRow.getProps().size() == 0);
+                    System.out.println(edgeRow.toString());
                 }
             }
         } catch (Exception e) {
@@ -75,20 +61,19 @@ public class ScanEdgeExample {
     }
 
     /**
-     * test scan edge with all columns
+     * scan edge with all columns
      */
-    public static void testScanEdgeWithAllColumns(StorageClient client) {
-        Map<String, List<String>> returnCols = Maps.newHashMap();
-        returnCols.put(tag, Arrays.asList());
+    public static void scanEdgeWithAllColumns(StorageClient client) {
+        List<String> returnCols = new ArrayList<>();
         ScanEdgeResultIterator iterator;
         try {
-            iterator = client.scanEdge(space, returnCols, false);
+            iterator = client.scanEdge(space, edge, returnCols);
             ScanEdgeResult result;
             while (iterator.hasNext()) {
                 result = iterator.next();
-                for (Edge edge : result.getAllEdges()) {
-                    assert (edge.getEdgeType().getProps().size() == 3);
-                    System.out.println(edge.toString());
+                for (EdgeRow edgeRow : result.getEdges()) {
+                    assert (edgeRow.getProps().size() == 3);
+                    System.out.println(edgeRow.toString());
                 }
             }
         } catch (Exception e) {
@@ -97,21 +82,20 @@ public class ScanEdgeExample {
     }
 
     /**
-     * test scan edge with specific columns
+     * scan edge with specific columns
      */
-    public static void testScanEdgeWithSpecificColumns(StorageClient client) {
-        Map<String, List<String>> returnCols = Maps.newHashMap();
-        returnCols.put(tag, Arrays.asList("duration", "relation"));
+    public static void scanEdgeWithSpecificColumns(StorageClient client) {
+        List<String> returnCols = Arrays.asList("likeness");
         ScanEdgeResultIterator iterator;
         try {
-            iterator = client.scanEdge(space, returnCols, false);
+            iterator = client.scanEdge(space, edge, returnCols);
             ScanEdgeResult result;
             while (iterator.hasNext()) {
                 result = iterator.next();
-                for (Edge edge : result.getAllEdges()) {
-                    assert (edge.getEdgeType().getProps().size() == 2);
-                    assert (edge.getRank() == 0);
-                    System.out.println(edge.toString());
+                for (EdgeRow edgeRow : result.getEdges()) {
+                    assert (edgeRow.getProps().size() == 2);
+                    assert (edgeRow.getRank() == 0);
+                    System.out.println(edgeRow.toString());
                 }
             }
         } catch (Exception e) {

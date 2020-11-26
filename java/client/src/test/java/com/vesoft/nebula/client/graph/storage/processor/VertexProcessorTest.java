@@ -13,7 +13,7 @@ import com.vesoft.nebula.DateTime;
 import com.vesoft.nebula.Row;
 import com.vesoft.nebula.Value;
 import com.vesoft.nebula.client.graph.meta.MetaInfo;
-import com.vesoft.nebula.client.graph.storage.scan.ScanVertexResult;
+import com.vesoft.nebula.client.graph.storage.data.VertexRow;
 import com.vesoft.nebula.meta.ColumnDef;
 import com.vesoft.nebula.meta.ColumnTypeDef;
 import com.vesoft.nebula.meta.Schema;
@@ -43,17 +43,15 @@ public class VertexProcessorTest extends TestCase {
         processor = new VertexProcessor(spaceName, metaInfo);
     }
 
-    public void tearDown() throws Exception {
+    public void tearDown() {
 
     }
 
     public void testConstructResult() {
         List<VertexProp> returnCols = Arrays.asList(new VertexProp((int) tagId, new ArrayList<>()));
-        ScanVertexResult result = processor.constructResult(dataSet, returnCols);
-        assert result.getAllVertices().size() == 1;
-        assert result.getVertices(tagName).size() == 1;
-        assert result.getVertex(vid).getTags().size() == 1;
-        assert result.getVertex(vid).getTags().get(0).getName().equals(tagName);
+        Map<String, VertexRow> result = processor.constructVertexRow(Arrays.asList(dataSet),
+                returnCols);
+        assert result.values().size() == 1;
     }
 
     private DataSet mockDataSet() {
