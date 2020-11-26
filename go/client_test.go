@@ -378,7 +378,7 @@ func TestReconnect(t *testing.T) {
 	}
 
 	// This assertion will pass only when reconnection happens
-	assert.Equal(t, resp.GetErrorCode(), graph.ErrorCode_E_SESSION_INVALID, "Expected error should be E_SESSION_INVALID")
+	assert.Equal(t, ErrorCode_E_SESSION_INVALID, resp.GetErrorCode(), "Expected error should be E_SESSION_INVALID")
 
 	startContainer(t, "nebula-docker-compose_graphd_1")
 	startContainer(t, "nebula-docker-compose_graphd2_1")

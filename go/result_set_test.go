@@ -335,7 +335,7 @@ func TestResultSet(t *testing.T) {
 		[]byte("test_comment")}
 	resultSet := genResultSet(resp)
 
-	assert.Equal(t, graph.ErrorCode_SUCCEEDED, resultSet.GetErrorCode())
+	assert.Equal(t, ErrorCode_SUCCEEDED, resultSet.GetErrorCode())
 	assert.Equal(t, "test_space", string(resultSet.resp.SpaceName))
 	assert.Equal(t, "test_comment", string(resultSet.resp.Comment))
 	assert.Equal(t, true, resultSet.IsSucceed())

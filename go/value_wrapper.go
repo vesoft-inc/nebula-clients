@@ -19,6 +19,24 @@ type ValueWrapper struct {
 	value *nebula.Value
 }
 
+type ErrorCode int64
+
+const (
+	ErrorCode_SUCCEEDED               ErrorCode = 0
+	ErrorCode_E_DISCONNECTED          ErrorCode = -1
+	ErrorCode_E_FAIL_TO_CONNECT       ErrorCode = -2
+	ErrorCode_E_RPC_FAILURE           ErrorCode = -3
+	ErrorCode_E_BAD_USERNAME_PASSWORD ErrorCode = -4
+	ErrorCode_E_SESSION_INVALID       ErrorCode = -5
+	ErrorCode_E_SESSION_TIMEOUT       ErrorCode = -6
+	ErrorCode_E_SYNTAX_ERROR          ErrorCode = -7
+	ErrorCode_E_EXECUTION_ERROR       ErrorCode = -8
+	ErrorCode_E_STATEMENT_EMTPY       ErrorCode = -9
+	ErrorCode_E_USER_NOT_FOUND        ErrorCode = -10
+	ErrorCode_E_BAD_PERMISSION        ErrorCode = -11
+	ErrorCode_E_SEMANTIC_ERROR        ErrorCode = -12
+)
+
 func (valueWrapper ValueWrapper) IsEmpty() bool {
 	return valueWrapper.GetType() == "empty"
 }

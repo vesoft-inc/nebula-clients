@@ -232,8 +232,22 @@ func (res ResultSet) GetColNames() []string {
 	return res.columnNames
 }
 
-func (res ResultSet) GetErrorCode() graph.ErrorCode {
-	return res.resp.ErrorCode
+// Returns an integer representing an error type
+// 0    ErrorCode_SUCCEEDED
+// -1   ErrorCode_E_DISCONNECTED
+// -2   ErrorCode_E_FAIL_TO_CONNECT
+// -3   ErrorCode_E_RPC_FAILURE
+// -4   ErrorCode_E_BAD_USERNAME_PASSWORD
+// -5   ErrorCode_E_SESSION_INVALID
+// -6   ErrorCode_E_SESSION_TIMEOUT
+// -7   ErrorCode_E_SYNTAX_ERROR
+// -8   ErrorCode_E_EXECUTION_ERROR
+// -9   ErrorCode_E_STATEMENT_EMTPY
+// -10  ErrorCode_E_USER_NOT_FOUND
+// -11  ErrorCode_E_BAD_PERMISSION
+// -12  ErrorCode_E_SEMANTIC_ERROR
+func (res ResultSet) GetErrorCode() ErrorCode {
+	return ErrorCode(int64(res.resp.ErrorCode))
 }
 
 func (res ResultSet) GetErrorMsg() []byte {
@@ -245,7 +259,7 @@ func (res ResultSet) GetErrorMsg() []byte {
 }
 
 func (res ResultSet) IsSucceed() bool {
-	return res.GetErrorCode() == graph.ErrorCode_SUCCEEDED
+	return res.GetErrorCode() == ErrorCode_SUCCEEDED
 }
 
 func (res ResultSet) hasColName(colName string) bool {
