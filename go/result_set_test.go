@@ -162,14 +162,14 @@ func TestAsTime(t *testing.T) {
 	value := nebula.Value{TVal: &nebula.Time{13, 12, 25, 29}}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsTime())
-	assert.Equal(t, "13:12:25.29", valWrap.String())
+	assert.Equal(t, "13:12:25.029", valWrap.String())
 }
 
 func TestAsDateTime(t *testing.T) {
 	value := nebula.Value{DtVal: &nebula.DateTime{2020, 12, 25, 13, 12, 25, 29}}
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsDateTime())
-	assert.Equal(t, "2020-12-25T13:12:25.29", valWrap.String())
+	assert.Equal(t, "2020-12-25T13:12:25.029", valWrap.String())
 }
 
 func TestAsNode(t *testing.T) {

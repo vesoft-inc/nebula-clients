@@ -268,13 +268,13 @@ func (valWarp ValueWrapper) String() string {
 		return `"` + string(value.GetSVal()) + `"`
 	} else if value.IsSetDVal() { // Date yyyy-mm-dd
 		date := value.GetDVal()
-		return fmt.Sprintf("%d-%d-%d", date.Year, date.Month, date.Day)
+		return fmt.Sprintf("%d-%02d-%02d", date.Year, date.Month, date.Day)
 	} else if value.IsSetTVal() { // Time HH:MM:SS.MS
 		time := value.GetTVal()
-		return fmt.Sprintf("%d:%d:%d.%d", time.Hour, time.Minute, time.Sec, time.Microsec)
+		return fmt.Sprintf("%02d:%02d:%02d.%03d", time.Hour, time.Minute, time.Sec, time.Microsec)
 	} else if value.IsSetDtVal() { // DateTime yyyy-mm-ddTHH:MM:SS.MS  TODO: add time zone
 		dateTime := value.GetDtVal()
-		return fmt.Sprintf("%d-%d-%dT%d:%d:%d.%d",
+		return fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d.%03d",
 			dateTime.Year, dateTime.Month, dateTime.Day,
 			dateTime.Hour, dateTime.Minute, dateTime.Sec, dateTime.Microsec)
 	} else if value.IsSetVVal() { // Vertex format: ("VertexID" :tag1{k0: v0,k1: v1}:tag2{k2: v2})

@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -117,9 +118,7 @@ func main() {
 
 			// Get all column names from the resultSet
 			colNames := resultSet.GetColNames()
-			for _, name := range colNames {
-				fmt.Printf("%15s |", name)
-			}
+			fmt.Printf("column names: " + strings.Join(colNames, ", "))
 			fmt.Print("\n")
 
 			// Get a row from resultSet
@@ -128,6 +127,7 @@ func main() {
 				log.Error(err.Error())
 			}
 			// Print whole row
+			fmt.Print("row elements: ")
 			record.PrintRow()
 			fmt.Print("\n")
 			// Get a value in the row by column index

@@ -9,6 +9,7 @@ package nebula
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
@@ -273,9 +274,11 @@ func (record Record) GetValueByColName(colName string) (*ValueWrapper, error) {
 }
 
 func (record Record) PrintRow() {
+	var strList []string
 	for _, val := range record._record {
-		fmt.Printf("%15s |", val.String())
+		strList = append(strList, val.String())
 	}
+	fmt.Printf(strings.Join(strList, ", "))
 }
 
 func (record Record) hasColName(colName string) bool {
@@ -346,15 +349,6 @@ func (node Node) Values(tagName string) ([]*ValueWrapper, error) {
 // Returns true if two nodes have same vid
 func (n1 Node) IsEqualTo(n2 *Node) bool {
 	return n1.GetID() == n2.GetID()
-}
-
-func (node Node) getTagIndexbyName(tagName string) (int, error) {
-	for index, label := range node.tags {
-		if label == tagName {
-			return index, nil
-		}
-	}
-	return -1, fmt.Errorf("Failed to get index: Tag name %s does not exsist in the Node", tagName)
 }
 
 func (relationship Relationship) GetSrcVertexID() string {
