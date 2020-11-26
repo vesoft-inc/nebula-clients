@@ -180,7 +180,10 @@ func genPathWrapper(path *nebula.Path) (*PathWrapper, error) {
 	}, nil
 }
 
-// Returns ExecutionResponse as a JSON []byte
+/*
+Returns ExecutionResponse as a JSON []byte.
+To get the string value in the nested JSON struct, decode with base64
+*/
 func (res ResultSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(res.resp.Data)
 }
