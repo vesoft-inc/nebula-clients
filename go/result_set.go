@@ -7,6 +7,7 @@
 package nebula
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
@@ -177,6 +178,11 @@ func genPathWrapper(path *nebula.Path) (*PathWrapper, error) {
 		relationshipList: relationshipList,
 		segments:         segList,
 	}, nil
+}
+
+// Returns ExecutionResponse as a JSON []byte
+func (res ResultSet) MarshalJSON() ([]byte, error) {
+	return json.Marshal(res.resp.Data)
 }
 
 // Returns all values in the given column

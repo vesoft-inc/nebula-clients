@@ -336,6 +336,8 @@ func TestResultSet(t *testing.T) {
 	resultSet := genResultSet(resp)
 
 	assert.Equal(t, graph.ErrorCode_SUCCEEDED, resultSet.GetErrorCode())
+	assert.Equal(t, "test_space", string(resultSet.resp.SpaceName))
+	assert.Equal(t, "test_comment", string(resultSet.resp.Comment))
 	assert.Equal(t, true, resultSet.IsSucceed())
 
 	expectedColNames := []string{"col0_int", "col1_string", "col2_vertex", "col3_edge", "col4_path"}
@@ -380,6 +382,23 @@ func TestResultSet(t *testing.T) {
 	assert.Equal(t, v3.GetID(), expected_v3.GetID())
 	assert.Equal(t, true, v4.IsEqualTo(expected_v4))
 	assert.Equal(t, true, v5.IsEqualTo(expected_v5))
+}
+
+func TestMarshalJson(t *testing.T) {
+	resp := &graph.ExecutionResponse{
+		graph.ErrorCode_SUCCEEDED,
+		1000,
+		getDateset(),
+		[]byte("test_space"),
+		[]byte("test"),
+		graph.NewPlanDescription(),
+		[]byte("test_comment")}
+	resultSet := genResultSet(resp)
+
+	_, err := resultSet.MarshalJSON()
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
 
 func getVertex(vid string) *nebula.Vertex {
