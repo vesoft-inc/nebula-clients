@@ -19,7 +19,7 @@ if __name__ == '__main__':
     client = None
     try:
         config = Config()
-        config.max_connection_pool_size = 1
+        config.max_connection_pool_size = 2
         # init connection pool
         connection_pool = ConnectionPool()
         assert connection_pool.init([('127.0.0.1', 3700), ('127.0.0.1', 3699)], config)

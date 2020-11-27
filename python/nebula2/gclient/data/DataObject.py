@@ -9,8 +9,137 @@
 from nebula2.common import ttypes
 from nebula2.Exception import (
     InvalidValueTypeException,
-    InvalidKeyException
-)
+    InvalidKeyException,
+    OutOfRangeException)
+
+
+class Record(object):
+    def __init__(self, values, names):
+        assert len(names) == len(values)
+        self._record = list()
+        self._names = names
+
+        for val in values:
+            self._record.append(ValueWrapper(val))
+
+    def __iter__(self):
+        return iter(self._record)
+
+    def size(self):
+        return len(self._names)
+
+    def get_value(self, index):
+        '''
+        get value by index
+        :return: Value
+        '''
+        if index >= len(self._names):
+            raise OutOfRangeException()
+        return self._record[index]
+
+    def get_value(self, key):
+        '''
+        get value by key
+        :return: Value
+        '''
+        if key not in self._names:
+            raise InvalidKeyException(key)
+        return self._record[self._names[key]]
+
+    def values(self):
+        return self._record
+
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__, self._record)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class DataSetWrapper(object):
+    def __init__(self, data_set, decode_type='utf-8'):
+        assert data_set is not None
+        self._decode_type = decode_type
+        self._data_set = data_set
+        self._column_names = []
+        self._key_indexes = {}
+        self._pos = -1
+        for index, name in enumerate(self._data_set.column_names):
+            d_name = name.decode(self._decode_type)
+            self._column_names.append(d_name)
+            self._key_indexes[d_name] = index
+
+    def get_col_names(self):
+        return self._column_names
+
+    def get_rows(self):
+        return self._data_set.rows
+
+    def get_row_types(self):
+        '''
+        Get row types
+        :param empty
+        :return: list<int>
+          ttypes.Value.__EMPTY__ = 0
+          ttypes.Value.NVAL = 1
+          ttypes.Value.BVAL = 2
+          ttypes.Value.IVAL = 3
+          ttypes.Value.FVAL = 4
+          ttypes.Value.SVAL = 5
+          ttypes.Value.DVAL = 6
+          ttypes.Value.TVAL = 7
+          ttypes.Value.DTVAL = 8
+          ttypes.Value.VVAL = 9
+          ttypes.Value.EVAL = 10
+          ttypes.Value.PVAL = 11
+          ttypes.Value.LVAL = 12
+          ttypes.Value.MVAL = 13
+          ttypes.Value.UVAL = 14
+          ttypes.Value.GVAL = 15
+        '''
+        if len(self._data_set.rows) == 0:
+            return []
+        return [(value.getType()) for value in self._data_set.rows[0].values]
+
+    def row_values(self, row_index):
+        '''
+        Get row values
+        :param index: the Record index
+        :return: list<ValueWrapper>
+        '''
+        if row_index >= len(self._data_set.rows):
+            raise OutOfRangeException()
+        return [(ValueWrapper(value)) for value in self._data_set.rows[row_index].values]
+
+    def column_values(self, key):
+        '''
+        get column values
+        :param key: the col name
+        :return: list<ValueWrapper>
+        '''
+        if key not in self._column_names:
+            raise InvalidKeyException(key)
+
+        return [(ValueWrapper(row.values[self._key_indexes[key]])) for row in self._data_set.rows]
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        '''
+        The record iterator
+        :return: recode
+        '''
+        if len(self._data_set.rows) == 0 or self._pos >= len(self._data_set.rows) - 1:
+            raise StopIteration
+        self._pos = self._pos + 1
+        return Record(self._data_set.rows[self._pos].values, self._column_names)
 
 
 class ValueWrapper(object):
