@@ -71,6 +71,8 @@ def main_test():
 
     except Exception as x:
         print(x)
+        import traceback
+        print(traceback.format_exc())
         if client is not None:
             client.release()
         exit(1)
@@ -80,11 +82,9 @@ if __name__ == '__main__':
     config = Config()
     config.max_connection_pool_size = 4
 
-    addresses = list()
-    addresses.append(('127.0.0.1', 3699))
     # init connection pool
     connection_pool = ConnectionPool()
-    assert connection_pool.init(addresses, config)
+    assert connection_pool.init([('127.0.0.1', 3699), ('127.0.0.1', 3700)], config)
 
     # Use multi thread and reuse the session three times
     for count in range(0, 3):

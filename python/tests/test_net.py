@@ -8,6 +8,7 @@
 
 import sys
 import os
+import pytest
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.join(current_dir, '..')
@@ -25,8 +26,8 @@ from nebula2.Config import Config
 
 from nebula2.Exception import (
     NotValidConnectionException,
-    InValidHostname
-)
+    InValidHostname,
+    IOErrorException)
 
 
 class TestConnection(TestCase):
@@ -62,7 +63,7 @@ class TestConnection(TestCase):
         conn.close()
         try:
             conn.authenticate('root', 'nebula')
-        except Exception as ex:
+        except IOErrorException:
             assert True
 
 
@@ -75,9 +76,6 @@ class TestConnectionPool(TestCase):
         self.configs = Config()
         self.configs.min_connection_pool_size = 2
         self.configs.max_connection_pool_size = 4
-        self.configs.max_retry_time = 3
-        self.configs.timeout = 10000
-        self.configs.idle_time = 2*1000
         self.pool = ConnectionPool()
         assert self.pool.init(self.addresses, self.configs)
         assert self.pool.connnects() == 2
@@ -147,9 +145,18 @@ class TestConnectionPool(TestCase):
         assert resp.is_succeeded()
         self.pool.close()
         try:
-            session.execute('SHOW SPACES')
-        except Exception:
+            new_session = self.pool.get_session('root', 'nebula')
+        except NotValidConnectionException:
             assert True
+        except Exception as e:
+            assert False, "We don't expect reach here:{}".format(e)
+
+        try:
+            session.execute('SHOW SPACES')
+        except IOErrorException:
+            assert True
+        except Exception as e:
+            assert False, "We don't expect reach here:".format(e)
 
 
 class TestSession(TestCase):
@@ -163,9 +170,6 @@ class TestSession(TestCase):
         self.configs = Config()
         self.configs.min_connection_pool_size = 2
         self.configs.max_connection_pool_size = 4
-        self.configs.max_retry_time = 3
-        self.configs.timeout = 10000
-        self.configs.idle_time = 2*1000
         self.pool = ConnectionPool()
         self.pool._check_delay = 2
         assert self.pool.init(self.addresses, self.configs)
