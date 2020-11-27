@@ -10,7 +10,8 @@ from nebula2.common import ttypes
 from nebula2.Exception import (
     InvalidValueTypeException,
     InvalidKeyException,
-    OutOfRangeException)
+    OutOfRangeException
+)
 
 
 class Record(object):
