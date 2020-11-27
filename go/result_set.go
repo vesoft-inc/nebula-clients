@@ -49,6 +49,24 @@ type PathWrapper struct {
 	segments         []segment
 }
 
+type ErrorCode int64
+
+const (
+	ErrorCode_SUCCEEDED               ErrorCode = ErrorCode(graph.ErrorCode_SUCCEEDED)
+	ErrorCode_E_DISCONNECTED          ErrorCode = ErrorCode(graph.ErrorCode_E_DISCONNECTED)
+	ErrorCode_E_FAIL_TO_CONNECT       ErrorCode = ErrorCode(graph.ErrorCode_E_FAIL_TO_CONNECT)
+	ErrorCode_E_RPC_FAILURE           ErrorCode = ErrorCode(graph.ErrorCode_E_RPC_FAILURE)
+	ErrorCode_E_BAD_USERNAME_PASSWORD ErrorCode = ErrorCode(graph.ErrorCode_E_BAD_USERNAME_PASSWORD)
+	ErrorCode_E_SESSION_INVALID       ErrorCode = ErrorCode(graph.ErrorCode_E_SESSION_INVALID)
+	ErrorCode_E_SESSION_TIMEOUT       ErrorCode = ErrorCode(graph.ErrorCode_E_SESSION_TIMEOUT)
+	ErrorCode_E_SYNTAX_ERROR          ErrorCode = ErrorCode(graph.ErrorCode_E_SYNTAX_ERROR)
+	ErrorCode_E_EXECUTION_ERROR       ErrorCode = ErrorCode(graph.ErrorCode_E_EXECUTION_ERROR)
+	ErrorCode_E_STATEMENT_EMTPY       ErrorCode = ErrorCode(graph.ErrorCode_E_STATEMENT_EMTPY)
+	ErrorCode_E_USER_NOT_FOUND        ErrorCode = ErrorCode(graph.ErrorCode_E_USER_NOT_FOUND)
+	ErrorCode_E_BAD_PERMISSION        ErrorCode = ErrorCode(graph.ErrorCode_E_BAD_PERMISSION)
+	ErrorCode_E_SEMANTIC_ERROR        ErrorCode = ErrorCode(graph.ErrorCode_E_SEMANTIC_ERROR)
+)
+
 func genResultSet(resp *graph.ExecutionResponse) *ResultSet {
 	var colNames []string
 	var colNameIndexMap = make(map[string]int)
