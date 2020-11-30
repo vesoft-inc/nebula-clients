@@ -71,7 +71,7 @@ func genResultSet(resp *graph.ExecutionResponse) *ResultSet {
 	var colNames []string
 	var colNameIndexMap = make(map[string]int)
 
-	if resp.Data == nil || resp.Data.ColumnNames == nil || resp.Data.Rows == nil {
+	if resp.Data == nil { // if resp.Data != nil then resp.Data.row and resp.Data.colNames wont be nil
 		return &ResultSet{
 			resp:            resp,
 			columnNames:     colNames,
@@ -199,15 +199,30 @@ func genPathWrapper(path *nebula.Path) (*PathWrapper, error) {
 	}, nil
 }
 
-/*
-Returns ExecutionResponse as a JSON []byte.
-To get the string value in the nested JSON struct, decode with base64
-*/
+// Returns ExecutionResponse as a JSON []byte.
+// To get the string value in the nested JSON struct, decode with base64
 func (res ResultSet) MarshalJSON() ([]byte, error) {
 	if res.resp.Data == nil {
 		return nil, fmt.Errorf("Failed to generate JSON, DataSet is empty")
 	}
 	return json.Marshal(res.resp.Data)
+}
+
+// Returns a 2D array of strings representing the query result
+// If resultSet.resp.data is nil, returns an empty 2D array
+func (res ResultSet) AsStringTable() [][]string {
+	var resTable [][]string
+	colNames := res.GetColNames()
+	resTable = append(resTable, colNames)
+	rows := res.GetRows()
+	for _, row := range rows {
+		var tempRow []string
+		for _, val := range row.Values {
+			tempRow = append(tempRow, ValueWrapper{val}.String())
+		}
+		resTable = append(resTable, tempRow)
+	}
+	return resTable
 }
 
 // Returns all values in the given column
@@ -258,7 +273,7 @@ func (res ResultSet) GetColSize() (int, error) {
 
 // Returns all rows
 func (res ResultSet) GetRows() []*nebula.Row {
-	if res.resp.Data == nil || res.resp.Data.Rows == nil {
+	if res.resp.Data == nil {
 		var empty []*nebula.Row
 		return empty
 	}
@@ -320,7 +335,7 @@ func (res ResultSet) GetComment() string {
 }
 
 func (res ResultSet) IsEmpty() bool {
-	if res.resp.Data == nil || res.resp.Data.ColumnNames == nil || res.resp.Data.Rows == nil {
+	if res.resp.Data == nil || len(res.resp.Data.ColumnNames) == 0 || len(res.resp.Data.Rows) == 0 {
 		return true
 	}
 	return false

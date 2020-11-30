@@ -415,6 +415,40 @@ func TestMarshalJson(t *testing.T) {
 	}
 }
 
+func TestAsStringTable(t *testing.T) {
+	resp := &graph.ExecutionResponse{
+		graph.ErrorCode_SUCCEEDED,
+		1000,
+		getDateset(),
+		[]byte("test_space"),
+		[]byte("test"),
+		graph.NewPlanDescription(),
+		[]byte("test_comment")}
+	resultSet := genResultSet(resp)
+
+	table := resultSet.AsStringTable()
+	var r string
+	for i := 0; i < len(table); i++ {
+		for _, col := range table[i] {
+			r += col + ", "
+		}
+		if i == 0 {
+			assert.Equal(t,
+				"col0_int, col1_string, col2_vertex, col3_edge, col4_path, ",
+				r)
+		}
+		if i == 1 {
+			assert.Equal(t,
+				"1, \"value1\", "+
+					"(\"Tom\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} :tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}), (\"Tom\")-[:classmate@100{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}]->(\"Lily\"), "+
+					"(\"Tom\")-[:classmate@100]->(\"vertex0\")<-[:classmate@100]-(\"vertex1\")-[:classmate@100]->(\"vertex2\"), ",
+				r)
+		}
+		r = ""
+	}
+}
+
 func getVertex(vid string) *nebula.Vertex {
 	var tags []*nebula.Tag
 
