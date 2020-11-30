@@ -591,7 +591,7 @@ public class MetaClient extends AbstractMetaClient {
         return edgeId;
     }
 
-    public Set<Integer> getSpaceParts(String spaceName) {
+    public List<Integer> getSpaceParts(String spaceName) {
         if (!metaInfo.getSpacePartLocation().containsKey(spaceName)) {
             if (existSpace(spaceName)) {
                 writeLock.lock();
@@ -611,7 +611,7 @@ public class MetaClient extends AbstractMetaClient {
         } finally {
             readLock.unlock();
         }
-        return spaceParts;
+        return new ArrayList<Integer>(spaceParts);
     }
 
     /**

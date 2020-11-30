@@ -8,7 +8,6 @@ package com.vesoft.nebula.client.graph.storage;
 
 import com.facebook.thrift.TException;
 import com.google.common.net.HostAndPort;
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.meta.MetaClient;
 import java.util.List;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
@@ -20,7 +19,7 @@ public class StorageConnPool {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnPool.class);
 
-    private GenericKeyedObjectPool<HostAndPort, StorageConnection> keyedPool;
+    private GenericKeyedObjectPool<HostAndPort, GraphStorageConnection> keyedPool;
     private final StorageConnPoolFactory poolFactory;
     private final List<HostAndPort> metaAddresses;
     private MetaClient metaClient;
@@ -48,11 +47,11 @@ public class StorageConnPool {
         keyedPool.close();
     }
 
-    public StorageConnection getStorageConnection(HostAndPort address) throws Exception {
+    public GraphStorageConnection getStorageConnection(HostAndPort address) throws Exception {
         return keyedPool.borrowObject(address);
     }
 
-    public void release(HostAndPort address, StorageConnection connection) {
+    public void release(HostAndPort address, GraphStorageConnection connection) {
         keyedPool.returnObject(address, connection);
     }
 

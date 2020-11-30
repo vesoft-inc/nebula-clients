@@ -7,7 +7,6 @@
 package com.vesoft.nebula.client.graph.storage;
 
 import com.google.common.net.HostAndPort;
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import org.apache.commons.pool2.KeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
@@ -16,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("checkstyle:Indentation")
 public class StorageConnPoolFactory
-        implements KeyedPooledObjectFactory<HostAndPort, StorageConnection> {
+        implements KeyedPooledObjectFactory<HostAndPort, GraphStorageConnection> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnPoolFactory.class);
 
     private final StoragePoolConfig config;
@@ -26,21 +25,21 @@ public class StorageConnPoolFactory
     }
 
     @Override
-    public PooledObject<StorageConnection> makeObject(HostAndPort address) throws Exception {
-        StorageConnection connection = new StorageConnection();
+    public PooledObject<GraphStorageConnection> makeObject(HostAndPort address) throws Exception {
+        GraphStorageConnection connection = new GraphStorageConnection();
         return new DefaultPooledObject<>(connection);
     }
 
     @Override
     public void destroyObject(HostAndPort hostAndPort,
-                              PooledObject<StorageConnection> pooledObject) {
+                              PooledObject<GraphStorageConnection> pooledObject) {
         pooledObject.getObject().close();
     }
 
     @Override
     public boolean validateObject(HostAndPort hostAndPort,
-                                  PooledObject<StorageConnection> pooledObject) {
-        StorageConnection connection = pooledObject.getObject();
+                                  PooledObject<GraphStorageConnection> pooledObject) {
+        GraphStorageConnection connection = pooledObject.getObject();
         if (connection == null) {
             return false;
         }
@@ -55,14 +54,14 @@ public class StorageConnPoolFactory
 
     @Override
     public void activateObject(HostAndPort address,
-                               PooledObject<StorageConnection> pooledObject)
+                               PooledObject<GraphStorageConnection> pooledObject)
             throws Exception {
         pooledObject.getObject().open(address, config.getTimeout());
     }
 
     @Override
     public void passivateObject(HostAndPort hostAndPort,
-                                PooledObject<StorageConnection> pooledObject) {
+                                PooledObject<GraphStorageConnection> pooledObject) {
         pooledObject.markReturning();
     }
 }

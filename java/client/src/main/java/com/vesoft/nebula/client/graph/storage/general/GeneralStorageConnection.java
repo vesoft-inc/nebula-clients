@@ -31,9 +31,6 @@ public class GeneralStorageConnection {
     // 0: idle, 1: using
     private int stat = 0;
 
-    public GeneralStorageConnection() {
-    }
-
     protected GeneralStorageConnection open(HostAndPort address, int timeout) throws Exception {
         this.address = address;
         try {

@@ -40,7 +40,6 @@ public class TestConnectionPool {
             List<HostAddress> addresses = Collections.singletonList(
                     new HostAddress("127.0.0.1", 3888));
             NebulaPool pool = new NebulaPool();
-            pool.init(addresses, nebulaPoolConfig);
             Assert.assertFalse(pool.init(addresses, nebulaPoolConfig));
         } catch (Exception e) {
             e.printStackTrace();

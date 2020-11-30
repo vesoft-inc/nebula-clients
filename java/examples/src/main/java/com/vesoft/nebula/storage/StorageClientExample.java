@@ -21,7 +21,7 @@ public class StorageClientExample {
             return;
         }
         try {
-            StorageClient client = new StorageClient(HostAndPort.fromString("192.168.8.171:45500"));
+            StorageClient client = new StorageClient(HostAndPort.fromString("127.0.0.1:45500"));
         } catch (Exception e) {
             LOGGER.error("failed to get client,", e);
         }

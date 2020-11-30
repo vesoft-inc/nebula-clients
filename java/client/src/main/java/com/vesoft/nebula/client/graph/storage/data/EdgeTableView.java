@@ -22,19 +22,32 @@ public class EdgeTableView {
         this.decodeType = decodeType;
     }
 
+    // // todo if server changes the scan result, then values.size is not at least 4.
     public String getSrcId() throws UnsupportedEncodingException {
+        if (values.size() < 4) {
+            throw new IllegalArgumentException("no src id is returned");
+        }
         return new String((byte[]) values.get(0), decodeType);
     }
 
     public String getDstId() throws UnsupportedEncodingException {
+        if (values.size() < 4) {
+            throw new IllegalArgumentException("no dst id is returned");
+        }
         return new String((byte[]) values.get(3), decodeType);
     }
 
     public long getEdgeId() {
+        if (values.size() < 4) {
+            throw new IllegalArgumentException("no edge id is returned");
+        }
         return (long) values.get(1);
     }
 
     public long getRank() {
+        if (values.size() < 4) {
+            throw new IllegalArgumentException("no rank is returned");
+        }
         return (long) values.get(2);
     }
 
@@ -45,7 +58,7 @@ public class EdgeTableView {
     @Override
     public String toString() {
         try {
-            return "EdgeRow{"
+            return "EdgeTableView{"
                     + "srcId=" + getSrcId()
                     + ", dstId=" + getDstId()
                     + ", rank=" + getRank()

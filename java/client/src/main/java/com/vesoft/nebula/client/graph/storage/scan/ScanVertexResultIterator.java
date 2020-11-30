@@ -11,7 +11,7 @@ import com.google.common.net.HostAndPort;
 import com.vesoft.nebula.DataSet;
 import com.vesoft.nebula.client.graph.meta.MetaClient;
 import com.vesoft.nebula.client.graph.storage.StorageConnPool;
-import com.vesoft.nebula.client.graph.storage.StorageConnection;
+import com.vesoft.nebula.client.graph.storage.GraphStorageConnection;
 import com.vesoft.nebula.client.graph.storage.data.ScanStatus;
 import com.vesoft.nebula.client.graph.storage.processor.VertexProcessor;
 import com.vesoft.nebula.storage.ErrorCode;
@@ -80,7 +80,7 @@ public class ScanVertexResultIterator extends ScanResultIterator {
                     return;
                 }
 
-                StorageConnection connection;
+                GraphStorageConnection connection;
                 try {
                     connection = pool.getStorageConnection(addr);
                 } catch (Exception e) {

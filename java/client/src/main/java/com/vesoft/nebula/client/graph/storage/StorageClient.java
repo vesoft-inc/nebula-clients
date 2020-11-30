@@ -7,15 +7,9 @@
 package com.vesoft.nebula.client.graph.storage;
 
 import com.facebook.thrift.TException;
-import com.google.common.collect.Maps;
 import com.google.common.net.HostAndPort;
-import com.vesoft.nebula.HostAddr;
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
-import com.vesoft.nebula.client.graph.exception.ExecuteFailedException;
 import com.vesoft.nebula.client.graph.meta.MetaClient;
 import com.vesoft.nebula.client.graph.meta.MetaInfo;
-import com.vesoft.nebula.client.graph.storage.processor.EdgeProcessor;
-import com.vesoft.nebula.client.graph.storage.processor.VertexProcessor;
 import com.vesoft.nebula.client.graph.storage.scan.PartScanInfo;
 import com.vesoft.nebula.client.graph.storage.scan.ScanEdgeResultIterator;
 import com.vesoft.nebula.client.graph.storage.scan.ScanVertexResultIterator;
@@ -27,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class StorageClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageClient.class);
 
-    private final StorageConnection connection;
+    private final GraphStorageConnection connection;
     private StorageConnPool pool;
     private MetaClient metaClient;
     private MetaInfo metaInfo;
@@ -55,12 +48,12 @@ public class StorageClient {
     }
 
     public StorageClient(List<HostAndPort> addresses) {
-        this.connection = new StorageConnection();
+        this.connection = new GraphStorageConnection();
         this.addresses = addresses;
     }
 
     public StorageClient(List<HostAndPort> addresses, int timeout) {
-        this.connection = new StorageConnection();
+        this.connection = new GraphStorageConnection();
         this.addresses = addresses;
         this.timeout = timeout;
     }
@@ -174,11 +167,11 @@ public class StorageClient {
                                                long endTime) throws Exception {
         assert (returnCols != null);
 
-        Set<Integer> parts = getSpaceParts(spaceName);
+        List<Integer> parts = metaClient.getSpaceParts(spaceName);
         if (parts.isEmpty()) {
             throw new TException("No valid part in space " + spaceName);
         }
-        return scanVertex(spaceName, new ArrayList<>(parts), tagName,
+        return scanVertex(spaceName, parts, tagName,
                 returnCols, false, limit, startTime, endTime);
     }
 
@@ -225,11 +218,11 @@ public class StorageClient {
                                                int limit,
                                                long startTime,
                                                long endTime) throws TException {
-        Set<Integer> parts = getSpaceParts(spaceName);
+        List<Integer> parts = metaClient.getSpaceParts(spaceName);
         if (parts.isEmpty()) {
             throw new TException("No valid part in space " + spaceName);
         }
-        return scanVertex(spaceName, new ArrayList<>(parts), tagName,
+        return scanVertex(spaceName, parts, tagName,
                 new ArrayList<>(), noColumns, limit, startTime, endTime);
     }
 
@@ -258,7 +251,7 @@ public class StorageClient {
 
         Set<PartScanInfo> partScanInfoSet = new HashSet<>();
         for (int part : parts) {
-            partScanInfoSet.add(new PartScanInfo(part, getLeader(spaceName, part)));
+            partScanInfoSet.add(new PartScanInfo(part, metaClient.getLeader(spaceName, part)));
         }
         Set<HostAndPort> addrs;
         try {
@@ -270,7 +263,7 @@ public class StorageClient {
 
         List<VertexProp> vertexCols = new ArrayList<>();
 
-        long tag = getTagId(spaceName, tagName);
+        long tag = metaClient.getTagId(spaceName, tagName);
         List<byte[]> props = new ArrayList<>();
         for (String prop : returnCols) {
             props.add(prop.getBytes());
@@ -418,11 +411,11 @@ public class StorageClient {
                                            long endTime) throws Exception {
         assert (returnCols != null);
 
-        Set<Integer> parts = getSpaceParts(spaceName);
+        List<Integer> parts = metaClient.getSpaceParts(spaceName);
         if (parts.isEmpty()) {
             throw new TException("No valid part in space " + spaceName);
         }
-        return scanEdge(spaceName, new ArrayList<>(parts), edgeName,
+        return scanEdge(spaceName, parts, edgeName,
                 returnCols, false, limit, startTime, endTime);
     }
 
@@ -469,11 +462,11 @@ public class StorageClient {
                                            long startTime,
                                            long endTime) throws TException {
 
-        Set<Integer> parts = getSpaceParts(spaceName);
+        List<Integer> parts = metaClient.getSpaceParts(spaceName);
         if (parts.isEmpty()) {
             throw new TException("No valid part in space " + spaceName);
         }
-        return scanEdge(spaceName, new ArrayList<>(parts), edgeName,
+        return scanEdge(spaceName, parts, edgeName,
                 new ArrayList<>(), noColumns, limit, startTime, endTime);
     }
 
@@ -502,7 +495,7 @@ public class StorageClient {
 
         Set<PartScanInfo> partScanInfoSet = new HashSet<>();
         for (int part : parts) {
-            partScanInfoSet.add(new PartScanInfo(part, getLeader(spaceName, part)));
+            partScanInfoSet.add(new PartScanInfo(part, metaClient.getLeader(spaceName, part)));
         }
         Set<HostAndPort> addrs;
         try {
@@ -576,7 +569,7 @@ public class StorageClient {
      *
      * @return StorageConnection
      */
-    public StorageConnection getConnection() {
+    public GraphStorageConnection getConnection() {
         return this.connection;
     }
 
@@ -586,31 +579,6 @@ public class StorageClient {
      */
     private int getSpaceId(String spaceName) {
         return metaClient.getSpaceId(spaceName);
-    }
-
-    /**
-     * get space parts
-     */
-    private Set<Integer> getSpaceParts(String spaceName) {
-        return metaClient.getSpaceParts(spaceName);
-    }
-
-    /**
-     * get leader of part
-     *
-     * @param spaceName nebula graph space
-     * @param part      nebula part
-     * @return leader
-     */
-    private HostAndPort getLeader(String spaceName, int part) {
-        return metaClient.getLeader(spaceName, part);
-    }
-
-    /**
-     * get tag id
-     */
-    private long getTagId(String spaceName, String tagName) {
-        return metaClient.getTagId(spaceName, tagName);
     }
 
     /**

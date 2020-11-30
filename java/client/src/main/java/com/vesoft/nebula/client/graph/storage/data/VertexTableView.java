@@ -22,11 +22,18 @@ public class VertexTableView {
         this.decodeType = decodeType;
     }
 
+    // todo if server changes the scan result, then values.size is not at least 2.
     public String getVid() throws UnsupportedEncodingException {
+        if (values.size() < 2) {
+            throw new IllegalArgumentException("no vertex id is returned");
+        }
         return new String((byte[]) values.get(0), decodeType);
     }
 
     public long getTagId() {
+        if (values.size() < 2) {
+            throw new IllegalArgumentException("no tag id is returned");
+        }
         return (long) values.get(1);
     }
 
@@ -38,7 +45,7 @@ public class VertexTableView {
     @Override
     public String toString() {
         try {
-            return "VertexRow{"
+            return "VertexTableView{"
                     + "vid=" + getVid()
                     + ", values=" + getValues()
                     + '}';

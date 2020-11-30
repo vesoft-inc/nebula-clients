@@ -122,7 +122,7 @@ public class GeneralStorageClient {
             int part = keyToPartId(spaceName, kv.getKey());
             KeyValue keyValue = new KeyValue(kv.getKey().getBytes(), kv.getValue().getBytes());
             if (!partKeyValues.containsKey(part)) {
-                partKeyValues.put(part, new ArrayList<KeyValue>());
+                partKeyValues.put(part, new ArrayList<>());
             }
             partKeyValues.get(part).add(keyValue);
         }
@@ -217,6 +217,8 @@ public class GeneralStorageClient {
                         freshLeader(spaceName, partResult.part_id, partResult.leader);
                     } else {
                         LOGGER.error(String.format("Put failed, error code=%d", partResult.code));
+                        connection.release();
+                        return false;
                     }
                 }
             } catch (TException e) {
@@ -237,26 +239,13 @@ public class GeneralStorageClient {
      * @param key       nebula key
      * @return String value
      */
-    public String get(String spaceName, String key) throws TException {
-        int spaceId = metaClient.getSpaceId(spaceName);
-        int part = keyToPartId(spaceName, key);
-        HostAndPort leader = getLeader(spaceName, part);
-
-        if (leader == null) {
-            throw new TException(String
-                    .format("no leader for space %s and key %s", spaceName, key));
+    public String get(String spaceName, String key) throws InterruptedException {
+        List<String> keys = Arrays.asList(key);
+        Map<String, String> result = get(spaceName, keys, true);
+        if (result.containsKey(key)) {
+            return result.get(key);
         }
-
-        Map<Integer, List<byte[]>> parts = Maps.newHashMap();
-        parts.put(part, Arrays.asList(key.getBytes()));
-        KVGetRequest request = new KVGetRequest(spaceId, parts, false);
-
-        Map<byte[], byte[]> result = doGet(spaceName, leader, request);
-        if (result.containsKey(key.getBytes())) {
-            return new String(result.get(key.getBytes()));
-        } else {
-            return null;
-        }
+        return null;
     }
 
 
@@ -381,8 +370,10 @@ public class GeneralStorageClient {
                     if (partResult.code == ErrorCode.E_LEADER_CHANGED) {
                         freshLeader(spaceName, partResult.part_id, partResult.leader);
                     } else {
-                        LOGGER.error(String.format("Put failed, error code=%d", partResult.code));
+                        LOGGER.error(String.format("Get failed, error code=%d", partResult.code));
                         connection.release();
+                        throw new TException(String.format("Get failed, error code=%d",
+                                partResult.code));
                     }
                 }
             } catch (TException e) {
@@ -401,16 +392,9 @@ public class GeneralStorageClient {
      * @param key       nebula key
      * @return boolean
      */
-    public boolean remove(String spaceName, String key) throws TException {
-        int spaceId = metaInfo.getSpaceNameMap().get(spaceName);
-        int part = keyToPartId(spaceName, key);
-
-        Map<Integer, List<byte[]>> parts = Maps.newHashMap();
-        parts.put(part, Arrays.asList(key.getBytes()));
-        KVRemoveRequest request = new KVRemoveRequest(spaceId, parts);
-
-        HostAndPort leader = getLeader(spaceName, part);
-        return doRemove(spaceName, leader, request);
+    public boolean remove(String spaceName, String key) throws InterruptedException {
+        List<String> keys = Arrays.asList(key);
+        return remove(spaceName, keys);
     }
 
 
@@ -522,6 +506,8 @@ public class GeneralStorageClient {
                     } else {
                         LOGGER.error(String.format("Remove failed, error code=%d",
                                 partResult.code));
+                        connection.release();
+                        return false;
                     }
                 }
             } catch (TException e) {

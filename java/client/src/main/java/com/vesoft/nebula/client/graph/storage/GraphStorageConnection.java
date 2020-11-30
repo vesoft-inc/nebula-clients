@@ -12,13 +12,7 @@ import com.facebook.thrift.protocol.TProtocol;
 import com.facebook.thrift.transport.TSocket;
 import com.facebook.thrift.transport.TTransport;
 import com.google.common.net.HostAndPort;
-import com.vesoft.nebula.storage.ExecResponse;
-import com.vesoft.nebula.storage.GeneralStorageService;
 import com.vesoft.nebula.storage.GraphStorageService;
-import com.vesoft.nebula.storage.KVGetRequest;
-import com.vesoft.nebula.storage.KVGetResponse;
-import com.vesoft.nebula.storage.KVPutRequest;
-import com.vesoft.nebula.storage.KVRemoveRequest;
 import com.vesoft.nebula.storage.ScanEdgeRequest;
 import com.vesoft.nebula.storage.ScanEdgeResponse;
 import com.vesoft.nebula.storage.ScanVertexRequest;
@@ -26,19 +20,16 @@ import com.vesoft.nebula.storage.ScanVertexResponse;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-
-public class StorageConnection {
+public class GraphStorageConnection {
     protected TTransport transport = null;
     protected TProtocol protocol = null;
     public HostAndPort address;
     private GraphStorageService.Client client;
-    private GeneralStorageService.Client generalClient;
 
-
-    protected StorageConnection() {
+    protected GraphStorageConnection() {
     }
 
-    protected StorageConnection open(HostAndPort address, int timeout) throws Exception {
+    protected GraphStorageConnection open(HostAndPort address, int timeout) throws Exception {
         this.address = address;
         try {
             int newTimeout = timeout <= 0 ? Integer.MAX_VALUE : timeout;
@@ -50,7 +41,6 @@ public class StorageConnection {
             this.transport.open();
             this.protocol = new TCompactProtocol(transport);
             client = new GraphStorageService.Client(protocol);
-            generalClient = new GeneralStorageService.Client(protocol);
         } catch (TException | UnknownHostException e) {
             throw e;
         }
