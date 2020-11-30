@@ -18,8 +18,8 @@ from nebula2.common.ttypes import Value, NullType, Time, DateTime, Set
 from nebula2.common import ttypes
 from nebula2.graph import ttypes as graphTtype
 from unittest import TestCase
-from nebula2.gclient.data.ResultSet import ResultSet
-from nebula2.gclient.data.DataObject import (
+from nebula2.data.ResultSet import ResultSet
+from nebula2.data.DataObject import (
     ValueWrapper,
     Node,
     Relationship,

@@ -8,7 +8,7 @@
 
 from nebula2.graph import ttypes
 
-from nebula2.gclient.data.DataObject import DataSetWrapper
+from nebula2.data.DataObject import DataSetWrapper
 
 
 class ResultSet(object):
