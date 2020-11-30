@@ -91,12 +91,14 @@ jobs:
         run: cmake --build build/ -j $(nproc)
       - name: Nebula Server
         run: |
-          pip3 install setuptools
-          pip3 install docker-compose
+          yum install -y docker
+          pip3 install setuptools docker-compose
+          docker network ls
           mkdir tmp
           pushd tmp
           git clone -b v2-preview https://github.com/vesoft-inc/nebula-docker-compose.git
           pushd nebula-docker-compose/
+          sed -i "s/\bdocker_nebula-net\b/$(docker network ls | tr -s [:blank:] | cut -d ' ' -f 2)/g" docker-compose.yml
           docker-compose up -d
           sleep 10
           popd
