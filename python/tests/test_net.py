@@ -8,7 +8,8 @@
 
 import sys
 import os
-import pytest
+import threading
+import time
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.join(current_dir, '..')
@@ -187,3 +188,62 @@ class TestSession(TestCase):
         except Exception:
             assert False
 
+
+def test_multi_thread():
+    # Test multi thread
+    addresses = [('127.0.0.1', 3699), ('127.0.0.1', 3700)]
+    configs = Config()
+    configs.max_connection_pool_size = 4
+    pool = ConnectionPool()
+    assert pool.init(addresses, configs)
+
+    global success_flag
+    success_flag = True
+
+    def main_test():
+        session = None
+        global success_flag
+        try:
+            session = pool.get_session('root', 'nebula')
+            if session is None:
+                print("ERROR: None client")
+                success_flag = False
+                return
+            space_name = 'space_' + threading.current_thread().getName()
+
+            session.execute('DROP SPACE %s' % space_name)
+            resp = session.execute('CREATE SPACE IF NOT EXISTS %s' % space_name)
+            print(resp)
+            if not resp.is_succeeded():
+                raise RuntimeError('CREATE SPACE failed: {}'.format(resp.error_msg()))
+
+            time.sleep(3)
+            resp = session.execute('USE %s' % space_name)
+            if not resp.is_succeeded():
+                raise RuntimeError('USE SPACE failed:{}'.format(resp.error_msg()))
+
+        except Exception as x:
+            print(x)
+            success_flag = False
+            return
+        finally:
+            if session is not None:
+                session.release()
+
+    thread1 = threading.Thread(target=main_test, name='thread1')
+    thread2 = threading.Thread(target=main_test, name='thread2')
+    thread3 = threading.Thread(target=main_test, name='thread3')
+    thread4 = threading.Thread(target=main_test, name='thread4')
+
+    thread1.start()
+    thread2.start()
+    thread3.start()
+    thread4.start()
+
+    thread1.join()
+    thread2.join()
+    thread3.join()
+    thread4.join()
+
+    pool.close()
+    assert success_flag

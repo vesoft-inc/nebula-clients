@@ -67,15 +67,14 @@ def main_test():
         print(' \n====== The query result of thread[%s]======\n '
               % threading.current_thread().getName())
         print_resp(query_resp)
-        client.release()
 
     except Exception as x:
         print(x)
         import traceback
         print(traceback.format_exc())
+    finally:
         if client is not None:
             client.release()
-        exit(1)
 
 
 if __name__ == '__main__':
