@@ -98,7 +98,7 @@ jobs:
           pushd tmp
           git clone -b v2-preview https://github.com/vesoft-inc/nebula-docker-compose.git
           pushd nebula-docker-compose/
-          sed -i "s/\bdocker_nebula-net\b/$(docker network ls | tr -s [:blank:] | cut -d ' ' -f 2)/g" docker-compose.yml
+          sed -i "s/\bdocker_nebula-net\b/$(docker network ls | grep github_network | tr -s [:blank:] | cut -d ' ' -f 2)/g" docker-compose.yml
           docker-compose up -d
           sleep 10
           popd
