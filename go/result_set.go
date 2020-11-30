@@ -7,7 +7,9 @@
 package nebula
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/vesoft-inc/nebula-clients/go/nebula"
 	"github.com/vesoft-inc/nebula-clients/go/nebula/graph"
@@ -47,25 +49,42 @@ type PathWrapper struct {
 	segments         []segment
 }
 
-func genResultSet(resp graph.ExecutionResponse) *ResultSet {
+type ErrorCode int64
+
+const (
+	ErrorCode_SUCCEEDED               ErrorCode = ErrorCode(graph.ErrorCode_SUCCEEDED)
+	ErrorCode_E_DISCONNECTED          ErrorCode = ErrorCode(graph.ErrorCode_E_DISCONNECTED)
+	ErrorCode_E_FAIL_TO_CONNECT       ErrorCode = ErrorCode(graph.ErrorCode_E_FAIL_TO_CONNECT)
+	ErrorCode_E_RPC_FAILURE           ErrorCode = ErrorCode(graph.ErrorCode_E_RPC_FAILURE)
+	ErrorCode_E_BAD_USERNAME_PASSWORD ErrorCode = ErrorCode(graph.ErrorCode_E_BAD_USERNAME_PASSWORD)
+	ErrorCode_E_SESSION_INVALID       ErrorCode = ErrorCode(graph.ErrorCode_E_SESSION_INVALID)
+	ErrorCode_E_SESSION_TIMEOUT       ErrorCode = ErrorCode(graph.ErrorCode_E_SESSION_TIMEOUT)
+	ErrorCode_E_SYNTAX_ERROR          ErrorCode = ErrorCode(graph.ErrorCode_E_SYNTAX_ERROR)
+	ErrorCode_E_EXECUTION_ERROR       ErrorCode = ErrorCode(graph.ErrorCode_E_EXECUTION_ERROR)
+	ErrorCode_E_STATEMENT_EMTPY       ErrorCode = ErrorCode(graph.ErrorCode_E_STATEMENT_EMTPY)
+	ErrorCode_E_USER_NOT_FOUND        ErrorCode = ErrorCode(graph.ErrorCode_E_USER_NOT_FOUND)
+	ErrorCode_E_BAD_PERMISSION        ErrorCode = ErrorCode(graph.ErrorCode_E_BAD_PERMISSION)
+	ErrorCode_E_SEMANTIC_ERROR        ErrorCode = ErrorCode(graph.ErrorCode_E_SEMANTIC_ERROR)
+)
+
+func genResultSet(resp *graph.ExecutionResponse) *ResultSet {
 	var colNames []string
 	var colNameIndexMap = make(map[string]int)
 
 	if resp.Data == nil || resp.Data.ColumnNames == nil || resp.Data.Rows == nil {
 		return &ResultSet{
-			resp:            &resp,
+			resp:            resp,
 			columnNames:     colNames,
 			colNameIndexMap: colNameIndexMap,
 		}
 	}
-
 	for i, name := range resp.Data.ColumnNames {
 		colNames = append(colNames, string(name))
 		colNameIndexMap[string(name)] = i
 	}
 
 	return &ResultSet{
-		resp:            &resp,
+		resp:            resp,
 		columnNames:     colNames,
 		colNameIndexMap: colNameIndexMap,
 	}
@@ -180,6 +199,14 @@ func genPathWrapper(path *nebula.Path) (*PathWrapper, error) {
 	}, nil
 }
 
+/*
+Returns ExecutionResponse as a JSON []byte.
+To get the string value in the nested JSON struct, decode with base64
+*/
+func (res ResultSet) MarshalJSON() ([]byte, error) {
+	return json.Marshal(res.resp.Data)
+}
+
 // Returns all values in the given column
 func (res ResultSet) GetValuesByColName(colName string) ([]*ValueWrapper, error) {
 	if !res.hasColName(colName) {
@@ -223,8 +250,22 @@ func (res ResultSet) GetColNames() []string {
 	return res.columnNames
 }
 
-func (res ResultSet) GetErrorCode() graph.ErrorCode {
-	return res.resp.ErrorCode
+// Returns an integer representing an error type
+// 0    ErrorCode_SUCCEEDED
+// -1   ErrorCode_E_DISCONNECTED
+// -2   ErrorCode_E_FAIL_TO_CONNECT
+// -3   ErrorCode_E_RPC_FAILURE
+// -4   ErrorCode_E_BAD_USERNAME_PASSWORD
+// -5   ErrorCode_E_SESSION_INVALID
+// -6   ErrorCode_E_SESSION_TIMEOUT
+// -7   ErrorCode_E_SYNTAX_ERROR
+// -8   ErrorCode_E_EXECUTION_ERROR
+// -9   ErrorCode_E_STATEMENT_EMTPY
+// -10  ErrorCode_E_USER_NOT_FOUND
+// -11  ErrorCode_E_BAD_PERMISSION
+// -12  ErrorCode_E_SEMANTIC_ERROR
+func (res ResultSet) GetErrorCode() ErrorCode {
+	return ErrorCode(int64(res.resp.ErrorCode))
 }
 
 func (res ResultSet) GetErrorMsg() []byte {
@@ -236,7 +277,7 @@ func (res ResultSet) GetErrorMsg() []byte {
 }
 
 func (res ResultSet) IsSucceed() bool {
-	return res.GetErrorCode() == graph.ErrorCode_SUCCEEDED
+	return res.GetErrorCode() == ErrorCode_SUCCEEDED
 }
 
 func (res ResultSet) hasColName(colName string) bool {
@@ -262,6 +303,14 @@ func (record Record) GetValueByColName(colName string) (*ValueWrapper, error) {
 	// Get index
 	index := (*record.colNameIndexMap)[colName]
 	return record._record[index], nil
+}
+
+func (record Record) PrintRow() {
+	var strList []string
+	for _, val := range record._record {
+		strList = append(strList, val.String())
+	}
+	fmt.Printf(strings.Join(strList, ", "))
 }
 
 func (record Record) hasColName(colName string) bool {
@@ -332,15 +381,6 @@ func (node Node) Values(tagName string) ([]*ValueWrapper, error) {
 // Returns true if two nodes have same vid
 func (n1 Node) IsEqualTo(n2 *Node) bool {
 	return n1.GetID() == n2.GetID()
-}
-
-func (node Node) getTagIndexbyName(tagName string) (int, error) {
-	for index, label := range node.tags {
-		if label == tagName {
-			return index, nil
-		}
-	}
-	return -1, fmt.Errorf("Failed to get index: Tag name %s does not exsist in the Node", tagName)
 }
 
 func (relationship Relationship) GetSrcVertexID() string {
