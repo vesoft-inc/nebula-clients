@@ -103,16 +103,14 @@ jobs:
           sleep 10
           popd
           popd
-      # TODO(shylock) the network of build container is created by github, and the nebula server
-      # in the custom network so can't access to
-      # - name: CTest
-        # env:
-          # ASAN_OPTIONS: fast_unwind_on_malloc=1
-        # run: |
-          # pushd build
-          # ctest -j $(($(nproc)/2+1)) --timeout 400 --output-on-failure
-          # popd
-        # timeout-minutes: 4
+      - name: CTest
+        env:
+          ASAN_OPTIONS: fast_unwind_on_malloc=1
+        run: |
+          pushd build
+          ctest -j $(($(nproc)/2+1)) --timeout 400 --output-on-failure
+          popd
+        timeout-minutes: 4
       - name: Cleanup
         if: ${{ always() }}
         run: rm -rf build modules
