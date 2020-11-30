@@ -53,7 +53,7 @@ class ResultSet(object):
         return self._resp.plan_desc
 
     def is_empty(self):
-        return self._data_set_wrapper is None or len(self._data_set_wrapper.rows) == 0
+        return self._data_set_wrapper is None or self._data_set_wrapper.get_row_size() == 0
 
     def keys(self):
         '''

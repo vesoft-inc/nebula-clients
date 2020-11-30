@@ -76,6 +76,9 @@ class DataSetWrapper(object):
             self._column_names.append(d_name)
             self._key_indexes[d_name] = index
 
+    def get_row_size(self):
+        return len(self._data_set.rows)
+
     def get_col_names(self):
         return self._column_names
 
@@ -315,6 +318,34 @@ class ValueWrapper(object):
         if self.is_path():
             return "path"
         return "unknown"
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, self.__class__):
+            return False
+        if self.get_value().getType() != o.get_value().getType():
+            return False
+        if self.is_null():
+            return o.is_null()
+        elif self.is_bool():
+            return self.as_bool() == o.as_bool()
+        elif self.is_int():
+            return self.as_int() == o.as_int()
+        elif self.is_double():
+            return self.as_double() == o.as_double()
+        elif self.is_string():
+            return self.as_string() == o.as_string()
+        elif self.is_list():
+            return self.as_list() == o.as_list()
+        elif self.is_set():
+            return self.as_set() == o.as_set()
+        elif self.is_map():
+            return self.as_map() == o.as_map()
+        else:
+            raise RuntimeError('Unsupported type:{} to compare'.format(self._get_type_name()))
+        return False
+
+    def __hash__(self):
+        return self._value.__hash__()
 
 
 class GenValue(object):

@@ -103,13 +103,19 @@ FUNCTIONS = {
     'dropHostFromZone': Function('dropHostFromZone', 'MetaService', 'ExecResp', [('DropHostFromZoneReq', 'req', 'DropHostFromZoneReq')]),
     'getZone': Function('getZone', 'MetaService', 'GetZoneResp', [('GetZoneReq', 'req', 'GetZoneReq')]),
     'listZones': Function('listZones', 'MetaService', 'ListZonesResp', [('ListZonesReq', 'req', 'ListZonesReq')]),
-    'drainZone': Function('drainZone', 'MetaService', 'ExecResp', [('DrainZoneReq', 'req', 'DrainZoneReq')]),
     'addGroup': Function('addGroup', 'MetaService', 'ExecResp', [('AddGroupReq', 'req', 'AddGroupReq')]),
     'dropGroup': Function('dropGroup', 'MetaService', 'ExecResp', [('DropGroupReq', 'req', 'DropGroupReq')]),
     'addZoneIntoGroup': Function('addZoneIntoGroup', 'MetaService', 'ExecResp', [('AddZoneIntoGroupReq', 'req', 'AddZoneIntoGroupReq')]),
     'dropZoneFromGroup': Function('dropZoneFromGroup', 'MetaService', 'ExecResp', [('DropZoneFromGroupReq', 'req', 'DropZoneFromGroupReq')]),
     'getGroup': Function('getGroup', 'MetaService', 'GetGroupResp', [('GetGroupReq', 'req', 'GetGroupReq')]),
     'listGroups': Function('listGroups', 'MetaService', 'ListGroupsResp', [('ListGroupsReq', 'req', 'ListGroupsReq')]),
+    'addListener': Function('addListener', 'MetaService', 'ExecResp', [('AddListenerReq', 'req', 'AddListenerReq')]),
+    'removeListener': Function('removeListener', 'MetaService', 'ExecResp', [('RemoveListenerReq', 'req', 'RemoveListenerReq')]),
+    'listListener': Function('listListener', 'MetaService', 'ListListenerResp', [('ListListenerReq', 'req', 'ListListenerReq')]),
+    'getStatis': Function('getStatis', 'MetaService', 'GetStatisResp', [('GetStatisReq', 'req', 'GetStatisReq')]),
+    'signInFTService': Function('signInFTService', 'MetaService', 'ExecResp', [('SignInFTServiceReq', 'req', 'SignInFTServiceReq')]),
+    'signOutFTService': Function('signOutFTService', 'MetaService', 'ExecResp', [('SignOutFTServiceReq', 'req', 'SignOutFTServiceReq')]),
+    'listFTClients': Function('listFTClients', 'MetaService', 'ListFTClientsResp', [('ListFTClientsReq', 'req', 'ListFTClientsReq')]),
 }
 
 SERVICE_NAMES = ['MetaService', ]

@@ -45,7 +45,7 @@ cd nebula-clients/python
 - Install
 
 ```python
-sudo python setup.py install
+sudo python3 setup.py install
 ```
 
 When your environment cannot access `pypi`, you need to manually install the following packages.
@@ -95,4 +95,5 @@ connection_pool.close()
 | Nebula2-Python Version | NebulaGraph Version |
 |---|---|
 | 2.0.0-alpha  | 2.0.0-alpha |
+| 2.0.0-beta  | 2.0.0-beta |
 

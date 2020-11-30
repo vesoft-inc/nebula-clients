@@ -68,6 +68,7 @@ class ErrorCode:
   E_TRANSFER_LEADER_FAILED = -46
   E_INVALID_STAT_TYPE = -47
   E_INVALID_VID = -48
+  E_NO_TRANSFORMED = -49
   E_LOAD_META_FAILED = -51
   E_FAILED_TO_CHECKPOINT = -60
   E_CHECKPOINT_BLOCKED = -61
@@ -112,6 +113,7 @@ class ErrorCode:
     -46: "E_TRANSFER_LEADER_FAILED",
     -47: "E_INVALID_STAT_TYPE",
     -48: "E_INVALID_VID",
+    -49: "E_NO_TRANSFORMED",
     -51: "E_LOAD_META_FAILED",
     -60: "E_FAILED_TO_CHECKPOINT",
     -61: "E_CHECKPOINT_BLOCKED",
@@ -157,6 +159,7 @@ class ErrorCode:
     "E_TRANSFER_LEADER_FAILED": -46,
     "E_INVALID_STAT_TYPE": -47,
     "E_INVALID_VID": -48,
+    "E_NO_TRANSFORMED": -49,
     "E_LOAD_META_FAILED": -51,
     "E_FAILED_TO_CHECKPOINT": -60,
     "E_CHECKPOINT_BLOCKED": -61,
@@ -5740,6 +5743,7 @@ class AdminExecResp:
   """
   Attributes:
    - result
+   - statis
   """
 
   thrift_spec = None
@@ -5770,6 +5774,12 @@ class AdminExecResp:
           self.result.read(iprot)
         else:
           iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.statis = nebula2.meta.ttypes.StatisItem()
+          self.statis.read(iprot)
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -5794,6 +5804,10 @@ class AdminExecResp:
       oprot.writeFieldBegin('result', TType.STRUCT, 1)
       self.result.write(oprot)
       oprot.writeFieldEnd()
+    if self.statis != None:
+      oprot.writeFieldBegin('statis', TType.STRUCT, 2)
+      self.statis.write(oprot)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -5804,6 +5818,10 @@ class AdminExecResp:
       value = pprint.pformat(self.result, indent=0)
       value = padding.join(value.splitlines(True))
       L.append('    result=%s' % (value))
+    if self.statis is not None:
+      value = pprint.pformat(self.statis, indent=0)
+      value = padding.join(value.splitlines(True))
+      L.append('    statis=%s' % (value))
     return "%s(%s)" % (self.__class__.__name__, "\n" + ",\n".join(L) if L else '')
 
   def __eq__(self, other):
@@ -8984,6 +9002,7 @@ all_structs.append(AdminExecResp)
 AdminExecResp.thrift_spec = (
   None, # 0
   (1, TType.STRUCT, 'result', [ResponseCommon, ResponseCommon.thrift_spec, False], None, 0, ), # 1
+  (2, TType.STRUCT, 'statis', [nebula2.meta.ttypes.StatisItem, nebula2.meta.ttypes.StatisItem.thrift_spec, False], None, 1, ), # 2
 )
 
 AdminExecResp.thrift_struct_annotations = {
@@ -8991,13 +9010,15 @@ AdminExecResp.thrift_struct_annotations = {
 AdminExecResp.thrift_field_annotations = {
 }
 
-def AdminExecResp__init__(self, result=None,):
+def AdminExecResp__init__(self, result=None, statis=None,):
   self.result = result
+  self.statis = statis
 
 AdminExecResp.__init__ = AdminExecResp__init__
 
 def AdminExecResp__setstate__(self, state):
   state.setdefault('result', None)
+  state.setdefault('statis', None)
   self.__dict__ = state
 
 AdminExecResp.__getstate__ = lambda self: self.__dict__.copy()

@@ -1078,6 +1078,7 @@ ProfilingStats.thrift_spec = (
 )
 
 ProfilingStats.thrift_struct_annotations = {
+  "cpp.type": """nebula::ProfilingStats""",
 }
 ProfilingStats.thrift_field_annotations = {
 }
@@ -1108,6 +1109,7 @@ PlanNodeBranchInfo.thrift_spec = (
 )
 
 PlanNodeBranchInfo.thrift_struct_annotations = {
+  "cpp.type": """nebula::PlanNodeBranchInfo""",
 }
 PlanNodeBranchInfo.thrift_field_annotations = {
 }
@@ -1134,6 +1136,7 @@ Pair.thrift_spec = (
 )
 
 Pair.thrift_struct_annotations = {
+  "cpp.type": """nebula::Pair""",
 }
 Pair.thrift_field_annotations = {
 }
@@ -1165,6 +1168,7 @@ PlanNodeDescription.thrift_spec = (
 )
 
 PlanNodeDescription.thrift_struct_annotations = {
+  "cpp.type": """nebula::PlanNodeDescription""",
 }
 PlanNodeDescription.thrift_field_annotations = {
 }
@@ -1202,6 +1206,7 @@ PlanDescription.thrift_spec = (
 )
 
 PlanDescription.thrift_struct_annotations = {
+  "cpp.type": """nebula::PlanDescription""",
 }
 PlanDescription.thrift_field_annotations = {
 }
@@ -1235,6 +1240,7 @@ ExecutionResponse.thrift_spec = (
 )
 
 ExecutionResponse.thrift_struct_annotations = {
+  "cpp.type": """nebula::ExecutionResponse""",
 }
 ExecutionResponse.thrift_field_annotations = {
 }
@@ -1272,6 +1278,7 @@ AuthResponse.thrift_spec = (
 )
 
 AuthResponse.thrift_struct_annotations = {
+  "cpp.type": """nebula::AuthResponse""",
 }
 AuthResponse.thrift_field_annotations = {
 }

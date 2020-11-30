@@ -9,13 +9,6 @@
 from nebula2.common.ttypes import Value
 
 
-def Value__hash__(self):
-    '''
-    reimplement the hash function for Value
-    :param self:
-    :return:
-    '''
-    return self.value.__hash__()
-Value.__hash__ = Value__hash__
+Value.__hash__ = lambda self: self.value.__hash__()
 
 

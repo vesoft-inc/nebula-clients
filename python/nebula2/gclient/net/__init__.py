@@ -50,6 +50,8 @@ class Session(object):
         :param stmt: the ngql
         :return: ResultSet
         """
+        if self._connection is None:
+            raise RuntimeError('The session has released')
         try:
             return ResultSet(self._connection.execute(self.session_id, stmt))
         except IOErrorException as ie:
@@ -71,15 +73,19 @@ class Session(object):
         """
         release the connection to pool
         """
-        self._connection.is_used = False
+        if self._connection is None:
+            return
         self._connection.signout(self.session_id)
-        self._connection.reset()
+        self._connection.is_used = False
+        self._connection = None
 
     def ping(self):
         """
         check the connection is ok
         :return Boolean
         """
+        if self._connection is None:
+            return False
         return self._connection.ping()
 
     def _reconnect(self):
@@ -179,11 +185,11 @@ class ConnectionPool(object):
         get available connection
         :return: Connection Object
         """
-        if self._close:
-            logging.error('The pool is closed')
-            raise NotValidConnectionException()
-
         with self._lock:
+            if self._close:
+                logging.error('The pool is closed')
+                raise NotValidConnectionException()
+
             try:
                 ok_num = self.get_ok_servers_num()
                 if ok_num == 0:
@@ -195,8 +201,8 @@ class ConnectionPool(object):
                     addr = self._addresses[self._pos]
                     if self._addresses_status[addr] == self.S_OK:
                         for connection in self._connections[addr]:
-                            if connection.ping():
-                                if not connection.is_used:
+                            if not connection.is_used:
+                                if connection.ping():
                                     connection.is_used = True
                                     logging.info('Get connection to {}'.format(addr))
                                     return connection
@@ -214,8 +220,9 @@ class ConnectionPool(object):
                                 self._connections[addr].remove(connection)
                     try_count = try_count + 1
                 return None
-            except Exception:
-                raise
+            except Exception as ex:
+                logging.error('Get connection failed: {}'.format(ex))
+                return None
 
     def ping(self, address):
         """
@@ -365,20 +372,20 @@ class Connection(object):
                 self.close()
 
     def close(self):
-        '''
+        """
 
         :return: void
-        '''
+        """
         try:
             self._connection._iprot.trans.close()
         except Exception as e:
             logging.error('Close connection to {}:{} failed:{}'.format(self._ip, self._port, e))
 
     def ping(self):
-        '''
+        """
         check the connection if ok
         :return: Boolean
-        '''
+        """
         try:
             self._connection.execute(0, 'YIELD 1;')
             return True

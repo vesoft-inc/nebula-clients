@@ -351,6 +351,7 @@ class TestResultset(TestBaseCase):
         assert result.comment() == "Permission"
         assert result.error_msg() == "Permission"
         assert result.error_code() == graphTtype.ErrorCode.E_BAD_PERMISSION
+        assert not result.is_empty()
         assert not result.is_succeeded()
         assert result.keys() == ["col1_empty",
                                  "col2_null",
