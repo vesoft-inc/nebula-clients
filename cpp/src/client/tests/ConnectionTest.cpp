@@ -16,6 +16,8 @@
 
 // Require a nebula server could access
 
+static constexpr char kServerHost[] = "graphd";
+
 class ConnectionTest : public ClientTest {
 protected:
     static void runOnce(nebula::Connection &c) {
@@ -36,7 +38,7 @@ protected:
         });
 
         // open
-        ASSERT_TRUE(c.open("127.0.0.1", 3699));
+        ASSERT_TRUE(c.open(kServerHost, 3699));
 
         // ping
         EXPECT_TRUE(c.ping());
