@@ -330,15 +330,20 @@ func TestResultSet(t *testing.T) {
 		1000,
 		getDateset(),
 		[]byte("test_space"),
-		[]byte("test"),
+		[]byte("test_err_msg"),
 		graph.NewPlanDescription(),
 		[]byte("test_comment")}
 	resultSet := genResultSet(resp)
 
 	assert.Equal(t, ErrorCode_SUCCEEDED, resultSet.GetErrorCode())
-	assert.Equal(t, "test_space", string(resultSet.resp.SpaceName))
-	assert.Equal(t, "test_comment", string(resultSet.resp.Comment))
+	assert.Equal(t, int32(1000), resultSet.GetLatency())
+	assert.Equal(t, "test_err_msg", resultSet.GetErrorMsg())
+	assert.Equal(t, "test_space", resultSet.GetSpaceName())
+	assert.Equal(t, "test_comment", resultSet.GetComment())
 	assert.Equal(t, true, resultSet.IsSucceed())
+
+	assert.Equal(t, 1, resultSet.GetRowSize())
+	assert.Equal(t, 5, resultSet.GetColSize())
 
 	expectedColNames := []string{"col0_int", "col1_string", "col2_vertex", "col3_edge", "col4_path"}
 	colNames := resultSet.GetColNames()

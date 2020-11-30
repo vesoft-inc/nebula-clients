@@ -237,6 +237,16 @@ func (res ResultSet) GetRowValuesByIndex(index int) (*Record, error) {
 	}, nil
 }
 
+// Returns the number of total rows
+func (res ResultSet) GetRowSize() int {
+	return len(res.resp.Data.Rows)
+}
+
+// Returns the number of total columns
+func (res ResultSet) GetColSize() int {
+	return len(res.resp.Data.ColumnNames)
+}
+
 // Returns all rows
 func (res ResultSet) GetRows() []*nebula.Row {
 	if res.resp.Data == nil || res.resp.Data.Rows == nil {
@@ -268,12 +278,36 @@ func (res ResultSet) GetErrorCode() ErrorCode {
 	return ErrorCode(int64(res.resp.ErrorCode))
 }
 
-func (res ResultSet) GetErrorMsg() []byte {
-	if res.resp.ErrorMsg == nil {
-		var empty []byte
-		return empty
+func (res ResultSet) GetLatency() int32 {
+	return res.resp.LatencyInUs
+}
+
+func (res ResultSet) GetSpaceName() string {
+	if res.resp.Comment == nil {
+		return ""
 	}
-	return res.resp.ErrorMsg
+	return string(res.resp.SpaceName)
+}
+
+func (res ResultSet) GetErrorMsg() string {
+	if res.resp.ErrorMsg == nil {
+		return ""
+	}
+	return string(res.resp.ErrorMsg)
+}
+
+func (res ResultSet) GetPlanDesc() *graph.PlanDescription {
+	if res.resp.Comment == nil {
+		return graph.NewPlanDescription()
+	}
+	return res.resp.PlanDesc
+}
+
+func (res ResultSet) GetComment() string {
+	if res.resp.Comment == nil {
+		return ""
+	}
+	return string(res.resp.Comment)
 }
 
 func (res ResultSet) IsSucceed() bool {
