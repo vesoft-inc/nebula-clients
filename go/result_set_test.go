@@ -352,6 +352,7 @@ func TestResultSet(t *testing.T) {
 	}
 	assert.Equal(t, 1, rowSize)
 	assert.Equal(t, 5, colSize)
+	assert.Equal(t, false, resultSet.IsEmpty())
 
 	expectedColNames := []string{"col0_int", "col1_string", "col2_vertex", "col3_edge", "col4_path"}
 	colNames := resultSet.GetColNames()

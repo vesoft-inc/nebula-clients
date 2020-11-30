@@ -319,6 +319,13 @@ func (res ResultSet) GetComment() string {
 	return string(res.resp.Comment)
 }
 
+func (res ResultSet) IsEmpty() bool {
+	if res.resp.Data == nil || res.resp.Data.ColumnNames == nil || res.resp.Data.Rows == nil {
+		return true
+	}
+	return false
+}
+
 func (res ResultSet) IsSucceed() bool {
 	return res.GetErrorCode() == ErrorCode_SUCCEEDED
 }
