@@ -100,6 +100,7 @@ jobs:
           pushd nebula-docker-compose/
           sed -i "s/\bdocker_nebula-net\b/$(docker network ls | grep github_network | tr -s [:blank:] | cut -d ' ' -f 2)/g" docker-compose.yaml
           docker-compose up -d
+          docker network ls
           sleep 10
           popd
           popd
