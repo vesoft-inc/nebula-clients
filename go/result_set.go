@@ -204,6 +204,9 @@ Returns ExecutionResponse as a JSON []byte.
 To get the string value in the nested JSON struct, decode with base64
 */
 func (res ResultSet) MarshalJSON() ([]byte, error) {
+	if res.resp.Data == nil {
+		return nil, fmt.Errorf("Failed to generate JSON, DataSet is empty")
+	}
 	return json.Marshal(res.resp.Data)
 }
 
@@ -238,13 +241,19 @@ func (res ResultSet) GetRowValuesByIndex(index int) (*Record, error) {
 }
 
 // Returns the number of total rows
-func (res ResultSet) GetRowSize() int {
-	return len(res.resp.Data.Rows)
+func (res ResultSet) GetRowSize() (int, error) {
+	if res.resp.Data == nil {
+		return -1, fmt.Errorf("Failed to get row size, DataSet is empty")
+	}
+	return len(res.resp.Data.Rows), nil
 }
 
 // Returns the number of total columns
-func (res ResultSet) GetColSize() int {
-	return len(res.resp.Data.ColumnNames)
+func (res ResultSet) GetColSize() (int, error) {
+	if res.resp.Data == nil {
+		return -1, fmt.Errorf("Failed to get column size, DataSet is empty")
+	}
+	return len(res.resp.Data.ColumnNames), nil
 }
 
 // Returns all rows

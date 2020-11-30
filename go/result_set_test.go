@@ -342,8 +342,16 @@ func TestResultSet(t *testing.T) {
 	assert.Equal(t, "test_comment", resultSet.GetComment())
 	assert.Equal(t, true, resultSet.IsSucceed())
 
-	assert.Equal(t, 1, resultSet.GetRowSize())
-	assert.Equal(t, 5, resultSet.GetColSize())
+	rowSize, err := resultSet.GetRowSize()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	colSize, err := resultSet.GetColSize()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	assert.Equal(t, 1, rowSize)
+	assert.Equal(t, 5, colSize)
 
 	expectedColNames := []string{"col0_int", "col1_string", "col2_vertex", "col3_edge", "col4_path"}
 	colNames := resultSet.GetColNames()
