@@ -6,231 +6,140 @@
 # This source code is licensed under Apache 2.0 License,
 # attached with Common Clause Condition 1.0, found in the LICENSES directory.
 
-from collections import deque
-from nebula2.data.DataObject import ConvertValue
+from nebula2.graph import ttypes
 
-from nebula2.Exception import (
-    OutOfRangeException,
-    InvalidKeyException
-)
-
-
-class Record(object):
-    def __init__(self, values, names):
-        self._record = list()
-        self._record = values
-        self._size = len(self._record)
-        self._names = dict()
-
-        for index, name in enumerate(names, start=0):
-            self._names[name] = index
-
-        assert len(self._names) == self._size
-
-    def __iter__(self):
-        return iter(self._record)
-
-    def get_type(self, index):
-        '''
-        get type by index
-        :return: value type
-        '''
-        if index >= self._size:
-            raise OutOfRangeException()
-        return self._record[index].getType()
-
-    def get_type(self, key):
-        '''
-        get type by key
-        :return: value type
-        '''
-        if key not in self._names:
-            raise InvalidKeyException(key)
-        return self._record[self._names[key]].getType()
-
-    def get_value(self, index):
-        '''
-        get value by index
-        :return: Value
-        '''
-        if index >= self._size:
-            raise OutOfRangeException()
-        return self._record[index]
-
-    def get_value(self, key):
-        '''
-        get value by key
-        :return: Value
-        '''
-        if key not in self._names:
-            raise InvalidKeyException(key)
-        return self._record[self._names[key]]
-
-    def values(self):
-        return self._record
-
-    def get_path(self, index):
-        '''
-        get path by index
-        :return: Path
-        '''
-        if index >= self._size:
-            raise OutOfRangeException()
-        if self._record[index] != ttypes.Value.PVAL:
-            return InvalidValueTypeException(
-                'the type of index: {} is {} != {}'.format(index,
-                                                           self._record[index].getType(),
-                                                           ttypes.Value.PVAL))
-        return ConvertValue.convert(self._record[index])
-
-    def get_path(self, key):
-        '''
-        get path by key
-        :return: Path
-        '''
-        if key not in self._names:
-            raise InvalidKeyException(key)
-        if self._names[key] != ttypes.Value.PVAL:
-            return InvalidValueTypeException(
-                'the type of key: {} is {} != {}'.format(key,
-                                                         self._names[key].getType(),
-                                                         ttypes.Value.PVAL))
-        return ConvertValue.convert(self._names[key])
-
-    def get_relationship(self, index):
-        '''
-        get relationship by key
-        :return: Relationship
-        '''
-        if index >= self._size:
-            raise OutOfRangeException()
-        if self._record[index] != ttypes.Value.EVAL:
-            return InvalidValueTypeException(
-                'the type of index: {} is {} != {}'.format(index,
-                                                           self._record[index].getType(),
-                                                           ttypes.Value.EVAL))
-        return ConvertValue.convert(self._record[index])
-
-    def get_relationship(self, key):
-        '''
-        get relationship by key
-        :return: Relationship
-        '''
-        if key not in self._names:
-            raise InvalidKeyException(key)
-        if self._names[key] != ttypes.Value.EVAL:
-            return InvalidValueTypeException(
-                'the type of key: {} is {} != {}'.format(key,
-                                                         self._names[key].getType(),
-                                                         ttypes.Value.EVAL))
-        return ConvertValue.convert(self._names[key])
-
-    def get_node(self, index):
-        '''
-        get node by key
-        :return: Node
-        '''
-        if index >= self._size:
-            raise OutOfRangeException()
-        if self._record[index] != ttypes.Value.VVAL:
-            return InvalidValueTypeException(
-                'the type of index: {} is {} != {}'.format(index,
-                                                           self._record[index].getType(),
-                                                           ttypes.Value.VVAL))
-        return ConvertValue.convert(self._record[index])
-
-    def get_node(self, key):
-        '''
-        get node by key
-        :return: Node
-        '''
-        if key not in self._names:
-            raise InvalidKeyException(key)
-        if self._names[key] != ttypes.Value.VVAL:
-            return InvalidValueTypeException(
-                'the type of key: {} is {} != {}'.format(key,
-                                                         self._names[key].getType(),
-                                                         ttypes.Value.VVAL))
-        return ConvertValue.convert(self._names[key])
-
-    def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self._record)
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-
-        return self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
+from nebula2.data.DataObject import DataSetWrapper
 
 
 class ResultSet(object):
-    def __init__(self, resp):
+    def __init__(self, resp, decode_type='utf-8'):
         '''
         get data from ResultSet
         '''
-        self._keys = list()
-        self._records = deque()
-        self._size = 0
-        self.error_code = resp.error_code
-        self.latency_in_us = resp.latency_in_us
-        self.space_name = resp.space_name
-        self.error_msg = resp.error_msg
-        self.plan_desc = resp.plan_desc
-        self.comment = resp.comment
-        if resp.data is not None:
-            ds = resp.data
-            self._keys = ds.column_names
-            self._index = dict()
-            for index, name in enumerate(self._keys):
-                self._index[name] = index
+        self._decode_type = decode_type
+        self._resp = resp
+        self._data_set_wrapper = None
+        if self._resp.data is not None:
+            self._data_set_wrapper = DataSetWrapper(resp.data, self._decode_type)
 
-            for row in ds.rows:
-                self._records.append(Record(row.values, self._keys))
+    def is_succeeded(self):
+        return self._resp.error_code == ttypes.ErrorCode.SUCCEEDED
 
-            self._size = len(self._records)
+    def error_code(self):
+        return self._resp.error_code
+
+    def space_name(self):
+        if self._resp.error_msg is None:
+            return None
+        return self._resp.space_name.decode(self._decode_type)
+
+    def error_msg(self):
+        if self._resp.error_msg is None:
+            return None
+        return self._resp.error_msg.decode(self._decode_type)
+
+    def comment(self):
+        if self._resp.error_msg is None:
+            return None
+        return self._resp.comment.decode(self._decode_type)
+
+    def latency(self):
+        '''
+        unit us
+        '''
+        return self._resp.latency_in_us
+
+    def plan_desc(self):
+        return self._resp.plan_desc
+
+    def is_empty(self):
+        return self._data_set_wrapper is None or self._data_set_wrapper.get_row_size() == 0
 
     def keys(self):
-        return self._keys
+        '''
+        get colNames
+        '''
+        if self._data_set_wrapper is None:
+            return []
+        return self._data_set_wrapper.get_col_names()
 
     def row_size(self):
-        return self._size
+        '''
+        get one row size
+        '''
+        if self._data_set_wrapper is None:
+            return 0
+        return len(self._data_set_wrapper.get_rows())
 
     def col_size(self):
-        return len(self._keys)
+        '''
+        get one col size
+        '''
+        if self._data_set_wrapper is None:
+            return 0
+        return len(self._data_set_wrapper.get_col_names())
 
-    def row_values(self, index):
+    def get_row_types(self):
+        '''
+        Get row types
+        :param empty
+        :return: list<int>
+          ttypes.Value.__EMPTY__ = 0
+          ttypes.Value.NVAL = 1
+          ttypes.Value.BVAL = 2
+          ttypes.Value.IVAL = 3
+          ttypes.Value.FVAL = 4
+          ttypes.Value.SVAL = 5
+          ttypes.Value.DVAL = 6
+          ttypes.Value.TVAL = 7
+          ttypes.Value.DTVAL = 8
+          ttypes.Value.VVAL = 9
+          ttypes.Value.EVAL = 10
+          ttypes.Value.PVAL = 11
+          ttypes.Value.LVAL = 12
+          ttypes.Value.MVAL = 13
+          ttypes.Value.UVAL = 14
+          ttypes.Value.GVAL = 15
+        '''
+        if self._data_set_wrapper is None:
+            return []
+        return self._data_set_wrapper.get_row_types()
+
+    def row_values(self, row_index):
         '''
         Get row values
         :param index: the Record index
-        :return: Record
+        :return: list<ValueWrapper>
         '''
-        if index >= self._size:
-            raise OutOfRangeException()
-        return self._records[index]
+        if self._data_set_wrapper is None:
+            return []
+        return self._data_set_wrapper.row_values(row_index)
 
     def column_values(self, key):
         '''
         get column values
-        :param index: the col name
-        :return: list
+        :param key: the col name
+        :return: list<ValueWrapper>
         '''
-        if key not in self._index.keys():
-            return None
+        if self._data_set_wrapper is None:
+            return []
+        return self._data_set_wrapper.column_values(key)
 
-        return [(record[self._index[key]]) for record in self._records]
+    def rows(self):
+        '''
+        get all rows
+        :param key: empty
+        :return: list<Row>
+        '''
+        if self._data_set_wrapper is None:
+            return []
+        return self._data_set_wrapper.get_rows()
 
     def __iter__(self):
-        '''
-        The row iterator
-        :return: row values
-        '''
-        return iter(self._records)
+        return iter(self._data_set_wrapper)
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self._records)
+        return "{}({})".format(self.__class__.__name__, self._resp)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

@@ -41,12 +41,6 @@ var poolAddress = []HostAddress{
 	},
 }
 
-// Set up logger
-// const (
-// 	logPath  = "logrus.nebulaLog"
-// 	logLevel = "info"
-// )
-
 var nebulaLog = DefaultLogger{}
 
 // Create default configs
@@ -62,10 +56,6 @@ func logoutAndClose(conn *connection, sessionID int64) {
 }
 
 func TestConnection(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping client test in short mode")
-	}
-
 	hostAdress := HostAddress{Host: address, Port: port}
 
 	conn := newConnection(hostAdress)
@@ -89,20 +79,20 @@ func TestConnection(t *testing.T) {
 		return
 	}
 
-	checkResp(t, "show hosts", resp)
+	checkConResp(t, "show hosts", resp)
 
 	resp, err = conn.execute(sessionID, "CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	checkResp(t, "create space", resp)
+	checkConResp(t, "create space", resp)
 	resp, err = conn.execute(sessionID, "DROP SPACE client_test;")
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	checkResp(t, "drop space", resp)
+	checkConResp(t, "drop space", resp)
 
 	res := conn.ping()
 	if res != true {
@@ -165,21 +155,21 @@ func TestPool_SingleHost(t *testing.T) {
 		t.Fatalf(err.Error())
 		return
 	}
-	checkResp(t, "show hosts", resp)
+	checkResSetResp(t, "show hosts", resp)
 	// Create a new space
 	resp, err = session.Execute("CREATE SPACE client_test(partition_num=1024, replica_factor=1);")
 	if err != nil {
 		t.Fatalf(err.Error())
 		return
 	}
-	checkResp(t, "create space", resp)
+	checkResSetResp(t, "create space", resp)
 
 	resp, err = session.Execute("DROP SPACE client_test;")
 	if err != nil {
 		t.Fatalf(err.Error())
 		return
 	}
-	checkResp(t, "drop space", resp)
+	checkResSetResp(t, "drop space", resp)
 }
 
 func TestPool_MultiHosts(t *testing.T) {
@@ -234,7 +224,7 @@ func TestPool_MultiHosts(t *testing.T) {
 		t.Fatalf(err.Error())
 		return
 	}
-	checkResp(t, "show hosts", resp)
+	checkResSetResp(t, "show hosts", resp)
 
 	// Try to get more session when the pool is full
 	newSession, err = pool.GetSession(username, password)
@@ -365,7 +355,7 @@ func TestReconnect(t *testing.T) {
 
 	// Send query to server periodically
 	for i := 0; i < timeoutConfig.MaxConnPoolSize; i++ {
-		time.Sleep(1 * time.Second)
+		time.Sleep(200 * time.Millisecond)
 		if i == 3 {
 			stopContainer(t, "nebula-docker-compose_graphd_1")
 		}
@@ -388,7 +378,7 @@ func TestReconnect(t *testing.T) {
 	}
 
 	// This assertion will pass only when reconnection happens
-	assert.Equal(t, resp.GetErrorCode(), graph.ErrorCode_E_SESSION_INVALID, "Expected error should be E_SESSION_INVALID")
+	assert.Equal(t, ErrorCode_E_SESSION_INVALID, resp.GetErrorCode(), "Expected error should be E_SESSION_INVALID")
 
 	startContainer(t, "nebula-docker-compose_graphd_1")
 	startContainer(t, "nebula-docker-compose_graphd2_1")
@@ -409,9 +399,14 @@ func TestIpLookup(t *testing.T) {
 }
 
 // Method used to check execution response
-func checkResp(t *testing.T, prefix string, err *graph.ExecutionResponse) {
-	if IsError(err) {
+func checkResSetResp(t *testing.T, prefix string, err *ResultSet) {
+	if !err.IsSucceed() {
 		t.Errorf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.GetErrorCode(), err.GetErrorMsg())
+	}
+}
+func checkConResp(t *testing.T, prefix string, err *graph.ExecutionResponse) {
+	if IsError(err) {
+		t.Errorf("%s, ErrorCode: %v, ErrorMsg: %s", prefix, err.ErrorCode, err.ErrorMsg)
 	}
 }
 

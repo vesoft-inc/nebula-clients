@@ -14,7 +14,7 @@ import threading
 sys.path.insert(0, '../')
 
 
-from nebula2.net import ConnectionPool
+from nebula2.gclient.net import ConnectionPool
 from nebula2.Config import Config
 from FormatResp import print_resp
 
@@ -25,15 +25,17 @@ def main_test():
         space_name = 'space_' + threading.current_thread().getName()
         print('thread name: %s, space_name : %s' %
                 (threading.current_thread().getName(), space_name))
-        # Get one client
+        # Get one gclient
         client = connection_pool.get_session('root', 'nebula')
         assert client is not None
 
         # Create space mySpace and schema
-        client.execute('CREATE SPACE IF NOT EXISTS {}; USE {};'
+        resp = client.execute('CREATE SPACE IF NOT EXISTS {}; USE {};'
                        'CREATE TAG IF NOT EXISTS person(name string, age int);'
                        'CREATE EDGE IF NOT EXISTS like(likeness double);'
                        .format(space_name, space_name))
+        assert resp.is_succeeded(), resp.error_msg()
+
         time.sleep(6)
 
         # Insert vertexes
@@ -43,6 +45,8 @@ def main_test():
                        '\'Tom\':(\'Tom\', 10), '
                        '\'Jerry\':(\'Jerry\', 13), '
                        '\'John\':(\'John\', 11)')
+
+        assert resp.is_succeeded(), resp.error_msg()
 
         # Insert edges
         client.execute('INSERT EDGE like(likeness) VALUES '
@@ -55,34 +59,31 @@ def main_test():
         # Query data
         query_resp = client.execute('GO FROM \"Bob\" OVER like YIELD $^.person.name, '
                                     '$^.person.age, like.likeness')
-        if query_resp.error_code:
-            print('Execute failed: %s' % query_resp.error_msg)
+        if not query_resp.is_succeeded():
+            print('Execute failed: %s' % query_resp.error_msg())
             exit(1)
 
         # Print the result of query
         print(' \n====== The query result of thread[%s]======\n '
               % threading.current_thread().getName())
         print_resp(query_resp)
-        client.release()
 
     except Exception as x:
         print(x)
+        import traceback
+        print(traceback.format_exc())
+    finally:
         if client is not None:
             client.release()
-        exit(1)
 
 
 if __name__ == '__main__':
     config = Config()
-    config.timeout = 1000
     config.max_connection_pool_size = 4
-    config.max_retry_time = 3
 
-    addresses = list()
-    addresses.append(('127.0.0.1', 3699))
     # init connection pool
     connection_pool = ConnectionPool()
-    assert connection_pool.init(addresses, config)
+    assert connection_pool.init([('127.0.0.1', 3699), ('127.0.0.1', 3700)], config)
 
     # Use multi thread and reuse the session three times
     for count in range(0, 3):

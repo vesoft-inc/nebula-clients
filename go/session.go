@@ -25,34 +25,34 @@ type Session struct {
 // 	return session.graph.ExecuteJson(session.sessionID, []byte(stmt))
 // }
 
-// Execute a query
-func (session *Session) Execute(stmt string) (*graph.ExecutionResponse, error) {
+// Execute() returns the result of given query as a ResultSet
+func (session *Session) Execute(stmt string) (*ResultSet, error) {
 	if session.connection == nil {
 		return nil, fmt.Errorf("Faied to execute: Session has been released")
 	}
 	resp, err := session.connection.execute(session.sessionID, stmt)
 	if err == nil {
-		return resp, nil
+		return genResultSet(resp), nil
 	}
 	// Reconnect only if the tranport is closed
 	if err, ok := err.(thrift.TransportException); ok && err.TypeID() == thrift.END_OF_FILE {
 		_err := session.reConnect()
 		if _err != nil {
-			session.log.Error(fmt.Sprintf("Failed to reconnect, %s \n", _err.Error()))
+			session.log.Error(fmt.Sprintf("Failed to reconnect, %s", _err.Error()))
 			return nil, _err
 		}
-		session.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d \n",
+		session.log.Info(fmt.Sprintf("Successfully reconnect to host: %s, port: %d",
 			session.connection.severAddress.Host, session.connection.severAddress.Port))
 		// Execute with the new connetion
 		resp, err := session.connection.execute(session.sessionID, stmt)
 		if err != nil {
 			return nil, err
 		}
-		return resp, nil
+		return genResultSet(resp), nil
 	}
 	// Reconnect fail
 	session.log.Error(fmt.Sprintf("Error info: %s", err.Error()))
-	return resp, err
+	return genResultSet(resp), err
 }
 
 func (session *Session) reConnect() error {

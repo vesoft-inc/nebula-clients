@@ -8,45 +8,44 @@
 
 import prettytable
 
-from nebula2.common import ttypes
-
 
 def print_resp(resp):
+    assert resp.is_succeeded()
     output_table = prettytable.PrettyTable()
     output_table.field_names = resp.keys()
     for recode in resp:
         value_list = []
         for col in recode:
-            if col.getType() == ttypes.Value.__EMPTY__:
+            if col.is_empty():
                 value_list.append('__EMPTY__')
-            elif col.getType() == ttypes.Value.NVAL:
+            elif col.is_null():
                 value_list.append('__NULL__')
-            elif col.getType() == ttypes.Value.BVAL:
-                value_list.append(col.get_bVal())
-            elif col.getType() == ttypes.Value.IVAL:
-                value_list.append(col.get_iVal())
-            elif col.getType() == ttypes.Value.FVAL:
-                value_list.append(col.get_fVal())
-            elif col.getType() == ttypes.Value.SVAL:
-                value_list.append(col.get_sVal())
-            elif col.getType() == ttypes.Type.TVAL:
-                value_list.append(col.get_tVal())
-            elif col.getType() == ttypes.Type.DVAL:
-                value_list.append(col.get_dVal())
-            elif col.getType() == ttypes.Type.DATETIME:
-                value_list.append(col.get_tVal())
-            elif col.getType() == ttypes.Type.LVAL:
-                value_list.append(col.get_lVal())
-            elif col.getType() == ttypes.Type.UVAL:
-                value_list.append(col.get_SVal())
-            elif col.getType() == ttypes.Type.MVAL:
-                value_list.append(col.get_tVal())
-            elif col.getType() == ttypes.Type.VVAL:
-                value_list.append(col.get_vVal())
-            elif col.getType() == ttypes.Type.EVAL:
-                value_list.append(col.get_eVal())
-            elif col.getType() == ttypes.Type.PVAL:
-                value_list.append(col.get_pVal())
+            elif col.is_bool():
+                value_list.append(col.as_bool())
+            elif col.is_int():
+                value_list.append(col.as_int())
+            elif col.is_double():
+                value_list.append(col.as_double())
+            elif col.is_string():
+                value_list.append(col.as_string())
+            elif col.is_time():
+                value_list.append(col.as_time())
+            elif col.is_date():
+                value_list.append(col.as_date())
+            elif col.is_datetime():
+                value_list.append(col.as_datetime())
+            elif col.is_list():
+                value_list.append(col.as_list())
+            elif col.is_set():
+                value_list.append(col.as_set())
+            elif col.is_map():
+                value_list.append(col.as_map())
+            elif col.is_vertex():
+                value_list.append(col.as_node())
+            elif col.is_edge():
+                value_list.append(col.as_relationship())
+            elif col.is_path():
+                value_list.append(col.as_path())
             else:
                 print('ERROR: Type unsupported')
                 return
