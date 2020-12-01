@@ -201,7 +201,24 @@ func TestAsPathWrapper(t *testing.T) { //("Tim Duncan")-[:serve@0]->("Spurs")<-[
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsPath())
 	assert.Equal(t,
-		"(\"Alice\")-[:classmate@100]->(\"vertex0\")<-[:classmate@100]-(\"vertex1\")-[:classmate@100]->(\"vertex2\")<-[:classmate@100]-(\"vertex3\")-[:classmate@100]->(\"vertex4\")",
+		"(\"Alice\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+			"(\"vertex0\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})<-[:classmate@100]-"+
+			"(\"vertex1\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+			"(\"vertex2\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})<-[:classmate@100]-"+
+			"(\"vertex3\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+			"(\"vertex4\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})",
 		valWrap.String())
 	res, _ := valWrap.AsPath()
 	path, _ := genPathWrapper(value.GetPVal())
@@ -442,7 +459,18 @@ func TestAsStringTable(t *testing.T) {
 				"1, \"value1\", "+
 					"(\"Tom\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} :tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
 					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}), (\"Tom\")-[:classmate@100{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}]->(\"Lily\"), "+
-					"(\"Tom\")-[:classmate@100]->(\"vertex0\")<-[:classmate@100]-(\"vertex1\")-[:classmate@100]->(\"vertex2\"), ",
+					"(\"Tom\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+					"(\"vertex0\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})<-[:classmate@100]-"+
+					"(\"vertex1\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+					"(\"vertex2\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}), ",
 				r)
 		}
 		r = ""

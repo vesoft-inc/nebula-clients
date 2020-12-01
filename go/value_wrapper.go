@@ -319,12 +319,14 @@ func (valWarp ValueWrapper) String() string {
 		path := value.GetPVal()
 		src := path.Src
 		steps := path.Steps
-		resStr := "(\"" + string(src.Vid) + "\")"
+		resStr := ValueWrapper{&nebula.Value{VVal: src}}.String()
 		for _, step := range steps {
 			if step.Type > 0 {
-				resStr = resStr + fmt.Sprintf("-[:%s@%d]->(\"%s\")", string(step.Name), step.Ranking, string(step.Dst.Vid))
+				resStr = resStr + fmt.Sprintf("-[:%s@%d]->%s", string(step.Name),
+					step.Ranking, ValueWrapper{&nebula.Value{VVal: step.Dst}}.String())
 			} else {
-				resStr = resStr + fmt.Sprintf("<-[:%s@%d]-(\"%s\")", string(step.Name), step.Ranking, string(step.Dst.Vid))
+				resStr = resStr + fmt.Sprintf("<-[:%s@%d]-%s", string(step.Name),
+					step.Ranking, ValueWrapper{&nebula.Value{VVal: step.Dst}}.String())
 			}
 		}
 		return resStr
