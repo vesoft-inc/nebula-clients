@@ -242,14 +242,12 @@ func (valueWrapper ValueWrapper) GetType() string {
 	return "empty"
 }
 
-/*
-String() returns the value in the ValueWrapper as a string.
-Maps in the output will be sorted by key value in alphabetical order.
-For vetex, the output is in form (vid: tagName{propKey: propVal, propKey2, propVal2}),
-For edge, the output is in form (SrcVid)-[name]->(DstVid)@Ranking{prop1: val1, prop2: val2}
-where arrow direction depends on edgeType
-For path, the output is in form(v1)-[name@edgeRanking]->(v2)-[name@edgeRanking]->(v3)
-*/
+// String() returns the value in the ValueWrapper as a string.
+// Maps in the output will be sorted by key value in alphabetical order.
+// For vetex, the output is in form (vid: tagName{propKey: propVal, propKey2, propVal2}),
+// For edge, the output is in form (SrcVid)-[name]->(DstVid)@Ranking{prop1: val1, prop2: val2}
+// where arrow direction depends on edgeType
+// For path, the output is in form(v1)-[name@edgeRanking]->(v2)-[name@edgeRanking]->(v3)
 func (valWarp ValueWrapper) String() string {
 	value := valWarp.value
 	if value.IsSetNVal() {
@@ -321,12 +319,14 @@ func (valWarp ValueWrapper) String() string {
 		path := value.GetPVal()
 		src := path.Src
 		steps := path.Steps
-		resStr := "(\"" + string(src.Vid) + "\")"
+		resStr := ValueWrapper{&nebula.Value{VVal: src}}.String()
 		for _, step := range steps {
 			if step.Type > 0 {
-				resStr = resStr + fmt.Sprintf("-[:%s@%d]->(\"%s\")", string(step.Name), step.Ranking, string(step.Dst.Vid))
+				resStr = resStr + fmt.Sprintf("-[:%s@%d]->%s", string(step.Name),
+					step.Ranking, ValueWrapper{&nebula.Value{VVal: step.Dst}}.String())
 			} else {
-				resStr = resStr + fmt.Sprintf("<-[:%s@%d]-(\"%s\")", string(step.Name), step.Ranking, string(step.Dst.Vid))
+				resStr = resStr + fmt.Sprintf("<-[:%s@%d]-%s", string(step.Name),
+					step.Ranking, ValueWrapper{&nebula.Value{VVal: step.Dst}}.String())
 			}
 		}
 		return resStr

@@ -201,7 +201,24 @@ func TestAsPathWrapper(t *testing.T) { //("Tim Duncan")-[:serve@0]->("Spurs")<-[
 	valWrap := ValueWrapper{&value}
 	assert.Equal(t, true, valWrap.IsPath())
 	assert.Equal(t,
-		"(\"Alice\")-[:classmate@100]->(\"vertex0\")<-[:classmate@100]-(\"vertex1\")-[:classmate@100]->(\"vertex2\")<-[:classmate@100]-(\"vertex3\")-[:classmate@100]->(\"vertex4\")",
+		"(\"Alice\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+			"(\"vertex0\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})<-[:classmate@100]-"+
+			"(\"vertex1\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+			"(\"vertex2\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})<-[:classmate@100]-"+
+			"(\"vertex3\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+			"(\"vertex4\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+			":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})",
 		valWrap.String())
 	res, _ := valWrap.AsPath()
 	path, _ := genPathWrapper(value.GetPVal())
@@ -330,15 +347,29 @@ func TestResultSet(t *testing.T) {
 		1000,
 		getDateset(),
 		[]byte("test_space"),
-		[]byte("test"),
+		[]byte("test_err_msg"),
 		graph.NewPlanDescription(),
 		[]byte("test_comment")}
 	resultSet := genResultSet(resp)
 
 	assert.Equal(t, ErrorCode_SUCCEEDED, resultSet.GetErrorCode())
-	assert.Equal(t, "test_space", string(resultSet.resp.SpaceName))
-	assert.Equal(t, "test_comment", string(resultSet.resp.Comment))
+	assert.Equal(t, int32(1000), resultSet.GetLatency())
+	assert.Equal(t, "test_err_msg", resultSet.GetErrorMsg())
+	assert.Equal(t, "test_space", resultSet.GetSpaceName())
+	assert.Equal(t, "test_comment", resultSet.GetComment())
 	assert.Equal(t, true, resultSet.IsSucceed())
+
+	rowSize, err := resultSet.GetRowSize()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	colSize, err := resultSet.GetColSize()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	assert.Equal(t, 1, rowSize)
+	assert.Equal(t, 5, colSize)
+	assert.Equal(t, false, resultSet.IsEmpty())
 
 	expectedColNames := []string{"col0_int", "col1_string", "col2_vertex", "col3_edge", "col4_path"}
 	colNames := resultSet.GetColNames()
@@ -398,6 +429,51 @@ func TestMarshalJson(t *testing.T) {
 	_, err := resultSet.MarshalJSON()
 	if err != nil {
 		t.Error(err.Error())
+	}
+}
+
+func TestAsStringTable(t *testing.T) {
+	resp := &graph.ExecutionResponse{
+		graph.ErrorCode_SUCCEEDED,
+		1000,
+		getDateset(),
+		[]byte("test_space"),
+		[]byte("test"),
+		graph.NewPlanDescription(),
+		[]byte("test_comment")}
+	resultSet := genResultSet(resp)
+
+	table := resultSet.AsStringTable()
+	var r string
+	for i := 0; i < len(table); i++ {
+		for _, col := range table[i] {
+			r += col + ", "
+		}
+		if i == 0 {
+			assert.Equal(t,
+				"col0_int, col1_string, col2_vertex, col3_edge, col4_path, ",
+				r)
+		}
+		if i == 1 {
+			assert.Equal(t,
+				"1, \"value1\", "+
+					"(\"Tom\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} :tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}), (\"Tom\")-[:classmate@100{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}]->(\"Lily\"), "+
+					"(\"Tom\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+					"(\"vertex0\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})<-[:classmate@100]-"+
+					"(\"vertex1\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4})-[:classmate@100]->"+
+					"(\"vertex2\" :tag0{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag1{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4} "+
+					":tag2{prop0: 0, prop1: 1, prop2: 2, prop3: 3, prop4: 4}), ",
+				r)
+		}
+		r = ""
 	}
 }
 

@@ -71,7 +71,7 @@ func genResultSet(resp *graph.ExecutionResponse) *ResultSet {
 	var colNames []string
 	var colNameIndexMap = make(map[string]int)
 
-	if resp.Data == nil || resp.Data.ColumnNames == nil || resp.Data.Rows == nil {
+	if resp.Data == nil { // if resp.Data != nil then resp.Data.row and resp.Data.colNames wont be nil
 		return &ResultSet{
 			resp:            resp,
 			columnNames:     colNames,
@@ -199,12 +199,30 @@ func genPathWrapper(path *nebula.Path) (*PathWrapper, error) {
 	}, nil
 }
 
-/*
-Returns ExecutionResponse as a JSON []byte.
-To get the string value in the nested JSON struct, decode with base64
-*/
+// Returns ExecutionResponse as a JSON []byte.
+// To get the string value in the nested JSON struct, decode with base64
 func (res ResultSet) MarshalJSON() ([]byte, error) {
+	if res.resp.Data == nil {
+		return nil, fmt.Errorf("Failed to generate JSON, DataSet is empty")
+	}
 	return json.Marshal(res.resp.Data)
+}
+
+// Returns a 2D array of strings representing the query result
+// If resultSet.resp.data is nil, returns an empty 2D array
+func (res ResultSet) AsStringTable() [][]string {
+	var resTable [][]string
+	colNames := res.GetColNames()
+	resTable = append(resTable, colNames)
+	rows := res.GetRows()
+	for _, row := range rows {
+		var tempRow []string
+		for _, val := range row.Values {
+			tempRow = append(tempRow, ValueWrapper{val}.String())
+		}
+		resTable = append(resTable, tempRow)
+	}
+	return resTable
 }
 
 // Returns all values in the given column
@@ -237,9 +255,25 @@ func (res ResultSet) GetRowValuesByIndex(index int) (*Record, error) {
 	}, nil
 }
 
+// Returns the number of total rows
+func (res ResultSet) GetRowSize() (int, error) {
+	if res.resp.Data == nil {
+		return -1, fmt.Errorf("Failed to get row size, DataSet is empty")
+	}
+	return len(res.resp.Data.Rows), nil
+}
+
+// Returns the number of total columns
+func (res ResultSet) GetColSize() (int, error) {
+	if res.resp.Data == nil {
+		return -1, fmt.Errorf("Failed to get column size, DataSet is empty")
+	}
+	return len(res.resp.Data.ColumnNames), nil
+}
+
 // Returns all rows
 func (res ResultSet) GetRows() []*nebula.Row {
-	if res.resp.Data == nil || res.resp.Data.Rows == nil {
+	if res.resp.Data == nil {
 		var empty []*nebula.Row
 		return empty
 	}
@@ -268,12 +302,43 @@ func (res ResultSet) GetErrorCode() ErrorCode {
 	return ErrorCode(int64(res.resp.ErrorCode))
 }
 
-func (res ResultSet) GetErrorMsg() []byte {
-	if res.resp.ErrorMsg == nil {
-		var empty []byte
-		return empty
+func (res ResultSet) GetLatency() int32 {
+	return res.resp.LatencyInUs
+}
+
+func (res ResultSet) GetSpaceName() string {
+	if res.resp.Comment == nil {
+		return ""
 	}
-	return res.resp.ErrorMsg
+	return string(res.resp.SpaceName)
+}
+
+func (res ResultSet) GetErrorMsg() string {
+	if res.resp.ErrorMsg == nil {
+		return ""
+	}
+	return string(res.resp.ErrorMsg)
+}
+
+func (res ResultSet) GetPlanDesc() *graph.PlanDescription {
+	if res.resp.Comment == nil {
+		return graph.NewPlanDescription()
+	}
+	return res.resp.PlanDesc
+}
+
+func (res ResultSet) GetComment() string {
+	if res.resp.Comment == nil {
+		return ""
+	}
+	return string(res.resp.Comment)
+}
+
+func (res ResultSet) IsEmpty() bool {
+	if res.resp.Data == nil || len(res.resp.Data.ColumnNames) == 0 || len(res.resp.Data.Rows) == 0 {
+		return true
+	}
+	return false
 }
 
 func (res ResultSet) IsSucceed() bool {
