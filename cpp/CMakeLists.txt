@@ -3,7 +3,7 @@
 # This source code is licensed under Apache 2.0 License,
 # attached with Common Clause Condition 1.0, found in the LICENSES directory.
 #
-# The build can be controlled by defining following variables on the
+# The build can be controlled by defining the following variables on the
 # <cmake> command line
 #
 #   CMAKE_C_COMPILER                -- Specify the compiler for C language
