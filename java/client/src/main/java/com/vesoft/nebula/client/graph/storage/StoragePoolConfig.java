@@ -1,12 +1,13 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2020 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-package com.vesoft.nebula.client.graph;
+package com.vesoft.nebula.client.graph.storage;
 
-public class NebulaPoolConfig {
+public class StoragePoolConfig {
     // The min connections in pool for all addresses
     private int minConnsSize = 0;
 
@@ -27,20 +28,20 @@ public class NebulaPoolConfig {
     // the max total connection in pool for each key
     private int maxTotalPerKey = 10;
 
-    public int getMinConnSize() {
+    public int getMinConnsSize() {
         return minConnsSize;
     }
 
-    public void setMinConnSize(int minConnSize) {
-        this.minConnsSize = minConnSize;
+    public void setMinConnsSize(int minConnsSize) {
+        this.minConnsSize = minConnsSize;
     }
 
-    public int getMaxConnSize() {
+    public int getMaxConnsSize() {
         return maxConnsSize;
     }
 
-    public void setMaxConnSize(int maxConnSize) {
-        this.maxConnsSize = maxConnSize;
+    public void setMaxConnsSize(int maxConnsSize) {
+        this.maxConnsSize = maxConnsSize;
     }
 
     public int getTimeout() {
